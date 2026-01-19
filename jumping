@@ -1,0 +1,37 @@
+Sub PerformJump()
+    ' Variables for the Jump Mechanic
+    Dim playerShape As Shape
+    Dim jumpForce As Double
+    Dim gravity As Double
+    Dim positionY As Double
+    Dim i As Integer
+    
+    ' Set initial values (Asset-to-Code reconciled)
+    Set playerShape = ActiveSheet.Shapes("PlayerRect")
+    jumpForce = 20
+    gravity = 1.5
+    positionY = playerShape.Top
+    
+    ' The "For Loop" articulating the jump arc
+    ' We simulate 30 frames of movement
+    For i = 1 To 30
+        ' Apply physics logic
+        positionY = positionY - jumpForce
+        jumpForce = jumpForce - gravity
+        
+        ' Update the "Asset" (The Excel Shape)
+        playerShape.Top = positionY
+        
+        ' Allow Excel to refresh the screen
+        DoEvents
+        
+        ' Small delay to make it visible
+        Application.Wait (Now + TimeValue("00:00:00")) 
+        
+        ' Ground collision check (Reconciliation)
+        If playerShape.Top >= 200 Then 
+            playerShape.Top = 200
+            Exit For
+        End If
+    Next i
+End Sub

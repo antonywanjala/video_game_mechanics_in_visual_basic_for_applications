@@ -1,0 +1,81 @@
+Option Explicit
+
+' Define a custom type to simulate a Game Entity (Character/Enemy)
+Type GameEntity
+    UnitName As String
+    UnitID As String          ' Internal Code ID
+    AssetRefID As String      ' The filename/Asset ID for QA Reconciliation
+    CurrentHP As Integer
+    Speed As Integer
+    IsStunned As Boolean
+End Type
+
+Sub RunTurnCycle()
+    
+    ' --- SETUP: Creating a Mock Battle Scenario ---
+    Dim BattleQueue(1 To 3) As GameEntity
+    
+    ' Unit 1: The Hero
+    BattleQueue(1).UnitName = "Paladin Lightbringer"
+    BattleQueue(1).UnitID = "PC_001"
+    BattleQueue(1).AssetRefID = "MDL_PLDN_V2.obj" ' Specific asset file for QA check
+    BattleQueue(1).CurrentHP = 150
+    BattleQueue(1).Speed = 10
+    
+    ' Unit 2: The Villain
+    BattleQueue(2).UnitName = "Goblin Skirmisher"
+    BattleQueue(2).UnitID = "NPC_GOB_05"
+    BattleQueue(2).AssetRefID = "MDL_GOB_WAR.obj"
+    BattleQueue(2).CurrentHP = 45
+    BattleQueue(2).Speed = 12
+    
+    ' Unit 3: A KO'd Ally (to test logic skipping)
+    BattleQueue(3).UnitName = "Mage Acolyte"
+    BattleQueue(3).UnitID = "PC_002"
+    BattleQueue(3).AssetRefID = "MDL_MAGE_BASE.obj"
+    BattleQueue(3).CurrentHP = 0
+    BattleQueue(3).Speed = 8
+
+    ' --- THE CORE LOGIC: Turn-Taking Loop ---
+    
+    Dim i As Integer
+    Dim strLog As String
+    
+    Debug.Print "--- TURN CYCLE START: " & Now & " ---"
+    
+    ' We iterate through the BattleQueue array
+    For i = LBound(BattleQueue) To UBound(BattleQueue)
+        
+        ' QA RECONCILIATION STEP:
+        ' We log the AssetRefID before logic execution.
+        ' A QA Analyst can copy the Immediate Window and VLOOKUP these IDs
+        ' against the Art Manifest to ensure no missing assets.
+        Debug.Print "[QA-AUDIT] Processing Entity: " & BattleQueue(i).UnitID & _
+                    " | Linked Asset: " & BattleQueue(i).AssetRefID
+        
+        ' LOGIC: Check if Unit is Alive
+        If BattleQueue(i).CurrentHP > 0 Then
+            
+            ' LOGIC: Check Status Effects (Turn-taking validation)
+            If Not BattleQueue(i).IsStunned Then
+                
+                ' Simulate the action
+                Debug.Print "   > ACT: " & BattleQueue(i).UnitName & " is taking their turn."
+                ' [Insert additional combat calculations here]
+                
+            Else
+                Debug.Print "   > SKIP: " & BattleQueue(i).UnitName & " is stunned."
+            End If
+            
+        Else
+            ' Logic for dead units
+            Debug.Print "   > DEAD: " & BattleQueue(i).UnitName & " is incapacitated. Skipping."
+        End If
+        
+        Debug.Print "-----------------------------------"
+        
+    Next i
+    
+    Debug.Print "--- TURN CYCLE COMPLETE ---"
+
+End Sub

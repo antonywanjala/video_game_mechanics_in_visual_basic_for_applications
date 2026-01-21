@@ -1,0 +1,36 @@
+Sub ReconcileActionPoints()
+    ' Variables for the QA Reconciliation process
+    Dim currentAP As Integer
+    Dim actionCost As Integer
+    Dim i As Integer
+    Dim lastRow As Long
+    
+    ' Initializing starting AP from a designated cell (e.g., B1)
+    currentAP = Range("B1").Value
+    
+    ' Find the last action in the QA test list (Column A)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' The For Loop: Reconciling the "Asset" (Action Cost) with the "Logic" (Subtraction)
+    For i = 2 To lastRow
+        actionCost = Cells(i, 1).Value
+        
+        ' Reconciliation Check
+        If currentAP >= actionCost Then
+            ' Process the spend
+            currentAP = currentAP - actionCost
+            
+            ' Log result for the Analyst
+            Cells(i, 2).Value = "Success"
+            Cells(i, 3).Value = currentAP
+            Cells(i, 2).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Flag a Reconciliation Error (Logic failure or Asset mismatch)
+            Cells(i, 2).Value = "RECONCILIATION ERROR: Insufficient AP"
+            Cells(i, 2).Interior.Color = RGB(255, 99, 71) ' Tomato Red
+            Exit For
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete. Remaining AP: " & currentAP
+End Sub

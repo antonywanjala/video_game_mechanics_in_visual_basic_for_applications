@@ -1,0 +1,35 @@
+Sub ReconcileCharacterUpgrades()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim statName As String
+    Dim assetPath As String
+    Dim upgradeMultiplier As Double
+    
+    ' Configuration
+    upgradeMultiplier = 1.15 ' 15% increase per level
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    MsgBox "Starting Asset-to-Code Reconciliation..."
+
+    ' Loop through the character stats listed in the sheet
+    For i = 2 To lastRow
+        statName = Cells(i, 1).Value ' Column A: Stat Name
+        assetPath = Cells(i, 2).Value ' Column B: Asset Path (The "Asset")
+        
+        ' 1. Calculate the Code Logic
+        Cells(i, 3).Value = Cells(i, 3).Value * upgradeMultiplier ' Column C: Value
+        
+        ' 2. Perform Reconciliation
+        ' Check if the Asset Path is defined and valid
+        If assetPath <> "" And InStr(assetPath, "UI_Icon_") > 0 Then
+            Cells(i, 4).Value = "RECONCILED"
+            Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            Cells(i, 4).Value = "MISSING ASSET"
+            Cells(i, 4).Interior.Color = RGB(255, 182, 193) ' Light Red
+            Debug.Print "QA ALERT: No visual asset found for " & statName
+        End If
+    Next i
+
+    MsgBox "Reconciliation Complete. Check Column D for flags."
+End Sub

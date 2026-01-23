@@ -1,0 +1,42 @@
+Sub ReconcileSprintingMechanic()
+    ' Variables for the Sprint Mechanic
+    Dim stamina As Double
+    Dim speed As Double
+    Dim frame As Integer
+    Dim animationState As String
+    Dim isReconciled As Boolean
+    
+    ' Initial States
+    stamina = 100.0
+    speed = 0.0
+    isReconciled = True
+    
+    ' Loop representing 100 "ticks" of movement logic
+    For frame = 1 To 100
+        ' Logic: If we have stamina, we sprint
+        If stamina > 0 Then
+            stamina = stamina - 1.5 ' Consume stamina
+            speed = 10.0            ' Sprint speed
+            animationState = "ASSET_SPRINT_LOOP"
+        Else
+            stamina = 0
+            speed = 3.0             ' Forced walk speed
+            animationState = "ASSET_WALK_EXHAUSTED"
+        End If
+        
+        ' --- QA RECONCILIATION STEP ---
+        ' Here we verify if the Asset State matches the Speed Logic
+        If (speed > 5 And animationState <> "ASSET_SPRINT_LOOP") Or _
+           (speed <= 5 And animationState <> "ASSET_WALK_EXHAUSTED") Then
+            Debug.Print "Reconciliation Error at Frame: " & frame
+            isReconciled = False
+        End If
+    Next frame
+    
+    ' Final Report
+    If isReconciled Then
+        MsgBox "Asset-to-Code Reconciliation Successful!", vbInformation
+    Else
+        MsgBox "Reconciliation Failed. Check Debug Console.", vbCritical
+    End If
+End Sub

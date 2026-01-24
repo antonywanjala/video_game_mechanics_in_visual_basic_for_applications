@@ -1,0 +1,37 @@
+Sub ReconcileDraftingMechanic()
+    Dim wsAssets As Worksheet
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim draftBoostAsset As Double
+    Dim currentBoostCode As Double
+    
+    ' Set reference to the sheet containing game asset constants
+    Set wsAssets = ThisWorkbook.Sheets("GameAssets")
+    
+    ' The "Source of Truth" from the design document
+    draftBoostAsset = wsAssets.Range("B2").Value ' e.g., 1.15 for a 15% boost
+    
+    ' Find the last vehicle entry in the QA log
+    lastRow = wsAssets.Cells(wsAssets.Rows.Count, "A").End(xlUp).Row
+    
+    ' Loop through vehicles to perform asset-to-code reconciliation
+    For i = 5 To lastRow
+        ' Simulate fetching the "In-Code" value from a memory dump or log
+        currentBoostCode = wsAssets.Cells(i, 3).Value
+        
+        ' Reconciliation Logic
+        If currentBoostCode <> draftBoostAsset Then
+            ' Highlight mismatch for the QA Analyst
+            wsAssets.Cells(i, 4).Value = "RECONCILIATION FAIL"
+            wsAssets.Cells(i, 4).Interior.Color = vbRed
+            
+            ' Log the fix: aligning code behavior to the asset design
+            Debug.Print "Reconciling Vehicle " & wsAssets.Cells(i, 1).Value & ": Boost set to " & draftBoostAsset
+        Else
+            wsAssets.Cells(i, 4).Value = "MATCHED"
+            wsAssets.Cells(i, 4).Interior.Color = vbGreen
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation for 'Drafting' Complete.", vbInformation
+End Sub

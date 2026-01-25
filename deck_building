@@ -1,0 +1,38 @@
+Sub ReconcileDeckAssets()
+    Dim i As Integer
+    Dim cardName As String
+    Dim assetPower As Integer
+    Dim codePower As Integer
+    Dim lastRow As Long
+    Dim discrepancyFound As Boolean
+    
+    ' Assume Sheet1 is the "Player Deck" and Sheet2 is the "Master Asset List"
+    lastRow = Sheets("PlayerDeck").Cells(Rows.Count, 1).End(xlUp).Row
+    discrepancyFound = False
+
+    ' The For Loop: The core of the reconciliation mechanic
+    For i = 2 To lastRow
+        cardName = Sheets("PlayerDeck").Cells(i, 1).Value
+        codePower = Sheets("PlayerDeck").Cells(i, 2).Value ' Power currently in "Code"
+        
+        ' Reconciliation: Lookup the "Source of Truth" in the Master Asset List
+        assetPower = Application.Vlookup(cardName, Sheets("Assets").Range("A:B"), 2, False)
+        
+        ' Validation Logic
+        If codePower <> assetPower Then
+            ' Highlight discrepancy for the QA Analyst
+            Sheets("PlayerDeck").Cells(i, 2).Interior.Color = vbRed
+            Debug.Print "RECONCILIATION ERROR: Card '" & cardName & "' expects " & assetPower & " power."
+            discrepancyFound = True
+        Else
+            ' Asset and Code are reconciled
+            Sheets("PlayerDeck").Cells(i, 2).Interior.Color = vbGreen
+        End If
+    Next i
+
+    If Not discrepancyFound Then
+        MsgBox "Asset-to-Code Reconciliation Successful!", vbInformation
+    Else
+        MsgBox "Reconciliation Failed. Discrepancies found in red.", vbCritical
+    End If
+End Sub

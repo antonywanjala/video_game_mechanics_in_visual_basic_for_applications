@@ -1,0 +1,38 @@
+Sub ReconcileFailForwardMechanic()
+    ' This script simulates a QA tool checking if "Fail Forward" 
+    ' visual consequences have matching assets in the build.
+    
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim assetName As String
+    Dim assetStatus As String
+    Dim reconciliationLog As String
+    
+    ' Assume Column A is "ConsequenceName" and Column B is "AssetPath"
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Fail Forward check
+    For i = 2 To lastRow
+        assetName = Cells(i, 1).Value
+        assetStatus = Cells(i, 2).Value ' Path to the .fbx or .png
+        
+        ' Simulation of Fail Forward Logic:
+        ' Even if the asset is MISSING (a failure), we "Fail Forward" 
+        ' by assigning a Default_Scar asset instead of breaking the build.
+        
+        If assetStatus = "" Or assetStatus = "MISSING" Then
+            ' Log the discrepancy for the QA Analyst
+            Cells(i, 3).Value = "RECONCILED: Placeholder Assigned"
+            Cells(i, 3).Interior.Color = RGB(255, 200, 0) ' Highlight for QA
+            
+            Debug.Print "Warning: " & assetName & " is missing. Defaulting to 'Standard_Scar'."
+        Else
+            Cells(i, 3).Value = "Verified"
+            Cells(i, 3).Interior.Color = RGB(0, 255, 0)
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. QA Report generated in Column C.", vbInformation
+End Sub

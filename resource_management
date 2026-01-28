@@ -1,0 +1,31 @@
+Sub ReconcileFableAssets()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetPrice As Double
+    Dim enginePrice As Double
+    Dim itemName As String
+    
+    ' Find the last row of assets in the sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Loop through the assets for reconciliation
+    ' Column A: Item Name | Column B: Asset Price | Column C: Live Engine Price
+    For i = 2 To lastRow
+        itemName = Cells(i, 1).Value
+        assetPrice = Cells(i, 2).Value
+        enginePrice = Cells(i, 3).Value
+        
+        ' Perform the Reconciliation check
+        If assetPrice <> enginePrice Then
+            ' Flag for QA Analyst: Highlight red if mismatch found
+            Cells(i, 4).Value = "FAIL: Mismatch"
+            Cells(i, 4).Interior.Color = RGB(255, 0, 0)
+        Else
+            ' Reconcile successful
+            Cells(i, 4).Value = "PASS: Reconciled"
+            Cells(i, 4).Interior.Color = RGB(0, 255, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

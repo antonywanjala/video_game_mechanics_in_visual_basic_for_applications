@@ -1,0 +1,37 @@
+Sub SimulateCraftingReconciliation()
+    ' Variables for the Crafting Mechanic
+    Dim frame As Integer
+    Dim totalFrames As Integer
+    Dim successStart As Integer
+    Dim successEnd As Integer
+    Dim isPressed As Boolean
+    
+    ' Configuration (Reconciling Asset Data)
+    totalFrames = 60      ' Length of the blacksmithing animation
+    successStart = 25    ' The frame where the visual "sweet spot" begins
+    successEnd = 35      ' The frame where the visual "sweet spot" ends
+    isPressed = True     ' Simulating a QA Analyst's perfectly timed click
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The Reconciliation Loop
+    For frame = 1 To totalFrames
+        
+        If frame >= successStart And frame <= successEnd Then
+            ' Logic for the "Success Zone"
+            If isPressed Then
+                Debug.Print "Frame " & frame & ": SUCCESS (Asset aligned with Logic)"
+                ' Exit loop once success is confirmed to save processing
+                Exit For
+            End If
+        Else
+            ' Logic for "Failure Zone"
+            If frame Mod 10 = 0 Then
+                Debug.Print "Frame " & frame & ": Idle/Swing Animation"
+            End If
+        End If
+        
+    Next frame
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub

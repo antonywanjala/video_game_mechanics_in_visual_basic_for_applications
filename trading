@@ -1,0 +1,98 @@
+Option Explicit
+
+' Define a custom type to represent a Game Asset
+Type GameItem
+    AssetID As String
+    Name As String
+    BaseValue As Long
+    CurrentStock As Integer
+    TownLocation As String
+End Type
+
+Sub FableEconomyReconciliation()
+    ' --- SETUP: MOCK DATABASE OF ASSETS ---
+    Dim ItemDatabase(1 To 3) As GameItem
+    
+    ' Asset 1: Health Potion (High Stock, Low Demand)
+    ItemDatabase(1).AssetID = "ITM_POTION_HP_01"
+    ItemDatabase(1).Name = "Health Potion"
+    ItemDatabase(1).BaseValue = 50
+    ItemDatabase(1).CurrentStock = 120
+    ItemDatabase(1).TownLocation = "Bowerstone South"
+    
+    ' Asset 2: Master Katana (Zero Stock, Extreme Demand)
+    ItemDatabase(2).AssetID = "ITM_WEAPON_KATANA_MST"
+    ItemDatabase(2).Name = "Master Katana"
+    ItemDatabase(2).BaseValue = 25000
+    ItemDatabase(2).CurrentStock = 0
+    ItemDatabase(2).TownLocation = "Oakvale"
+    
+    ' Asset 3: Crunchy Chick (Normal Stock)
+    ItemDatabase(3).AssetID = "ITM_FOOD_CHICK_01"
+    ItemDatabase(3).Name = "Crunchy Chick"
+    ItemDatabase(3).BaseValue = 15
+    ItemDatabase(3).CurrentStock = 10
+    ItemDatabase(3).TownLocation = "Darkwood Bordello"
+
+    ' --- QA PARAMETERS ---
+    Dim HeroGuileLevel As Integer
+    HeroGuileLevel = 4 ' Simulating a Hero with mid-level Guile/Barter skill
+    
+    Dim CalculatedPrice As Double
+    Dim SupplyMultiplier As Double
+    Dim i As Integer
+    Dim ReconciliationStatus As String
+    
+    ' --- THE LOOP: ASSET-TO-CODE RECONCILIATION ---
+    Debug.Print "--- STARTING QA ECONOMY PASS: " & Now & " ---"
+    
+    For i = LBound(ItemDatabase) To UBound(ItemDatabase)
+        
+        ' 1. ASSET INTEGRITY CHECK
+        If Len(ItemDatabase(i).AssetID) = 0 Then
+            Debug.Print "[CRITICAL] Asset at Index " & i & " is missing an ID!"
+            GoTo NextIteration
+        End If
+        
+        ' 2. APPLY GAME MECHANIC LOGIC (Supply & Demand Loop)
+        ' Logic: If Stock is 0, Price is 200% Base. If Stock is 100+, Price is 50% Base.
+        ' Guile reduces buy price slightly.
+        
+        If ItemDatabase(i).CurrentStock = 0 Then
+            SupplyMultiplier = 2.0
+        ElseIf ItemDatabase(i).CurrentStock > 50 Then
+            SupplyMultiplier = 0.5
+        Else
+            SupplyMultiplier = 1.0
+        End If
+        
+        ' Calculate Final Price
+        CalculatedPrice = (ItemDatabase(i).BaseValue * SupplyMultiplier) - (HeroGuileLevel * 2)
+        
+        ' 3. RECONCILIATION LOGIC (QA Analyst Pass/Fail)
+        ' Bounds Checking: Price cannot be negative.
+        If CalculatedPrice < 1 Then CalculatedPrice = 1
+        
+        ' Output Verification
+        If CalculatedPrice > (ItemDatabase(i).BaseValue * 3) Then
+            ReconciliationStatus = "[FLAG] Price Spike Detected"
+        ElseIf CalculatedPrice < (ItemDatabase(i).BaseValue * 0.1) Then
+             ReconciliationStatus = "[FLAG] Economy Crash Risk"
+        Else
+             ReconciliationStatus = "[PASS] Nominal"
+        End If
+        
+        ' 4. PRINT REPORT
+        Debug.Print "Asset: " & ItemDatabase(i).Name
+        Debug.Print " |__ Location: " & ItemDatabase(i).TownLocation
+        Debug.Print " |__ Stock: " & ItemDatabase(i).CurrentStock & " | Base Val: " & ItemDatabase(i).BaseValue
+        Debug.Print " |__ Calc Price: " & CalculatedPrice
+        Debug.Print " |__ QA Status: " & ReconciliationStatus
+        Debug.Print "------------------------------------------------"
+
+NextIteration:
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+
+End Sub

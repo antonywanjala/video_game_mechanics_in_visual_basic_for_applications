@@ -1,0 +1,94 @@
+Option Explicit
+
+' ==============================================================================
+' MODULE: Fable_Economy_Reconciliation
+' PURPOSE: Automate Asset-to-Code verification for the "Guile/Negotiating" mechanic.
+' AUTHOR: QA Automation Script
+' ==============================================================================
+
+Public Sub ReconcileNegotiationMechanic()
+    
+    ' --- 1. SETUP VARIABLES ---
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Simulation Variables for the Mechanic
+    Dim ItemName As String
+    Dim BaseAssetValue As Double      ' value from Design (Asset)
+    Dim InGamePrice As Double         ' value from Build (Code)
+    Dim HeroGuileLevel As Integer
+    Dim ShopStock As Integer
+    Dim CalculatedPrice As Double
+    Dim Variance As Double
+    
+    ' Fable Mechanic Constants (Hypothetical modifiers based on Fable 1/TLC)
+    Const GUILE_MODIFIER As Double = 0.05 ' 5% discount per Guile level
+    Const STOCK_INFLATION As Double = 0.02 ' 2% price hike per missing stock unit
+    Const MAX_DISCOUNT As Double = 0.50   ' Cap discount at 50%
+    
+    ' Set Target Worksheet (Assumes Sheet1 has data)
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+    
+    ' Find the last row of data
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Get Global Variables (Assumed to be in header or separate config cells)
+    ' For this loop, we hardcode a Hero Guile Level of 4 for the test case.
+    HeroGuileLevel = 4
+    
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION: NEGOTIATION ---"
+    
+    ' --- 2. THE RECONCILIATION LOOP ---
+    ' Iterates through every asset to verify the Negotiation mechanic
+    For i = 2 To lastRow
+        
+        ' A. Retrieve Asset Data
+        ItemName = ws.Cells(i, 1).Value
+        BaseAssetValue = ws.Cells(i, 2).Value ' The static asset value
+        ShopStock = ws.Cells(i, 3).Value      ' Current shop supply
+        InGamePrice = ws.Cells(i, 4).Value    ' The price showing in the game build
+        
+        ' B. Replicate Game Logic (The "Negotiating" Mechanic)
+        ' Logic: Base Price - (Guile Discount) + (Stock Scarcity Inflation)
+        
+        Dim currentDiscount As Double
+        currentDiscount = HeroGuileLevel * GUILE_MODIFIER
+        If currentDiscount > MAX_DISCOUNT Then currentDiscount = MAX_DISCOUNT
+        
+        ' Calculate what the price SHOULD be based on design rules
+        CalculatedPrice = BaseAssetValue * (1 - currentDiscount)
+        
+        ' Adjust for Stock (Supply/Demand mechanic)
+        ' If stock is low (e.g. below 10), price increases
+        If ShopStock < 10 Then
+            CalculatedPrice = CalculatedPrice * (1 + ((10 - ShopStock) * STOCK_INFLATION))
+        End If
+        
+        ' Rounding to match integer gold values usually found in Fable
+        CalculatedPrice = Round(CalculatedPrice, 0)
+        
+        ' C. Reconciliation Check (Asset vs. Code)
+        Variance = CalculatedPrice - InGamePrice
+        
+        ' D. Output Results
+        If Variance = 0 Then
+            ' PASS: Code accurately reflects the Asset + Mechanic
+            ws.Cells(i, 5).Value = "PASS"
+            ws.Cells(i, 5).Interior.Color = RGB(200, 255, 200) ' Green
+        Else
+            ' FAIL: Discrepancy detected. Flag for QA Analyst.
+            ws.Cells(i, 5).Value = "FAIL (Var: " & Variance & ")"
+            ws.Cells(i, 5).Interior.Color = RGB(255, 200, 200) ' Red
+            
+            Debug.Print "MISMATCH DETECTED: " & ItemName & _
+                        " | Expected: " & CalculatedPrice & _
+                        " | Actual: " & InGamePrice
+        End If
+        
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+    MsgBox "Negotiation Mechanic Reconciliation Complete.", vbInformation
+
+End Sub

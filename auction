@@ -1,0 +1,91 @@
+Option Explicit
+
+' Mock Data Structure for Game Assets
+Type GameAsset
+    AssetID As String
+    AssetName As String
+    BaseValue As Long
+    IsUnique As Boolean
+    ExpectedMaxBid As Long
+End Type
+
+Sub RunAuctionReconciliation()
+    ' --- SETUP: Define Assets (The "Asset" side of Reconciliation) ---
+    Dim AuctionItems(1 To 3) As GameAsset
+    
+    ' Item 1: The Fairfax Castle (Fable II style real estate)
+    AuctionItems(1).AssetID = "RE_CASTLE_001"
+    AuctionItems(1).AssetName = "Fairfax Castle"
+    AuctionItems(1).BaseValue = 1000000
+    AuctionItems(1).ExpectedMaxBid = 1500000 ' Economy cap logic
+    
+    ' Item 2: The Daichi (Legendary Katana)
+    AuctionItems(2).AssetID = "WEP_LEG_055"
+    AuctionItems(2).AssetName = "The Daichi"
+    AuctionItems(2).BaseValue = 45000
+    AuctionItems(2).ExpectedMaxBid = 60000
+    
+    ' Item 3: Crunchy Chick (Consumable)
+    AuctionItems(3).AssetID = "ITM_FOOD_003"
+    AuctionItems(3).AssetName = "Crunchy Chick"
+    AuctionItems(3).BaseValue = 5
+    AuctionItems(3).ExpectedMaxBid = 50 ' Inflation logic check
+    
+    ' --- VARIABLES ---
+    Dim i As Integer
+    Dim currentBid As Long
+    Dim bidderCount As Integer
+    Dim reconciliationStatus As String
+    Dim bidStep As Long
+    
+    ' Initialize QA Log
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION: AUCTION MECHANIC ---"
+    Debug.Print "Timestamp: " & Now
+    Debug.Print "---------------------------------------------------------------"
+    
+    ' --- THE CORE LOOP: Simulating the Mechanic ---
+    ' This loop articulates the [Auction] behavior for every asset in the batch.
+    
+    For i = LBound(AuctionItems) To UBound(AuctionItems)
+        
+        ' 1. Initialize Auction State
+        currentBid = AuctionItems(i).BaseValue
+        bidderCount = Int((10 - 2 + 1) * Rnd + 2) ' Random bidders between 2 and 10
+        
+        Debug.Print "Processing Asset: " & AuctionItems(i).AssetName & " (" & AuctionItems(i).AssetID & ")"
+        
+        ' 2. Simulate Bidding War (The Mechanic Logic)
+        ' We loop until the bid reaches a simulated "market saturation"
+        Do While bidderCount > 1
+            ' Logic: Bids increase by 10% of base value per round
+            bidStep = AuctionItems(i).BaseValue * 0.1
+            currentBid = currentBid + bidStep
+            
+            ' Logic: Bidders drop out as price gets too high
+            If currentBid > (AuctionItems(i).ExpectedMaxBid * 0.8) Then
+                bidderCount = bidderCount - 1
+            End If
+            
+            ' Failsafe for infinite loops in test
+            If currentBid > (AuctionItems(i).ExpectedMaxBid * 2) Then Exit Do
+        Loop
+        
+        ' 3. Asset-to-Code Reconciliation (The QA Analyst Task)
+        ' Check if the mechanic produced a result within design tolerances
+        
+        If currentBid <= AuctionItems(i).ExpectedMaxBid Then
+            reconciliationStatus = "[PASS] Logic validated."
+        Else
+            reconciliationStatus = "[FAIL] Inflation Bug Detected! Bid (" & currentBid & ") exceeded cap (" & AuctionItems(i).ExpectedMaxBid & ")."
+        End If
+        
+        ' 4. Output Result
+        Debug.Print "   > Final Price: " & currentBid & " Gold"
+        Debug.Print "   > Reconciliation: " & reconciliationStatus
+        Debug.Print "---------------------------------------------------------------"
+        
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+
+End Sub

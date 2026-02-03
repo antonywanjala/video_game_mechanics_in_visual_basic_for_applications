@@ -1,0 +1,34 @@
+Sub ReconcileEngineBuildingAssets()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim baseYield As Double
+    Dim multiplier As Double
+    Dim reconciledValue As Double
+    
+    ' Assuming data is in Sheet1: Column A (Asset Name), B (Current Level), C (In-Game Gold)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Constants for the Engine Building logic
+    baseYield = 50
+    multiplier = 1.25
+    
+    For i = 2 To lastRow
+        ' --- QA ANALYST VALIDATION STEP ---
+        ' Ensure the asset level is within a logical range (0-10)
+        If Cells(i, 2).Value < 0 Or Cells(i, 2).Value > 10 Then
+            Cells(i, 4).Value = "ERROR: Out of Range"
+            Cells(i, 4).Interior.Color = vbRed
+        Else
+            ' --- ENGINE BUILDING MATH ---
+            ' The reconciliation formula: Yield = Base * (Multiplier ^ Level)
+            reconciledValue = baseYield * (multiplier ^ Cells(i, 2).Value)
+            
+            ' Update the spreadsheet to match the code-calculated value
+            Cells(i, 3).Value = reconciledValue
+            Cells(i, 4).Value = "Reconciled"
+            Cells(i, 4).Interior.Color = vbGreen
+        End If
+    Next i
+
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

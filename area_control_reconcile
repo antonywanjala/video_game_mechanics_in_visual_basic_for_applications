@@ -1,0 +1,97 @@
+Attribute VB_Name = "AreaControl_Reconcile"
+' ==============================================================================
+' MODULE: AreaControl_Reconcile
+' DESCRIPTION: Automates Asset-to-Code reconciliation for Area Control mechanics.
+' AUTHOR: Gemini (AI Assistant)
+' REPOSITORY: [Your Repository URL Here]
+' ==============================================================================
+
+Option Explicit
+
+' Entry point for the QA Analyst
+Sub ReconcileAreaControl()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Variables for Reconciliation
+    Dim zoneID As String
+    Dim assetValue As Double    ' Value defined in the Excel Asset
+    Dim codeValue As Double     ' Value returned by the Game Engine
+    Dim discrepancyCount As Integer
+    
+    ' Set the worksheet containing the Game Design Data
+    ' Assumes: Col A = Zone Name, Col B = Target Control Value (Asset)
+    Set ws = ThisWorkbook.Sheets("AreaControl_Data")
+    
+    ' Find the last row of data
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    discrepancyCount = 0
+    
+    ' ==========================================================================
+    ' THE RECONCILIATION LOOP
+    ' Iterates through game assets to validate against code implementation.
+    ' ==========================================================================
+    For i = 2 To lastRow ' Assuming Row 1 is headers
+    
+        zoneID = ws.Cells(i, 1).Value
+        assetValue = ws.Cells(i, 2).Value
+        
+        ' 1. Fetch the actual value from the Game/Code
+        ' In a live environment, this might call a DLL or parse a JSON export.
+        ' Here, we simulate the fetch.
+        codeValue = GetEngineControlValue(zoneID)
+        
+        ' 2. Output the code value to the sheet for visibility
+        ws.Cells(i, 3).Value = codeValue
+        
+        ' 3. Compare Asset vs. Code
+        ' We use a small epsilon for float comparison to prevent false positives
+        If Abs(assetValue - codeValue) > 0.01 Then
+            ' DISCREPANCY FOUND
+            ' Highlight the row Red to attract QA attention immediately
+            ws.Range(ws.Cells(i, 1), ws.Cells(i, 3)).Interior.Color = RGB(255, 200, 200)
+            
+            ' Add a comment explaining the diff
+            ws.Cells(i, 4).Value = "MISMATCH: Asset expects " & assetValue & " but Code returns " & codeValue
+            
+            discrepancyCount = discrepancyCount + 1
+        Else
+            ' MATCH CONFIRMED
+            ' Highlight Green for pass
+            ws.Range(ws.Cells(i, 1), ws.Cells(i, 3)).Interior.Color = RGB(200, 255, 200)
+            ws.Cells(i, 4).Value = "OK"
+        End If
+        
+    Next i
+    
+    ' Final Report to User
+    If discrepancyCount > 0 Then
+        MsgBox "Reconciliation Complete. Found " & discrepancyCount & " discrepancies.", vbExclamation, "QA Alert"
+    Else
+        MsgBox "Reconciliation Complete. All assets match code implementation.", vbInformation, "QA Success"
+    End If
+
+End Sub
+
+' ==============================================================================
+' FUNCTION: GetEngineControlValue
+' DESCRIPTION: Simulates an API call to the Game Engine to retrieve live data.
+' IN REALITY: This would connect to a game debug port or read a dumped log file.
+' ==============================================================================
+Function GetEngineControlValue(zoneName As String) As Double
+    ' Simulating game behavior:
+    ' Some zones are implemented correctly, others have bugs/drift.
+    
+    Select Case zoneName
+        Case "Bowerstone_Market"
+            GetEngineControlValue = 100#   ' Matches asset
+        Case "Oakvale_Ruins"
+            GetEngineControlValue = 50#    ' Matches asset
+        Case "Darkwood_Camp"
+            GetEngineControlValue = 0#     ' BUG: Code says 0, Asset might say 20
+        Case Else
+            ' Default logic or randomized drift for simulation
+            GetEngineControlValue = 0#
+    End Select
+End Function

@@ -1,0 +1,56 @@
+Sub ReconcileFableAlignmentAssets()
+    ' ==============================================================================
+    ' QA ASSET-TO-CODE RECONCILIATION SCRIPT
+    ' Context: Fable (Alignment Morphing Mechanic)
+    ' Purpose: Verifies that Entity Alignment Scores map to the correct Visual Assets
+    ' ==============================================================================
+
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim alignmentScore As Long
+    Dim currentAsset As String
+    Dim expectedAsset As String
+    Dim statusCell As Range
+    
+    ' Determine the last row of data in Column A
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' LOOP: Iterate through all Game Entities in the export list
+    For i = 2 To lastRow ' Assuming Row 1 is the Header
+    
+        ' 1. Fetch Data from the "Code" (The numerical state)
+        alignmentScore = Cells(i, 2).Value
+        
+        ' 2. Fetch Data from the "Asset" (The visual ID)
+        currentAsset = Cells(i, 3).Value
+        
+        ' 3. Define the Logic (The Fable Mechanic Rule)
+        If alignmentScore > 20 Then
+            expectedAsset = "TEX_HERO_ANGEL_01"
+        ElseIf alignmentScore < -20 Then
+            expectedAsset = "TEX_HERO_DEMON_01"
+        Else
+            expectedAsset = "TEX_HERO_NEUTRAL_01"
+        End If
+        
+        ' 4. Perform Reconciliation
+        Set statusCell = Cells(i, 4) ' Output results to Column D
+        
+        If currentAsset = expectedAsset Then
+            ' PASS: Code and Asset match
+            statusCell.Value = "[PASS] Valid Reconciliation"
+            statusCell.Interior.Color = RGB(200, 255, 200) ' Light Green
+        Else
+            ' FAIL: Discrepancy detected (e.g., Evil hero has Angel texture)
+            statusCell.Value = "[FAIL] Mismatch! Expected: " & expectedAsset
+            statusCell.Interior.Color = RGB(255, 200, 200) ' Light Red
+            
+            ' Flag for QA attention
+            statusCell.Font.Bold = True
+        End If
+        
+    Next i
+    
+    MsgBox "Reconciliation Complete. Please review Column D for discrepancies.", vbInformation, "QA Automated Check"
+
+End Sub

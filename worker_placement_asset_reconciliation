@@ -1,0 +1,77 @@
+Option Explicit
+
+' Define a custom type to represent a Game Object
+Type GameObject
+    ID As String
+    Name As String
+    AssetPath As String
+    IsAssigned As Boolean
+End Type
+
+Sub WorkerPlacement_AssetReconciliation()
+    
+    ' --- SETUP: Simulate the Game Data ---
+    Dim Villagers(1 To 5) As GameObject
+    Dim WorkStations(1 To 5) As GameObject
+    Dim i As Integer
+    Dim qaLog As String
+    Dim assetStatus As String
+    
+    ' Populate Mock Data (The "Fable" Context)
+    ' In a real scenario, this would pull from your Game Design Document (GDD)
+    Villagers(1).Name = "Bowerstone Blacksmith": Villagers(1).AssetPath = "Assets/Chars/Smith_01. fbx"
+    Villagers(2).Name = "Oakvale Farmer":        Villagers(2).AssetPath = "Assets/Chars/Farmer_05.fbx"
+    Villagers(3).Name = "Hero's Apprentice":     Villagers(3).AssetPath = "" ' MISSING ASSET INTENTIONAL
+    Villagers(4).Name = "Guild Guard":           Villagers(4).AssetPath = "Assets/Chars/Guard_02.fbx"
+    Villagers(5).Name = "Chicken Chaser":        Villagers(5).AssetPath = "Assets/Chars/Chaser_01.fbx"
+    
+    ' Define Workstations
+    WorkStations(1).Name = "The Forge"
+    WorkStations(2).Name = "Apple Orchard"
+    WorkStations(3).Name = "Guild Hall"
+    WorkStations(4).Name = "Lookout Point"
+    WorkStations(5).Name = "Demon Door"
+    
+    qaLog = "--- QA ASSET RECONCILIATION LOG ---" & vbCrLf
+    qaLog = qaLog & "Mechanic: Worker Placement (Albion)" & vbCrLf & vbCrLf
+
+    ' --- THE LOOP: Worker Placement Logic ---
+    ' This loop articulates the placement of workers to stations
+    ' AND checks for asset validity simultaneously.
+    
+    For i = LBound(Villagers) To UBound(Villagers)
+        
+        ' 1. The Game Mechanic Logic: Assign Worker to Station
+        ' (Simple 1:1 mapping for this example)
+        Villagers(i).IsAssigned = True
+        
+        ' 2. The Asset Reconciliation Logic
+        ' Check if the AssetPath string is empty or invalid
+        If Villagers(i).AssetPath = "" Then
+            assetStatus = "[CRITICAL FAIL]"
+        Else
+            assetStatus = "[OK]"
+        End If
+        
+        ' 3. Generate Output for the QA Analyst
+        ' This format highlights errors immediately, encouraging reconciliation.
+        qaLog = qaLog & "Frame " & i & ": Placing [" & Villagers(i).Name & "] at [" & WorkStations(i).Name & "]" & vbCrLf
+        qaLog = qaLog & "    > Asset Path: " & IIf(Villagers(i).AssetPath = "", "MISSING!", Villagers(i).AssetPath) & vbCrLf
+        qaLog = qaLog & "    > Status: " & assetStatus & vbCrLf
+        
+        If assetStatus = "[CRITICAL FAIL]" Then
+             qaLog = qaLog & "    > ACTION: QA must flag to Art Team immediately." & vbCrLf
+        End If
+        
+        qaLog = qaLog & "------------------------------------------------" & vbCrLf
+        
+    Next i
+
+    ' --- OUTPUT ---
+    ' Print to Immediate Window (Ctrl+G to view in VBA Editor)
+    Debug.Print qaLog
+    
+    ' Optional: Output to a MessageBox for immediate visibility
+    MsgBox "Reconciliation Complete. Check Immediate Window for logs.", vbInformation, "QA Tool"
+
+End Sub

@@ -1,0 +1,45 @@
+Sub ReconcileWorkerPlacement()
+    Dim propertyList As Variant
+    Dim i As Long
+    Dim assetStatus As String
+    Dim incomeTotal As Double
+    
+    ' Mocking an array of Property Assets
+    ' Format: {Property Name, Is_Owned_In_Code, Income_Rate}
+    propertyList = Array( _
+        Array("Bowerstone Blacksmith", True, 250), _
+        Array("Oakvale Tavern", True, 150), _
+        Array("Fairfax Castle", False, 5000), _
+        Array("Brightwall Academy", True, 300) _
+    )
+    
+    incomeTotal = 0
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Mechanic + QA Validation
+    For i = LBound(propertyList) To UBound(propertyList)
+        
+        ' 1. Logic Check: Is the worker/owner assigned in the code?
+        If propertyList(i)(1) = True Then
+            
+            ' 2. Reconciliation Check: Ensure Income_Rate is valid (> 0)
+            If propertyList(i)(2) > 0 Then
+                incomeTotal = incomeTotal + propertyList(i)(2)
+                assetStatus = "[MATCH] Processing Rent..."
+            Else
+                ' QA Alert: Asset is marked "Owned" but has 0 income (Potential Bug)
+                assetStatus = "[MISMATCH] Flag: Asset owned but zero yield."
+            End If
+            
+        Else
+            assetStatus = "[SKIP] Property not owned by Hero."
+        End If
+        
+        ' Output findings to the Immediate Window for the QA Analyst
+        Debug.Print "Property: " & propertyList(i)(0) & " | Status: " & assetStatus
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+    Debug.Print "Total Validated Income: " & incomeTotal
+End Sub

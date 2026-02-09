@@ -1,0 +1,79 @@
+Attribute VB_Name = "CombatReconciliation"
+' -----------------------------------------------------------------------
+' MODULE: Fable_Combat_Reconciliation
+' DESCRIPTION: Iterates through enemy assets to validate Combat/Flourish
+'              logic compatibility for QA Analysis.
+' AUTHOR: QA Automation Bot
+' -----------------------------------------------------------------------
+
+Option Explicit
+
+' Define a simulated Game Asset (e.g., a row in a Game Design Document)
+Private Type EnemyAsset
+    Name As String
+    MaxHealth As Long
+    HasFlourishAnimation As Boolean
+    DamageMultiplier As Double
+End Type
+
+Sub RunCombatReconciliationLoop()
+    Dim EnemyList(1 To 4) As EnemyAsset
+    Dim i As Integer
+    Dim AssetStatus As String
+    
+    ' --- 1. SETUP: Mocking the Asset Data (Asset Layer) ---
+    ' In a real scenario, this would pull directly from your Excel rows
+    
+    ' Asset A: Standard Hobbes (Valid)
+    EnemyList(1).Name = "Hobbes_Grunt"
+    EnemyList(1).MaxHealth = 100
+    EnemyList(1).HasFlourishAnimation = True
+    EnemyList(1).DamageMultiplier = 1.0
+    
+    ' Asset B: Balverine (Valid)
+    EnemyList(2).Name = "Balverine_White"
+    EnemyList(2).MaxHealth = 450
+    EnemyList(2).HasFlourishAnimation = True
+    EnemyList(2).DamageMultiplier = 1.5
+    
+    ' Asset C: Placeholder Cube (INVALID - Missing Animation)
+    EnemyList(3).Name = "Dev_Test_Cube"
+    EnemyList(3).MaxHealth = 9999
+    EnemyList(3).HasFlourishAnimation = False ' <--- Logic Break Risk
+    EnemyList(3).DamageMultiplier = 0
+    
+    ' Asset D: Glitched Bandit (INVALID - 0 Health)
+    EnemyList(4).Name = "Bandit_Broken"
+    EnemyList(4).MaxHealth = 0 ' <--- Combat Loop Error Risk
+    EnemyList(4).HasFlourishAnimation = True
+    EnemyList(4).DamageMultiplier = 1.0
+
+    ' --- 2. THE LOOP: Combat Mechanic Reconciliation (Code Layer) ---
+    ' This loop simulates the game engine checking assets before a fight starts.
+    
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION [COMBAT] ---"
+    
+    For i = LBound(EnemyList) To UBound(EnemyList)
+        AssetStatus = "[OK]"
+        
+        ' Logic Check A: Does the entity exist? (Health Check)
+        If EnemyList(i).MaxHealth <= 0 Then
+            AssetStatus = "[FAIL] Asset has 0 Health. Combat loop will divide by zero or auto-kill."
+        
+        ' Logic Check B: Fable Mechanic Specific (Flourish Compatibility)
+        ' If the player uses a Flourish attack, the enemy MUST have a reaction animation.
+        ElseIf EnemyList(i).HasFlourishAnimation = False Then
+            AssetStatus = "[FAIL] Missing 'Flourish_Reaction'. Game will hang on Heavy Attack."
+            
+        Else
+            ' Simulate Code Execution
+            AssetStatus = "[PASS] Ready for Combat initialization."
+        End If
+        
+        ' Return result to QA Analyst
+        Debug.Print "Asset ID " & i & " (" & EnemyList(i).Name & "): " & AssetStatus
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+
+End Sub

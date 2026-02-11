@@ -1,0 +1,54 @@
+Sub ReconcileSetCollection()
+    ' Variables for the QA Analyst to track asset-to-code alignment
+    Dim setAssets As Variant
+    Dim i As Integer
+    Dim assetName As String
+    Dim isReconciled As Boolean
+    Dim totalBonus As Double
+    Dim logRow As Integer
+    
+    ' Define the Fable-style "Archon Set" IDs
+    setAssets = Array("archon_helm_01", "archon_chest_01", "archon_gloves_01", "archon_boots_01")
+    totalBonus = 1.0
+    logRow = 1
+    
+    ' Clear previous QA log
+    Sheet1.Range("E:F").ClearContents
+    Sheet1.Cells(logRow, 5).Value = "QA Status"
+    Sheet1.Cells(logRow, 6).Value = "Reconciliation Note"
+    
+    ' The For Loop: Articulating the behavior during reconciliation
+    For i = LBound(setAssets) To UBound(setAssets)
+        assetName = setAssets(i)
+        logRow = logRow + 1
+        
+        ' Simulate checking if the Asset Name matches the Code Entry
+        ' In a real scenario, this would look up a Value in a Class or Database
+        If Not IsEmpty(Sheet1.Cells(logRow, 1)) And Sheet1.Cells(logRow, 1).Value = assetName Then
+            isReconciled = True
+        Else
+            isReconciled = False
+        End If
+        
+        ' Logic for the QA Analyst: Flagging reconciliation errors
+        If isReconciled Then
+            ' If asset and code match, apply 25% of the set bonus
+            totalBonus = totalBonus + 0.25
+            Sheet1.Cells(logRow, 5).Value = "PASS"
+            Sheet1.Cells(logRow, 5).Font.Color = vbGreen
+            Sheet1.Cells(logRow, 6).Value = "Asset '" & assetName & "' successfully mapped to ID."
+        Else
+            ' Immediate visual feedback for the QA Analyst
+            Sheet1.Cells(logRow, 5).Value = "FAIL"
+            Sheet1.Cells(logRow, 5).Font.Color = vbRed
+            Sheet1.Cells(logRow, 6).Value = "CRITICAL: Asset '" & assetName & "' missing in build or ID mismatch."
+        End If
+    Next i
+    
+    ' Final output of the Set Collection mechanic
+    If totalBonus >= 2.0 Then
+        MsgBox "Set Collection Complete! Total Multiplier: " & totalBonus & "x", vbInformation, "Reconciliation Success"
+    Else
+        MsgBox "Set Collection Incomplete. QA Review Required.", vbExclamation, "Reconciliation Failure"
+    End If
+End Sub

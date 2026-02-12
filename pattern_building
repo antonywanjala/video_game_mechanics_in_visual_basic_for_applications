@@ -1,0 +1,47 @@
+Sub ReconcilePatternMechanic()
+    ' Variables for Pattern Building & QA Reconciliation
+    Dim i As Integer
+    Dim totalInputs As Integer
+    Dim assetTimestamp As Double
+    Dim codeTimestamp As Double
+    Dim driftTolerance As Double
+    Dim syncStatus As String
+    
+    ' Configuration
+    totalInputs = 10 ' Number of hits in the blacksmithing pattern
+    driftTolerance = 0.05 ' 50ms tolerance before reconciliation is flagged
+    
+    ' Header for the QA Report
+    Range("A1:D1").Value = Array("Input Index", "Drift Value", "Status", "QA Action")
+    
+    For i = 1 To totalInputs
+        ' Simulating the Asset (Visual Icon Appearance) vs Code (Input Window Open)
+        assetTimestamp = Cells(i + 1, 2).Value ' Column B: Visual Cue Time
+        codeTimestamp = Cells(i + 1, 3).Value  ' Column C: Logic Trigger Time
+        
+        ' Calculate the drift between Asset and Code
+        Dim drift As Double
+        drift = Abs(assetTimestamp - codeTimestamp)
+        
+        ' Record the drift for the QA Analyst
+        Cells(i + 1, 1).Value = "Hit_" & i
+        Cells(i + 1, 2).Value = drift
+        
+        ' Pattern Building Logic: Reconciliation Trigger
+        If drift > driftTolerance Then
+            ' If the pattern is broken, QA needs to reconcile the asset to the code
+            syncStatus = "DESYNC DETECTED"
+            Cells(i + 1, 3).Value = syncStatus
+            Cells(i + 1, 3).Font.Color = vbRed
+            Cells(i + 1, 4).Value = "Update Asset Frame to: " & codeTimestamp
+        Else
+            ' Pattern is built correctly
+            syncStatus = "Synchronized"
+            Cells(i + 1, 3).Value = syncStatus
+            Cells(i + 1, 3).Font.Color = vbGreen
+            Cells(i + 1, 4).Value = "No Action"
+        End If
+    Next i
+    
+    MsgBox "Pattern Reconciliation Loop Complete. Check Red flags for QA adjustments."
+End Sub

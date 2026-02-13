@@ -1,0 +1,38 @@
+Sub ReconcileRenownMechanic()
+    Dim i As Integer
+    Dim playerRenown As Long
+    Dim npcCount As Integer
+    Dim assetValue As Long
+    Dim codeValue As Long
+    
+    ' Assume the Player's current Renown is stored in cell A2
+    playerRenown = Range("A2").Value
+    ' Number of NPCs to check
+    npcCount = Range("B2").Value
+    
+    ' The Reconciliation Loop
+    For i = 1 To npcCount
+        ' Fetch values (Column D = Design Asset, Column E = Current Code State)
+        assetValue = Cells(i + 4, 4).Value
+        codeValue = Cells(i + 4, 5).Value
+        
+        ' 1. The Reconciliation Check
+        If codeValue <> assetValue Then
+            ' Update Code to match Asset (Reconciliation)
+            Cells(i + 4, 5).Value = assetValue
+            Cells(i + 4, 6).Value = "RECONCILED"
+            Cells(i + 4, 6).Interior.Color = vbYellow
+        End If
+        
+        ' 2. The Recognition Mechanic Logic
+        If playerRenown >= Cells(i + 4, 5).Value Then
+            ' NPC recognizes the Hero
+            Cells(i + 4, 7).Value = "NPC Reacts: 'Look! It's the Chicken Chaser!'"
+        Else
+            ' NPC ignores the Hero
+            Cells(i + 4, 7).Value = "NPC Reacts: 'Who are you, then?'"
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for " & npcCount & " entities.", vbInformation
+End Sub

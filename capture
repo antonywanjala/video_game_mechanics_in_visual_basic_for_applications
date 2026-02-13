@@ -1,0 +1,36 @@
+Sub ReconcileFableCaptureMechanic()
+    ' Variables for the QA Analyst to track reconciliation
+    Dim assetList As Variant
+    Dim renownTotal As Long
+    Dim i As Integer
+    Dim assetName As String
+    Dim assetValue As Integer
+    Dim isReconciled As Boolean
+    
+    ' Mock data: Asset Name and its Code-Value (Points)
+    ' In a real scenario, this would be pulled from a spreadsheet range
+    assetList = Array("Trophy_HobbeHead", 50, "Emote_Dance", 10, "Boast_NoDamage", 100)
+    
+    renownTotal = 0
+    
+    ' The For Loop: Reconciling Assets to Code
+    For i = LBound(assetList) To UBound(assetList) Step 2
+        assetName = assetList(i)
+        assetValue = assetList(i + 1)
+        
+        ' QA Validation Step: Ensure the asset isn't null or broken
+        If len(assetName) > 0 And assetValue > 0 Then
+            isReconciled = True
+            renownTotal = renownTotal + assetValue
+            
+            ' Log result for the QA Analyst
+            Debug.Print "Reconciled: " & assetName & " | Added: " & assetValue & " Renown."
+        Else
+            isReconciled = False
+            Debug.Print "ERROR: Asset-to-Code mismatch at " & assetName
+        End If
+    Next i
+    
+    ' Output final reconciled state
+    MsgBox "Reconciliation Complete. Total Renown Captured: " & renownTotal, vbInformation, "QA Report"
+End Sub

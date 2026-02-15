@@ -1,0 +1,27 @@
+Sub ReconcileEliminationMechanic()
+    Dim i As Long
+    Dim lastRow As Long
+    Dim npcStatus As String
+    Dim codeFlag As Boolean
+    
+    ' Assuming Column A is NPC_Name, B is Asset_State (Eliminated/Active), 
+    ' and C is Code_Database_Flag (True/False)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        npcStatus = Cells(i, 2).Value ' The "Asset" visual state
+        codeFlag = Cells(i, 3).Value  ' The "Code" backend state
+        
+        ' Logic: If Asset is Eliminated, Code must be True (1)
+        If npcStatus = "Eliminated" Then
+            If codeFlag <> True Then
+                ' RECONCILIATION STEP
+                Cells(i, 3).Value = True
+                Cells(i, 3).Interior.Color = RGB(255, 200, 200) ' Highlighted for QA
+                Debug.Print "Reconciled: " & Cells(i, 1).Value & " was dead but flag was False."
+            End If
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

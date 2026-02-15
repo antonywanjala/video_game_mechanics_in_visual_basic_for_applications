@@ -1,0 +1,38 @@
+Sub ReconcileRenownRecognition()
+    Dim i As Long
+    Dim lastRow As Long
+    Dim playerRenown As Long
+    Dim assetPath As String
+    Dim statusReport As String
+    
+    ' Assume Player Renown is stored in a specific cell
+    playerRenown = Range("B1").Value
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+
+    ' The For Loop: Articulating Recognition Logic
+    For i = 2 To lastRow
+        ' 1. Check if the NPC's threshold is met by the current code (Renown)
+        If playerRenown >= Cells(i, 2).Value Then
+            assetPath = Cells(i, 3).Value ' Column C holds the Animation Asset path
+            
+            ' 2. QA Reconciliation: Verify the asset string is not empty
+            If assetPath <> "" Then
+                Cells(i, 4).Value = "RECONCILED"
+                Cells(i, 4).Interior.Color = vbGreen
+                Debug.Print "NPC ID " & Cells(i, 1).Value & ": Success. Playing " & assetPath
+            Else
+                ' 3. Alert QA: Logic triggers recognition, but no asset is assigned
+                Cells(i, 4).Value = "MISSING ASSET"
+                Cells(i, 4).Interior.Color = vbRed
+                Debug.Print "CRITICAL ERROR: NPC ID " & Cells(i, 1).Value & " has no asset for Renown " & playerRenown
+            End If
+        Else
+            Cells(i, 4).Value = "NO RECOGNITION"
+            Cells(i, 4).Interior.Color = vbGrayText
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Column D for discrepancies.", vbInformation
+End Sub

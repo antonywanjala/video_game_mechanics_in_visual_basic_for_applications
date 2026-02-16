@@ -1,0 +1,34 @@
+Sub ReconcileAreaEnclosure()
+    Dim assetList As Variant
+    Dim i As Long
+    Dim assetName As String
+    Dim isReconciled As Boolean
+    Dim lastRow As Long
+    
+    ' Define the boundaries of our enclosure manifest
+    ' Let's assume Column A is Asset Name and Column B is Status
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation: Greatwood Enclosure ---"
+    
+    ' The For Loop: Articulating the mechanic behavior
+    For i = 2 To lastRow
+        assetName = Cells(i, 1).Value
+        
+        ' Logic: Check if the asset exists in the "Engine Build" (simulated via status check)
+        If Cells(i, 2).Value = "Active" Then
+            isReconciled = True
+            Debug.Print "MATCH FOUND: " & assetName & " is correctly enclosed."
+            Cells(i, 3).Value = "Verified"
+            Cells(i, 3).Interior.Color = vbGreen
+        Else
+            isReconciled = False
+            ' Highlighting for the QA Analyst to investigate
+            Debug.Print "RECONCILIATION ERROR: " & assetName & " missing from logic!"
+            Cells(i, 3).Value = "FLAGGED"
+            Cells(i, 3).Interior.Color = vbRed
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check the log for discrepancies.", vbInformation
+End Sub

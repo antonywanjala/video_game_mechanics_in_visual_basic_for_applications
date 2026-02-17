@@ -1,0 +1,41 @@
+Sub ReconcileSocialMechanic()
+    ' Variables for the Social Deduction Check
+    Dim npcs As Variant
+    Dim i As Integer
+    Dim npcRole As String
+    Dim visualAsset As String
+    Dim statusReport As String
+    
+    ' Mock Data: {NPC Name, Logic Role, Assigned Visual Asset}
+    ' This represents the "Asset-to-Code" reconciliation process
+    npcs = Array( _
+        Array("Guildmaster", "Friendly", "anim_wave_happy"), _
+        Array("Whisper", "Friendly", "anim_wave_happy"), _
+        Array("Jack of Blades", "Traitor", "anim_idle_suspicious"), _
+        Array("Maze", "Traitor", "anim_wave_happy") _
+    )
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Social Deduction Logic
+    For i = LBound(npcs) To UBound(npcs)
+        npcRole = npcs(i)(1)
+        visualAsset = npcs(i)(2)
+        
+        ' QA Validation Logic:
+        ' If a Traitor is using a "Happy" asset, it might be a bug 
+        ' OR a specific social deduction "deception" mechanic.
+        If npcRole = "Traitor" And visualAsset = "anim_wave_happy" Then
+            statusReport = "FLAG: " & npcs(i)(0) & " is a Traitor but using Friendly assets. Check for Deception Logic."
+        ElseIf npcRole = "Friendly" And visualAsset = "anim_idle_suspicious" Then
+            statusReport = "ERROR: " & npcs(i)(0) & " asset mismatch. Friendly NPC using suspicious animation."
+        Else
+            statusReport = "PASS: " & npcs(i)(0) & " assets reconciled."
+        End If
+        
+        ' Output result for the Analyst
+        Debug.Print statusReport
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Immediate Window (Ctrl+G) for logs.", vbInformation
+End Sub

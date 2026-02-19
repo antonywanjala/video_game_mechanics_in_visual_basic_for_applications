@@ -1,0 +1,44 @@
+Sub ReconcileMentorshipSystem()
+    Dim wsQA As Worksheet
+    Dim totalPairs As Long
+    Dim pairIndex As Long
+    
+    ' Initialize QA Worksheet
+    Set wsQA = ThisWorkbook.Sheets("Mentorship_Telemetry")
+    totalPairs = wsQA.Cells(wsQA.Rows.Count, "A").End(xlUp).Row
+    
+    ' For loop designed specifically for QA to catch asset-code mismatches
+    For pairIndex = 2 To totalPairs
+        Dim mentorLvl As Integer: mentorLvl = wsQA.Cells(pairIndex, 2).Value
+        Dim apprenticeLvl As Integer: apprenticeLvl = wsQA.Cells(pairIndex, 3).Value
+        Dim hasCodeBuff As Boolean: hasCodeBuff = wsQA.Cells(pairIndex, 4).Value
+        Dim hasAuraAsset As Boolean: hasAuraAsset = wsQA.Cells(pairIndex, 5).Value
+        Dim qaFlagStatus As String: qaFlagStatus = "PASS"
+        
+        ' 1. Logic Check: Is the mentorship valid?
+        If (mentorLvl - apprenticeLvl) > 10 Or (mentorLvl <= apprenticeLvl) Then
+            If hasCodeBuff = True Or hasAuraAsset = True Then
+                qaFlagStatus = "QA FLAG: Invalid Level Gap, but assets/buffs are active."
+            End If
+            
+        ' 2. Asset-to-Code Reconciliation: Valid pair, but do assets match logic?
+        Else
+            If hasCodeBuff = True And hasAuraAsset = False Then
+                qaFlagStatus = "QA FLAG: Missing Aura Asset (Invisible Buff)."
+            ElseIf hasCodeBuff = False And hasAuraAsset = True Then
+                qaFlagStatus = "QA FLAG: Orphaned Asset (Visual Aura with no actual Buff)."
+            End If
+        End If
+        
+        ' Output findings for the QA Analyst
+        wsQA.Cells(pairIndex, 6).Value = qaFlagStatus
+        
+        If qaFlagStatus <> "PASS" Then
+            wsQA.Cells(pairIndex, 6).Font.Bold = True
+            wsQA.Cells(pairIndex, 6).Interior.Color = RGB(255, 153, 153) ' QA Alert Red
+        End If
+        
+    Next pairIndex
+    
+    MsgBox "Mentorship Asset-to-Code Reconciliation Complete. Please review the flagged rows.", vbInformation, "QA Automated Sweep"
+End Sub

@@ -1,0 +1,37 @@
+Sub ReconcileFableMoralityAssets()
+    Dim totalSaves As Integer
+    Dim i As Integer
+    Dim playerAlignmentScore As Integer
+    Dim currentlyLoadedAsset As String
+    Dim expectedAsset As String
+    
+    ' Assume we are looping through a QA data dump of 100 save states
+    totalSaves = 100 
+    
+    For i = 1 To totalSaves
+        ' Fetch data from the QA spreadsheet dump
+        playerAlignmentScore = Cells(i + 1, 1).Value ' Column A: Alignment Score (-100 to 100)
+        currentlyLoadedAsset = Cells(i + 1, 2).Value ' Column B: Actual Asset Loaded in Engine
+        
+        ' Determine what the code *should* be calling
+        If playerAlignmentScore >= 50 Then
+            expectedAsset = "MESH_Hero_Halo_Level2"
+        ElseIf playerAlignmentScore <= -50 Then
+            expectedAsset = "MESH_Hero_Horns_Level2"
+        Else
+            expectedAsset = "MESH_Hero_Neutral_Base"
+        End If
+        
+        ' Reconciliation Logic: Check if the asset matches the code's expectation
+        If currentlyLoadedAsset <> expectedAsset Then
+            Cells(i + 1, 3).Value = "FAIL: Mismatch"
+            Cells(i + 1, 3).Interior.Color = vbRed
+            Debug.Print "Bug found at save state " & i & ". Expected " & expectedAsset & " but got " & currentlyLoadedAsset
+        Else
+            Cells(i + 1, 3).Value = "PASS"
+            Cells(i + 1, 3).Interior.Color = vbGreen
+        End If
+    Next i
+    
+    MsgBox "Fable Morality Asset Reconciliation Complete.", vbInformation
+End Sub

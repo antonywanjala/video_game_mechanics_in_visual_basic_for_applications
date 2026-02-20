@@ -1,0 +1,40 @@
+Sub ReconcileRelationships()
+    Dim i As Long
+    Dim lastRow As Long
+    Dim disposition As Integer
+    Dim assetState As String
+    Dim targetState As String
+    
+    ' Assuming Column A is NPC ID, B is Disposition (0-100), C is Current Asset
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        disposition = Cells(i, 2).Value
+        assetState = Cells(i, 3).Value
+        
+        ' Determine what the code says the state SHOULD be
+        Select Case disposition
+            Case Is >= 80
+                targetState = "Adoration"
+            Case Is <= 20
+                targetState = "Hostility"
+            Case Else
+                targetState = "Neutral"
+        End Select
+        
+        ' Perform Asset-to-Code Reconciliation
+        If assetState <> targetState Then
+            ' Highlight discrepancy for QA Analyst
+            Cells(i, 3).Interior.Color = RGB(255, 0, 0)
+            
+            ' Reconcile: Update asset to match code logic
+            Cells(i, 3).Value = targetState
+            Debug.Print "Reconciled NPC ID " & Cells(i, 1).Value & " to " & targetState
+        Else
+            ' Clear highlight if reconciliation is successful
+            Cells(i, 3).Interior.ColorIndex = xlNone
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

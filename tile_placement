@@ -1,0 +1,35 @@
+Sub ReconcileFableTiles()
+    ' Variables for the grid dimensions
+    Dim row As Integer
+    Dim col As Integer
+    Dim maxRows As Integer: maxRows = 50
+    Dim maxCols As Integer: maxCols = 50
+    
+    Dim assetID As String
+    Dim blueprintID As String
+    Dim reconciliationErrorCount As Integer
+    reconciliationErrorCount = 0
+
+    ' The For Loop: Articulating Tile Placement Reconciliation
+    For row = 1 To maxRows
+        For col = 1 To maxCols
+            
+            ' Fetching IDs from a hypothetical sheet (Asset vs Blueprint)
+            assetID = Cells(row, col).Value              ' Current asset in the build
+            blueprintID = Cells(row, col).Comment.Text   ' Expected ID from the design doc
+            
+            ' The Reconciliation Check
+            If assetID <> blueprintID Then
+                ' Logic: If they don't match, highlight the tile for the QA Analyst
+                Cells(row, col).Interior.Color = RGB(255, 0, 0) ' Mark Red
+                reconciliationErrorCount = reconciliationErrorCount + 1
+            Else
+                ' Logic: Match found, validate placement
+                Cells(row, col).Interior.Color = RGB(0, 255, 0) ' Mark Green
+            End If
+            
+        Next col
+    Next row
+
+    MsgBox "Reconciliation Complete. " & reconciliationErrorCount & " mismatches found.", vbInformation, "QA Report"
+End Sub

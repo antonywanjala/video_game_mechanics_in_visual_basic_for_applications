@@ -1,0 +1,45 @@
+Sub ReconcileHexAssets()
+    ' VBA Script for QA Analysts to reconcile Hex Counters with Game Data
+    
+    Dim i As Integer, j As Integer
+    Dim hexID As String
+    Dim assetStrength As Integer
+    Dim codeStrength As Integer
+    Dim lastRow As Long
+    
+    ' Define the grid dimensions (e.g., 50x50 Albion Tactical Map)
+    Const GRID_SIZE = 50
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Hex-and-Counter scan
+    For i = 1 To GRID_SIZE
+        For j = 1 To GRID_SIZE
+            
+            ' Generate a coordinate ID (e.g., Hex_1_12)
+            hexID = "Hex_" & i & "_" & j
+            
+            ' Simulation: Fetching the visual asset strength from the Map Sheet
+            assetStrength = Cells(i, j).Value
+            
+            ' Simulation: Fetching the "Source of Truth" (Code/Data) from a Reference Table
+            ' VLookup represents the "Code" side of the reconciliation
+            On Error Resume Next
+            codeStrength = Application.WorksheetFunction.VLookup(hexID, Sheets("GameData").Range("A:B"), 2, False)
+            
+            ' The QA Reconciliation Check
+            If Err.Number <> 0 Then
+                ' No unit found in code for this hex asset
+                Cells(i, j).Interior.Color = vbYellow ' Flag for QA review
+                Err.Clear
+            ElseIf assetStrength <> codeStrength Then
+                ' Data mismatch identified
+                Debug.Print "CRITICAL: Mismatch at " & hexID & " (Asset: " & assetStrength & " / Code: " & codeStrength & ")"
+                Cells(i, j).Font.Color = vbRed ' Highlight for the QA Analyst
+            End If
+            
+        Next j
+    Next i
+    
+    MsgBox "Reconciliation Complete. Red cells indicate Asset-to-Code mismatches.", vbInformation, "QA Report"
+End Sub

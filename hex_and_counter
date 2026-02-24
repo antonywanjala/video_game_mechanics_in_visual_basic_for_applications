@@ -1,0 +1,40 @@
+Sub ReconcileHexAssets()
+    Dim i As Integer, j As Integer
+    Dim maxRows As Integer, maxCols As Integer
+    Dim assetID As String
+    Dim codeDataID As String
+    Dim logSheet As Worksheet
+    
+    ' Define grid dimensions (e.g., 50x50 Hex Grid)
+    maxRows = 50
+    maxCols = 50
+    Set logSheet = ThisWorkbook.Sheets("QA_Log")
+    
+    ' Begin Loop: Hex-and-Counter Reconciliation
+    For i = 1 To maxRows
+        For j = 1 To maxCols
+            
+            ' Fetch Asset ID from the Map Layout Sheet
+            assetID = Sheets("HexMap").Cells(i, j).Value
+            
+            ' Fetch corresponding Data ID from the Master Code Sheet
+            codeDataID = Sheets("UnitData").Cells(i, j).Value
+            
+            ' Perform Reconciliation (The core QA check)
+            If assetID <> codeDataID Then
+                ' Highlight discrepancy for the QA Analyst
+                Sheets("HexMap").Cells(i, j).Interior.Color = vbRed
+                
+                ' Log the error for the dev team
+                logSheet.Cells(logSheet.Cells(Rows.Count, 1).End(xlUp).Row + 1, 1).Value = _
+                    "Mismatch at Hex (" & i & "," & j & "): Asset " & assetID & " vs Code " & codeDataID
+            Else
+                ' Reconciliation successful
+                Sheets("HexMap").Cells(i, j).Interior.Color = vbGreen
+            End If
+            
+        Next j
+    Next i
+
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

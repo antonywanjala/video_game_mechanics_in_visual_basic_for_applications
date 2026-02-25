@@ -1,0 +1,41 @@
+Sub ReconcileFableDigSpots()
+    ' Variables for the QA Reconciliation Process
+    Dim i As Integer
+    Dim totalAssets As Integer
+    Dim lootQuality As Double
+    Dim assetID As String
+    Dim qaReport As String
+    
+    ' Let's assume there are 50 dig-spot assets in the "Greatwood" region
+    totalAssets = 50
+    qaReport = "--- QA RECONCILIATION REPORT ---" & vbCrLf
+    
+    ' The For Loop: Articulating Randomization & Asset Validation
+    For i = 1 To totalAssets
+        assetID = "DigSpot_GW_" & i
+        
+        ' Seed the randomization (The "Fable" Luck Factor)
+        Randomize
+        lootQuality = Rnd() ' Generates a number between 0 and 1
+        
+        ' QA Analyst Logic: Check if asset is valid before reconciling
+        If lootQuality < 0.05 Then
+            ' 5% chance the asset is "Broken" or "Empty" in the build
+            qaReport = qaReport & "[ERROR] " & assetID & ": Asset-Code Mismatch. No loot assigned." & vbCrLf
+        Else
+            ' Reconciliation Success: Mapping the asset to a loot tier
+            Select Case lootQuality
+                Case Is > 0.9
+                    qaReport = qaReport & "[SUCCESS] " & assetID & ": Reconciled to [Legendary Item]" & vbCrLf
+                Case Is > 0.6
+                    qaReport = qaReport & "[SUCCESS] " & assetID & ": Reconciled to [Rare Augment]" & vbCrLf
+                Case Else
+                    qaReport = qaReport & "[SUCCESS] " & assetID & ": Reconciled to [Common Scraps]" & vbCrLf
+            End Select
+        End If
+    Next i
+    
+    ' Output the results for the QA Analyst to review
+    MsgBox "Reconciliation Complete. Check the Immediate Window (Ctrl+G) for the full report."
+    Debug.Print qaReport
+End Sub

@@ -1,0 +1,38 @@
+Sub ReconcileModularBoard()
+    ' Variables for the Modular Board dimensions
+    Dim totalTiles As Integer
+    Dim i As Integer
+    Dim assetName As String
+    Dim isCodeRegistered As Boolean
+    
+    ' Assume we have a list of 100 modular tiles in Column A
+    totalTiles = 100
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Modular Board Behavior
+    For i = 1 To totalTiles
+        assetName = Cells(i, 1).Value ' Asset name from the "Modular Board" manifest
+        
+        ' Logic Check: Does the code registry (Column B) match the asset?
+        ' This makes it easier for QA to spot "Ghost Assets"
+        If Cells(i, 2).Value <> "" Then
+            isCodeRegistered = True
+        Else
+            isCodeRegistered = False
+        End If
+        
+        ' Reconciliation Output
+        If isCodeRegistered Then
+            Cells(i, 3).Value = "PASS"
+            Cells(i, 3).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Flagging for QA Analyst: Asset exists but has no functional code
+            Cells(i, 3).Value = "FAIL: Missing Logic"
+            Cells(i, 3).Interior.Color = RGB(255, 102, 102) ' Coral Red
+            Debug.Print "Alert: Asset [" & assetName & "] at Tile " & i & " is missing code hooks."
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check the 'Status' column for discrepancies.", vbInformation
+End Sub

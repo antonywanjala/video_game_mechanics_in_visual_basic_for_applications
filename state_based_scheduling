@@ -1,0 +1,49 @@
+Sub ReconcileTempoMechanic()
+    ' Variables for the Economic Tempo Reconciliation
+    Dim secondTick As Integer
+    Dim tempoInterval As Integer
+    Dim currentGoldCode As Long
+    Dim assetTriggered As Boolean
+    Dim reconciliationErrorCount As Integer
+    
+    ' The "Beat" of the game: Gold is collected every 10 seconds
+    tempoInterval = 10
+    currentGoldCode = 1000 ' Starting Gold
+    reconciliationErrorCount = 0
+    
+    Debug.Print "--- Initializing Tempo Reconciliation: Economic Heartbeat ---"
+    
+    ' Loop through a 60-second gameplay slice
+    For secondTick = 1 To 60
+        
+        ' Logic: Every 10th second, the Code SHOULD update
+        If secondTick Mod tempoInterval = 0 Then
+            currentGoldCode = currentGoldCode + 50 ' Increment Gold in Code
+            
+            ' QA Simulation: Check if the UI/Audio Asset actually fired
+            ' (In a real test, this would poll the Engine's Event Log)
+            assetTriggered = SimulateAssetTrigger() 
+            
+            ' Reconciliation Check
+            If assetTriggered = True Then
+                Debug.Print "Second " & secondTick & ": [SYNCED] Tempo Beat matched Asset Trigger. Gold: " & currentGoldCode
+            Else
+                Debug.Print "Second " & secondTick & ": [ERROR] Tempo Drift! Code updated but Asset failed to fire."
+                reconciliationErrorCount = reconciliationErrorCount + 1
+            End If
+        End If
+        
+    Next secondTick
+    
+    ' Summary for the QA Report
+    Debug.Print "--- Reconciliation Finished. Total Tempo Errors: " & reconciliationErrorCount & " ---"
+End Sub
+
+Function SimulateAssetTrigger() As Boolean
+    ' Randomly simulate a failure 10% of the time for testing purposes
+    If Rnd() > 0.1 Then
+        SimulateAssetTrigger = True
+    Else
+        SimulateAssetTrigger = False
+    End If
+End Function

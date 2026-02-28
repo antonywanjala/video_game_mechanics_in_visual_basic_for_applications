@@ -1,0 +1,33 @@
+Sub ReconcileFableWeatherAssets()
+    Dim i As Long
+    Dim lastRow As Long
+    Dim regionName As String
+    Dim codeWeatherIntensity As Double
+    Dim assetParticleRate As Double
+    
+    ' Assuming data is in Sheet1: Column A (Region), B (Code Value), C (Asset Value)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        regionName = Cells(i, 1).Value
+        codeWeatherIntensity = Cells(i, 2).Value
+        assetParticleRate = Cells(i, 3).Value
+        
+        ' Reconciliation Logic
+        If codeWeatherIntensity <> assetParticleRate Then
+            ' Highlight for QA Analyst
+            Cells(i, 4).Value = "RECONCILED"
+            Cells(i, 4).Interior.Color = RGB(0, 255, 0)
+            
+            ' Perform the "Code-to-Asset" fix
+            Cells(i, 3).Value = codeWeatherIntensity
+            
+            Debug.Print "Fixed mismatch in " & regionName & ": Asset updated to " & codeWeatherIntensity
+        Else
+            Cells(i, 4).Value = "MATCHED"
+            Cells(i, 4).Interior.Color = RGB(200, 200, 200)
+        End If
+    Next i
+    
+    MsgBox "Weather Asset Reconciliation Complete!", vbInformation
+End Sub

@@ -1,0 +1,37 @@
+Sub ReconcileFableRent()
+    Dim i As Integer
+    Dim hoursMissed As Integer
+    Dim baseRent As Double
+    Dim totalReconciledGold As Double
+    Dim lastRow As Long
+    
+    ' Define the catch-up period (e.g., 48 hours offline)
+    hoursMissed = Range("B1").Value 
+    totalReconciledGold = 0
+    
+    ' Find the last property asset in the sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' OUTER LOOP: Iterate through each Asset (Property)
+    For i = 2 To lastRow
+        baseRent = Cells(i, 2).Value ' Column B: Rent Value
+        
+        ' INNER LOOP: The Catch-up Mechanism
+        ' Reconciles time-slice data against the asset's code logic
+        For h = 1 To hoursMissed
+            totalReconciledGold = totalReconciledGold + baseRent
+            
+            ' QA Trigger: If gold exceeds an "Economy Cap," flag the asset
+            If totalReconciledGold > 1000000 Then
+                Cells(i, 3).Value = "RECONCILIATION FAIL: Overflow"
+                Exit For
+            End If
+        Next h
+        
+        ' Update the reconciled total for the QA report
+        Cells(i, 4).Value = totalReconciledGold
+        totalReconciledGold = 0 ' Reset for next asset
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

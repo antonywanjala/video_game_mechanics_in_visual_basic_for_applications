@@ -1,0 +1,33 @@
+Sub ReconcileAlignmentAssets()
+    Dim i As Long
+    Dim LastRow As Long
+    Dim PurityValue As Integer
+    Dim CurrentAsset As String
+    Dim TargetAsset As String
+    
+    ' Assuming Column A is CharacterID, B is Purity_Value (-100 to 100), C is Current_Asset_Path
+    LastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To LastRow
+        PurityValue = Cells(i, 2).Value
+        CurrentAsset = Cells(i, 3).Value
+        
+        ' Logic for Asset Reconciliation
+        If PurityValue >= 50 Then
+            TargetAsset = "Models/Skins/Hero_Pure_Final.fbx"
+        ElseIf PurityValue <= -50 Then
+            TargetAsset = "Models/Skins/Hero_Corrupt_Final.fbx"
+        Else
+            TargetAsset = "Models/Skins/Hero_Neutral_Final.fbx"
+        End If
+        
+        ' Perform Reconciliation (The Code-to-Asset Fix)
+        If CurrentAsset <> TargetAsset Then
+            Cells(i, 3).Value = TargetAsset
+            Cells(i, 3).Interior.Color = RGB(144, 238, 144) ' Highlight reconciled cells in green
+            Debug.Print "Row " & i & ": Asset Reconciled to " & TargetAsset
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

@@ -1,0 +1,33 @@
+Sub ReconcilePhysicalStature()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim expectedScale As Double
+    Dim actualScale As Double
+    Dim physiqueLevel As Integer
+    
+    ' Assuming Column A is Level, Column B is Actual Asset Scale
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        physiqueLevel = Cells(i, 1).Value
+        actualScale = Cells(i, 2).Value
+        
+        ' Logic: Every level of Strength adds 10% to physical stature
+        expectedScale = 1 + (physiqueLevel * 0.1)
+        
+        ' Reconciliation Check
+        If Abs(actualScale - expectedScale) > 0.001 Then
+            ' Highlight for QA Analyst
+            Cells(i, 2).Interior.Color = RGB(255, 0, 0) 
+            Cells(i, 3).Value = "RECONCILED: Updated to " & expectedScale
+            
+            ' Reconcile the "Code" (Update the value to match logic)
+            Cells(i, 2).Value = expectedScale
+        Else
+            Cells(i, 2).Interior.Color = RGB(0, 255, 0)
+            Cells(i, 3).Value = "Verified"
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

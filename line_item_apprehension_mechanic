@@ -1,0 +1,40 @@
+Sub ReconcileFableLootMechanic()
+    Dim i As Long
+    Dim lastRow As Long
+    Dim assetID As String
+    Dim lootChance As Double
+    Dim isReconciled As Boolean
+    
+    ' Assuming Column A has World Asset IDs and Column B has Code-side Data
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    For i = 2 To lastRow ' Starting at 2 to skip headers
+        assetID = Cells(i, 1).Value
+        
+        ' 1. Simulate the Randomization Mechanic (0 to 1)
+        ' Logic: If the roll is high, the asset is "Active"
+        Randomize
+        lootChance = Rnd()
+        
+        ' 2. Reconciliation Check (QA Focus)
+        ' Check if the Asset ID in the world matches the Code Database in Column B
+        If Cells(i, 1).Value = Cells(i, 2).Value Then
+            isReconciled = True
+            Cells(i, 3).Value = "Reconciled"
+            Cells(i, 3).Interior.Color = RGB(144, 238, 144) ' Green
+        Else
+            isReconciled = False
+            Cells(i, 3).Value = "ERROR: Code Mismatch"
+            Cells(i, 3).Interior.Color = RGB(255, 182, 193) ' Red
+        End If
+        
+        ' 3. Output the simulated randomization result for QA review
+        If isReconciled Then
+            Debug.Print "Asset: " & assetID & " | Roll: " & Round(lootChance, 2) & " | Status: Verified"
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Column C for discrepancies.", vbInformation
+End Sub

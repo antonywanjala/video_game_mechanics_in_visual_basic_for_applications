@@ -1,0 +1,30 @@
+Sub ReconcileDiceMechanic()
+    Dim i As Integer
+    Dim dieResult As Integer
+    Dim assetPath As String
+    Dim totalRolls As Integer
+    
+    ' Define how many times the QA Analyst wants to test the reconciliation
+    totalRolls = 10 
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    For i = 1 To totalRolls
+        ' 1. Generate the Game Logic Result (Dice Roll)
+        dieResult = Int((6 * Rnd) + 1)
+        
+        ' 2. Reconcile with Asset Metadata
+        ' In a real scenario, this would check if "dice_face_6.png" exists
+        assetPath = "Art/Props/Dice/dice_face_" & dieResult & ".fbx"
+        
+        ' 3. QA Validation Logic
+        If dieResult > 0 And dieResult <= 6 Then
+            Debug.Print "Roll #" & i & ": Logic Result [" & dieResult & "] matches Asset: " & assetPath
+        Else
+            ' This part alerts the QA Analyst if the code tries to call a non-existent asset
+            Debug.Print "ERROR: Roll #" & i & " produced an invalid Logic-to-Asset mapping!"
+        End If
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub

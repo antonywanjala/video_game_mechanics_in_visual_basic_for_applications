@@ -1,0 +1,42 @@
+' VBA Script: Critical Hit Asset-to-Code Reconciliation
+' Description: Validates if the weapon's "Asset" crit rate matches the "Code" output.
+
+Sub ReconcileCriticalHits()
+    Dim i As Long
+    Dim totalSamples As Long
+    Dim critCount As Long
+    Dim weaponCritAsset As Double
+    Dim currentRoll As Double
+    Dim reconciliationReport As String
+    
+    ' --- ASSET DATA ---
+    ' In Fable, a Master Longbow might have a 15% crit chance (0.15)
+    weaponCritAsset = 0.15 
+    totalSamples = 1000
+    critCount = 0
+    
+    ' Seed the random number generator
+    Randomize
+    
+    ' --- THE FOR LOOP (CODE EXECUTION) ---
+    For i = 1 To totalSamples
+        currentRoll = Rnd() ' Generates a number between 0 and 1
+        
+        ' Logic: If the roll is less than the asset value, it's a Critical Hit
+        If currentRoll < weaponCritAsset Then
+            critCount = critCount + 1
+        End If
+    Next i
+    
+    ' --- RECONCILIATION RESULT ---
+    Dim actualRate As Double
+    actualRate = critCount / totalSamples
+    
+    reconciliationReport = "RECONCILIATION REPORT" & vbCrLf & _
+                           "---------------------" & vbCrLf & _
+                           "Asset Crit Rate: " & Format(weaponCritAsset, "0.0%") & vbCrLf & _
+                           "Actual Code Rate: " & Format(actualRate, "0.0%") & vbCrLf & _
+                           "Variance: " & Format(Abs(weaponCritAsset - actualRate), "0.000")
+    
+    MsgBox reconciliationReport, vbInformation, "QA Analyst Tool"
+End Sub

@@ -1,0 +1,30 @@
+Sub ReconcileFableFlourish()
+    Dim totalFrames As Integer
+    Dim i As Integer
+    Dim assetContact As Boolean
+    Dim codeHitboxActive As Boolean
+    Dim reconciliationMissCount As Integer
+    
+    ' Assume 60 frames for a standard Flourish animation
+    totalFrames = 60
+    reconciliationMissCount = 0
+    
+    For i = 1 To totalFrames
+        ' Simulate reading data from a spreadsheet (Columns A and B)
+        assetContact = Cells(i, 1).Value      ' True if animation shows contact
+        codeHitboxActive = Cells(i, 2).Value  ' True if code enables damage
+        
+        ' Logic: If the asset shows a hit but the code says it's a miss...
+        If assetContact = True And codeHitboxActive = False Then
+            Debug.Print "Reconciliation Miss at Frame: " & i
+            Cells(i, 3).Value = "RECONCILIATION MISS"
+            Cells(i, 3).Interior.Color = vbRed
+            reconciliationMissCount = reconciliationMissCount + 1
+        Else
+            Cells(i, 3).Value = "Synced"
+            Cells(i, 3).Interior.Color = vbGreen
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Total Misses Found: " & reconciliationMissCount
+End Sub

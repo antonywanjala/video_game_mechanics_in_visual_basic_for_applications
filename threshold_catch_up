@@ -1,0 +1,30 @@
+Sub ReconcileFableCatchUp()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim playerVal As Double
+    Dim thresholdVal As Double
+    Dim catchUpMult As Double
+    
+    ' Assuming Column A is Stat Name, B is Player Asset Value, C is Code Threshold
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        playerVal = Cells(i, 2).Value
+        thresholdVal = Cells(i, 3).Value
+        
+        ' QA Reconciliation: Check if player asset is behind code baseline
+        If playerVal < thresholdVal Then
+            ' Calculate Catch-up Mechanism (Fable-style multiplier)
+            catchUpMult = round((thresholdVal / playerVal), 2)
+            
+            ' Reconcile: Update the Asset Value column to match or scale
+            Cells(i, 4).Value = "Catch-up Active: x" & catchUpMult
+            Cells(i, 2).Interior.Color = RGB(144, 238, 144) ' Highlight Reconciled (Light Green)
+        Else
+            Cells(i, 4).Value = "In Sync"
+            Cells(i, 2).Interior.Color = xlNone
+        End If
+    Next i
+
+    MsgBox "Asset-to-Code Reconciliation Complete for QA Review.", vbInformation
+End Sub

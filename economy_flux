@@ -1,0 +1,39 @@
+Sub ReconcileEconomyFlux()
+    ' Variables for Asset-to-Code Reconciliation
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim basePrice As Double
+    Dim currentStock As Integer
+    Dim targetStock As Integer
+    Dim calculatedPrice As Double
+    Dim maxPriceCap As Double
+    
+    ' Assuming data is in a table: 
+    ' Col A: Item Name, Col B: Base Price, Col C: Current Stock, Col D: Target Stock
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    maxPriceCap = 500 ' Example hard-cap for Fable-style balancing
+    
+    MsgBox "Starting Asset-to-Code Reconciliation for Town Economy..."
+
+    ' The For Loop representing the mechanic
+    For i = 2 To lastRow
+        basePrice = Cells(i, 2).Value
+        currentStock = Cells(i, 3).Value
+        targetStock = Cells(i, 4).Value
+        
+        ' Logic: Price increases as stock deviates from target
+        ' (Target - Current) / Target provides the percentage shift
+        calculatedPrice = basePrice * (1 + ((targetStock - currentStock) / targetStock))
+        
+        ' Reconciliation Guardrail: Ensure price doesn't exceed design limits
+        If calculatedPrice > (basePrice * 2.5) Then
+            calculatedPrice = basePrice * 2.5
+            Cells(i, 5).Interior.Color = RGB(255, 200, 200) ' Highlight if capped
+        End If
+        
+        ' Output the reconciled price to Column E
+        Cells(i, 5).Value = Round(calculatedPrice, 2)
+    Next i
+
+    MsgBox "Reconciliation Complete. Check Column E for Code-derived prices."
+End Sub

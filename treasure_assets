@@ -1,0 +1,35 @@
+Sub ReconcileTreasureAssets()
+    ' Represents a QA check for Fable-style Treasure Hunting mechanics
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim assetID As String
+    Dim lootLookup As String
+    Dim statusReport As String
+    
+    ' Assume Column A is Asset ID from the Game Engine
+    ' Assume Column B is the expected Loot ID from the Design Doc
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    For i = 2 To lastRow
+        assetID = Cells(i, 1).Value
+        lootLookup = Cells(i, 2).Value
+        
+        ' Simulate the mechanics check
+        If assetID <> "" Then
+            If lootLookup <> "" Then
+                ' Logic: Ensure the digging trigger maps to a valid item
+                Cells(i, 3).Value = "Reconciled"
+                Cells(i, 3).Interior.Color = vbGreen
+            Else
+                ' Logic: Found a visual mound in-game with no code-side loot attached
+                Cells(i, 3).Value = "RECONCILIATION ERROR: Missing Loot"
+                Cells(i, 3).Interior.Color = vbRed
+                statusReport = statusReport & "Row " & i & ": Asset " & assetID & " has no loot code." & vbCrLf
+            End If
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete." & vbCrLf & statusReport
+End Sub

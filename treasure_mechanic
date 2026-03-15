@@ -1,0 +1,95 @@
+Attribute VB_Name = "QADogMechanicReconciliation"
+Option Explicit
+
+' Define the structure of a Treasure Node from the game's asset database
+Type TreasureNode
+    NodeID As String
+    DistanceToDog As Double
+    RequiredAnimAsset As String
+    RequiredSoundAsset As String
+    IsAnimLoaded As Boolean
+    IsSoundLoaded As Boolean
+End Type
+
+Sub ReconcileDogTreasureMechanic()
+    ' -------------------------------------------------------------------------
+    ' QA TOOL: Asset-to-Code Reconciliation for Fable Dog Companion Mechanic
+    ' PURPOSE: Scans nearby nodes, attempts to trigger the dog behavior, and
+    '          flags missing code-to-asset bindings for the QA team.
+    ' -------------------------------------------------------------------------
+    
+    Dim LoadedNodes(1 To 3) As TreasureNode
+    Dim i As Integer
+    Dim QAErrorsFound As Integer
+    Dim DetectionRadius As Double
+    
+    ' Initialize QA variables
+    QAErrorsFound = 0
+    DetectionRadius = 15.5 ' Units in-game
+    
+    ' --- MOCK DATA SETUP (Simulating the loaded level data) ---
+    ' Node 1: Perfect, all assets loaded
+    LoadedNodes(1).NodeID = "TR_Bowerstone_01"
+    LoadedNodes(1).DistanceToDog = 10.2
+    LoadedNodes(1).RequiredAnimAsset = "ANIM_Dog_Point_01"
+    LoadedNodes(1).RequiredSoundAsset = "SFX_Dog_Bark_Excited"
+    LoadedNodes(1).IsAnimLoaded = True
+    LoadedNodes(1).IsSoundLoaded = True
+    
+    ' Node 2: Out of range, should be ignored by the loop
+    LoadedNodes(2).NodeID = "TR_Bowerstone_02"
+    LoadedNodes(2).DistanceToDog = 45.0
+    
+    ' Node 3: In range, but MISSING an audio asset (QA needs to catch this!)
+    LoadedNodes(3).NodeID = "TR_Oakfield_01"
+    LoadedNodes(3).DistanceToDog = 5.4
+    LoadedNodes(3).RequiredAnimAsset = "ANIM_Dog_Dig"
+    LoadedNodes(3).RequiredSoundAsset = "SFX_Dog_Whine"
+    LoadedNodes(3).IsAnimLoaded = True
+    LoadedNodes(3).IsSoundLoaded = False ' BUG: Audio file not linked to code!
+    
+    
+    ' --- THE CORE MECHANIC & RECONCILIATION LOOP ---
+    Debug.Print "--- STARTING QA RECONCILIATION RUN ---"
+    
+    For i = 1 To UBound(LoadedNodes)
+        
+        ' 1. Logic Check: Is the dog close enough to the treasure?
+        If LoadedNodes(i).DistanceToDog <= DetectionRadius Then
+            
+            Debug.Print "Dog detected node: " & LoadedNodes(i).NodeID
+            
+            ' 2. QA Asset-to-Code Reconciliation Check
+            ' Validate that the engine has the required assets to execute the mechanic
+            If Not LoadedNodes(i).IsAnimLoaded Then
+                Debug.Print "  -> [QA FLAG] Missing Animation Asset: " & LoadedNodes(i).RequiredAnimAsset
+                QAErrorsFound = QAErrorsFound + 1
+            End If
+            
+            If Not LoadedNodes(i).IsSoundLoaded Then
+                Debug.Print "  -> [QA FLAG] Missing Sound Asset: " & LoadedNodes(i).RequiredSoundAsset
+                QAErrorsFound = QAErrorsFound + 1
+            End If
+            
+            ' 3. Execution Phase (Only runs if assets are cleanly reconciled)
+            If LoadedNodes(i).IsAnimLoaded And LoadedNodes(i).IsSoundLoaded Then
+                Debug.Print "  -> SUCCESS: Firing Dog Trigger Script. Playing " & _
+                            LoadedNodes(i).RequiredSoundAsset & " & " & _
+                            LoadedNodes(i).RequiredAnimAsset
+            Else
+                Debug.Print "  -> ABORT: Mechanic failed to fire due to missing assets."
+            End If
+            
+        End If
+        
+    Next i
+    
+    ' --- QA REPORTING ---
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+    If QAErrorsFound > 0 Then
+        Debug.Print "QA ALERT: " & QAErrorsFound & " broken asset link(s) found. Please log in Jira."
+    Else
+        Debug.Print "QA STATUS: All local mechanic assets reconciled successfully."
+    End If
+
+End Sub

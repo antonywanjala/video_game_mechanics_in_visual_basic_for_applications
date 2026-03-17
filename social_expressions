@@ -1,0 +1,40 @@
+Sub ReconcileSocialExpressions()
+    ' Variables for the QA Reconciliation process
+    Dim expressions As Variant
+    Dim i As Integer
+    Dim assetPath As String
+    Dim alignmentStatus As String
+    Dim isVerified As Boolean
+    
+    ' Mock data: {Expression Name, Animation Asset, Required Alignment}
+    expressions = Array(Array("Heroic Pose", "anim_pos_hero_01", "Good"), _
+                        Array("Vulgar Thrust", "anim_soc_rude_02", "Evil"), _
+                        Array("Laugh", "anim_soc_neut_01", "Neutral"), _
+                        Array("Chicken Dance", "anim_soc_fun_05", "Neutral"))
+
+    Debug.Print "--- Starting Asset-to-Code Reconciliation: Social Expressions ---"
+
+    ' The For Loop: Articulating the mechanic behavior
+    For i = LBound(expressions) To UBound(expressions)
+        assetPath = expressions(i)(1)
+        alignmentStatus = expressions(i)(2)
+        
+        ' Simulate QA Verification Logic
+        ' In a real scenario, this would check if the file exists in the build path
+        If assetPath <> "" Then
+            isVerified = True
+        Else
+            isVerified = False
+        End If
+
+        ' Output reconciliation results
+        If isVerified Then
+            Debug.Print "Verified: [" & expressions(i)(0) & "] mapped to " & _
+                        assetPath & " (Alignment: " & alignmentStatus & ")"
+        Else
+            Debug.Print "ERROR: Asset Missing for " & expressions(i)(0)
+        End If
+    Next i
+
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub

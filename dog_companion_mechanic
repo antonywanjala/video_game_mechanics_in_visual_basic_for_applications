@@ -1,0 +1,30 @@
+Sub ReconcileDogCompanionMechanic()
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim detectionRadius As Double
+    Dim distanceToAsset As Double
+    
+    ' Detection threshold defined in game design docs
+    detectionRadius = 5.0
+    
+    ' Find the last asset in the spreadsheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' The Loop: Articulating the Dog's behavior reconciliation
+    For i = 2 To lastRow
+        ' Assume Column B is Treasure X-Coord, Column C is Dog X-Coord
+        distanceToAsset = Abs(Cells(i, 2).Value - Cells(i, 3).Value)
+        
+        If distanceToAsset <= detectionRadius Then
+            ' Update status for QA Verification
+            Cells(i, 4).Value = "TRIGGERED: Bark_At_Ground"
+            Cells(i, 4).Interior.Color = vbGreen
+        Else
+            ' Asset exists but Dog is too far
+            Cells(i, 4).Value = "IDLE: Following_Hero"
+            Cells(i, 4).Interior.Color = vbWhite
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for Hero's Companion.", vbInformation
+End Sub

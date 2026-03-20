@@ -1,0 +1,43 @@
+Sub ReconcileEconomyFlux()
+    ' Variables for the shop items
+    Dim i As Integer
+    Dim itemCount As Integer
+    Dim basePrice As Double
+    Dim currentStock As Integer
+    Dim idealStock As Integer
+    Dim assetPrice As Double
+    Dim calculatedPrice As Double
+    Dim tolerance As Double
+    
+    ' Standard QA tolerance for rounding differences
+    tolerance = 0.01
+    
+    ' Assuming data starts at Row 2 in Excel
+    itemCount = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To itemCount
+        ' 1. Pull Data from the "Asset" (The Sheet)
+        basePrice = Cells(i, 2).Value     ' Column B: Base Price
+        currentStock = Cells(i, 3).Value  ' Column C: Current Stock
+        idealStock = Cells(i, 4).Value    ' Column D: Ideal Stock
+        assetPrice = Cells(i, 5).Value    ' Column E: Current Price in-game
+        
+        ' 2. The Economy Flux Logic
+        ' Price increases if stock < ideal, decreases if stock > ideal
+        calculatedPrice = basePrice * (1 + (idealStock - currentStock) / idealStock)
+        
+        ' 3. Reconciliation Logic for QA
+        If Abs(calculatedPrice - assetPrice) > tolerance Then
+            ' Flag the discrepancy for the QA report
+            Cells(i, 6).Value = "FAIL"
+            Cells(i, 6).Interior.Color = RGB(255, 0, 0) ' Highlight Red
+            Cells(i, 7).Value = "Expected: " & calculatedPrice
+        Else
+            Cells(i, 6).Value = "PASS"
+            Cells(i, 6).Interior.Color = RGB(0, 255, 0) ' Highlight Green
+            Cells(i, 7).Value = ""
+        End If
+    Next i
+    
+    MsgBox "Economy Reconciliation Complete!", vbInformation
+End Sub

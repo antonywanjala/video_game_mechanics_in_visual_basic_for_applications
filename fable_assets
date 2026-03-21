@@ -1,0 +1,41 @@
+Sub ReconcileFableAssets()
+    ' Variables representing Fable's physical alignment categories
+    Dim categories As Variant
+    Dim statValues As Variant
+    Dim assetStatus As String
+    Dim i As Integer
+    
+    ' Categories: Strength (Bulk), Will (Runes), Skill (Height), Alignment (Halo/Horns)
+    categories = Array("Physique", "Will Power", "Accuracy", "Alignment")
+    
+    ' Mock data retrieved from the Game Engine's current build
+    statValues = Array(85, 40, 10, -90) ' -90 suggests an "Evil" alignment
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating categories for the QA Analyst
+    For i = LBound(categories) To UBound(categories)
+        
+        ' Logic: If stat is high/low enough, verify the specific asset is toggled
+        Select Case categories(i)
+            Case "Physique"
+                If statValues(i) > 80 Then assetStatus = "Heavy_Muscle_Mesh_ON"
+            Case "Will Power"
+                If statValues(i) > 30 Then assetStatus = "Blue_Vein_Texture_ON"
+            Case "Alignment"
+                If statValues(i) < -50 Then 
+                    assetStatus = "Horns_Asset_V1_ACTIVE"
+                ElseIf statValues(i) > 50 Then 
+                    assetStatus = "Halo_Asset_V1_ACTIVE"
+                End If
+        End Select
+        
+        ' QA Output: Reconciling the Asset ID with the Stat Code
+        Debug.Print "Category: " & categories(i) & " | Value: " & statValues(i) & " | Target Asset: " & assetStatus
+        
+        ' Reset status for next iteration
+        assetStatus = "No_Change"
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub

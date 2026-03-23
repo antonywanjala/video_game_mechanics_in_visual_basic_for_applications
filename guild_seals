@@ -1,0 +1,29 @@
+Sub ReconcileGuildSeals()
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim assetManifest As Range
+    Dim sealID As String
+    Dim matchFound As Variant
+    
+    ' Assume Column A has Earned Seal IDs and Column E has the Master Asset List
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    Set assetManifest = Range("E2:E100")
+    
+    For i = 2 To lastRow
+        sealID = Cells(i, 1).Value
+        
+        ' Attempt to find the code ID in the asset manifest
+        matchFound = Application.Match(sealID, assetManifest, 0)
+        
+        If IsError(matchFound) Then
+            ' Highlight reconciliation errors in red for the QA Analyst
+            Cells(i, 2).Value = "FAILED: Asset Missing"
+            Cells(i, 2).Font.Color = RGB(255, 0, 0)
+        Else
+            Cells(i, 2).Value = "Reconciled"
+            Cells(i, 2).Font.Color = RGB(0, 128, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

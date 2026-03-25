@@ -1,0 +1,48 @@
+Attribute VB_Name = "QA_Scarring_Reconciliation"
+Option Explicit
+
+Sub ReconcileScarringAssets()
+    ' Variables to track gameplay state
+    Dim combatEncounter As Integer
+    Dim playerDamageTaken As Double
+    Dim scarringLevel As Double
+    Dim expectedAssetID As String
+    
+    ' Initialize player state
+    scarringLevel = 0
+    
+    ' Print QA Log Header
+    Debug.Print "--- QA ASSET RECONCILIATION LOG: SCARRING MECHANIC ---"
+    Debug.Print "Encounter | Damage Taken | Scarring Level | Expected Asset ID"
+    Debug.Print "-------------------------------------------------------------"
+    
+    ' The For Loop simulating gameplay progression
+    For combatEncounter = 1 To 10
+        ' Simulate random damage taken in this encounter (between 0 and 25)
+        playerDamageTaken = Rnd() * 25
+        
+        ' Accumulate scarring based on damage (mechanic logic)
+        scarringLevel = scarringLevel + (playerDamageTaken * 0.45)
+        
+        ' Asset-to-Code Reconciliation: Map math to specific file names
+        Select Case scarringLevel
+            Case Is < 15
+                expectedAssetID = "tex_hero_body_clean_00"
+            Case 15 To 35
+                expectedAssetID = "tex_hero_body_scar_light_01"
+            Case 36 To 65
+                expectedAssetID = "tex_hero_body_scar_med_02"
+            Case Else
+                expectedAssetID = "tex_hero_body_scar_heavy_03"
+        End Select
+        
+        ' Output the reconciliation line for the QA Analyst to verify in-engine
+        Debug.Print combatEncounter & " | " & _
+                    Round(playerDamageTaken, 2) & " | " & _
+                    Round(scarringLevel, 2) & " | " & _
+                    expectedAssetID
+    Next combatEncounter
+    
+    Debug.Print "-------------------------------------------------------------"
+    Debug.Print "--- END OF LOG. QA: PLEASE VERIFY TEXTURES IN-ENGINE ---"
+End Sub

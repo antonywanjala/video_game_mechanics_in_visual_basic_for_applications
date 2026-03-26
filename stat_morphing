@@ -1,0 +1,28 @@
+Sub ReconcileStatMorphing()
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim strengthStat As Double
+    Dim currentAssetWidth As Double
+    Dim expectedWidth As Double
+    
+    ' Assume Column A is CharacterID, B is Strength, C is Current Mesh Width
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        strengthStat = Cells(i, 2).Value
+        currentAssetWidth = Cells(i, 3).Value
+        
+        ' Fable-style Morphing Formula: Base Width (1.0) + (Strength * 0.05)
+        expectedWidth = 1 + (strengthStat * 0.05)
+        
+        ' Reconciliation Check
+        If Abs(currentAssetWidth - expectedWidth) > 0.001 Then
+            Cells(i, 3).Interior.Color = RGB(255, 0, 0) ' Highlight Discrepancy
+            Debug.Print "Reconciliation Failed for Row " & i & ": Check Asset Scaling."
+        Else
+            Cells(i, 3).Interior.Color = RGB(0, 255, 0) ' Match Confirmed
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete.", vbInformation
+End Sub

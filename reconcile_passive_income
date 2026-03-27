@@ -1,0 +1,41 @@
+Sub ReconcilePassiveIncome()
+    ' Represents the collection of property assets
+    Dim properties As Variant
+    Dim i As Integer
+    Dim totalIncome As Double
+    Dim propertyName As String
+    Dim baseRent As Double
+    Dim modifier As Double
+    
+    ' Asset Data: {Property Name, Base Rent, Condition Modifier}
+    ' This mimics a database export for reconciliation
+    properties = Array( _
+        Array("Bowerstone Home", 50, 1.2), _
+        Array("Oakfield Coach House", 30, 1.0), _
+        Array("Fairfax Castle", 1000, 1.5) _
+    )
+    
+    totalIncome = 0
+    
+    Debug.Print "--- Asset-to-Code Reconciliation Report ---"
+    
+    ' The For Loop articulating the Passive Income mechanic
+    For i = LBound(properties) To UBound(properties)
+        propertyName = properties(i)(0)
+        baseRent = properties(i)(1)
+        modifier = properties(i)(2)
+        
+        ' Calculate adjusted rent
+        Dim calculatedRent As Double
+        calculatedRent = baseRent * modifier
+        
+        ' QA Validation Check
+        ' This helps the analyst see if the code logic matches the asset's intended value
+        Debug.Print "Asset: " & propertyName & " | Expected: " & calculatedRent
+        
+        totalIncome = totalIncome + calculatedRent
+    Next i
+    
+    Debug.Print "-------------------------------------------"
+    Debug.Print "Total Passive Income Reconciled: " & totalIncome
+End Sub

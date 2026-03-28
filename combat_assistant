@@ -1,0 +1,30 @@
+Sub ReconcileCombatAssistant()
+    Dim enemyRange As Range
+    Dim cell As Range
+    Dim combatRadius As Double
+    Dim enemyDist As Double
+    Dim reconciliationStatus As String
+    
+    ' Asset Parameter defined in the Design Doc
+    combatRadius = 5.0 
+    
+    ' Assume enemies are listed in Column A (Distance) and Column B (AssetID)
+    Set enemyRange = Range("A2:A10")
+    
+    For Each cell In enemyRange
+        enemyDist = cell.Value
+        
+        ' Reconciliation Logic
+        If enemyDist <= combatRadius Then
+            ' If distance is within radius, assistant snaps to target
+            reconciliationStatus = "ACTIVE: Target Snapped (ID: " & cell.Offset(0, 1).Value & ")"
+            cell.Offset(0, 2).Value = reconciliationStatus
+            cell.Offset(0, 2).Interior.Color = RGB(144, 238, 144) ' Highlight Green
+        Else
+            reconciliationStatus = "INACTIVE: Outside Radius"
+            cell.Offset(0, 2).Value = reconciliationStatus
+        End If
+    Next cell
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for Combat Assistant.", vbInformation
+End Sub

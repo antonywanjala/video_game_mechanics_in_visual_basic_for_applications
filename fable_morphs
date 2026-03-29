@@ -1,0 +1,36 @@
+Sub ReconcileFableMorphs()
+    Dim i As Integer
+    Dim moralScore As Double
+    Dim expectedValue As Double
+    Dim actualValue As Double
+    Dim featureName As String
+    
+    ' Assume Moral Score is in Cell A2 (-100 to 100)
+    moralScore = Range("A2").Value
+    
+    ' Loop through 10 specific character morph targets
+    For i = 2 To 11
+        featureName = Cells(i, 2).Value ' Column B: Feature Name
+        actualValue = Cells(i, 3).Value  ' Column C: Current Asset State
+        
+        ' Logic: Evil (<0) increases Horns/Pale Skin; Good (>0) increases Halo/Tan
+        If moralScore < 0 Then
+            expectedValue = Abs(moralScore) * 0.5 ' Scaling factor
+        Else
+            expectedValue = moralScore * 0.2
+        End If
+        
+        ' RECONCILIATION STEP
+        ' If the asset state (actual) differs from logic (expected), flag it for QA
+        If actualValue <> expectedValue Then
+            Cells(i, 4).Value = "RECONCILE"
+            Cells(i, 4).Interior.Color = RGB(255, 0, 0) ' Red Highlight
+            Cells(i, 5).Value = expectedValue ' Suggest correct value
+        Else
+            Cells(i, 4).Value = "Synced"
+            Cells(i, 4).Interior.Color = RGB(0, 255, 0) ' Green Highlight
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

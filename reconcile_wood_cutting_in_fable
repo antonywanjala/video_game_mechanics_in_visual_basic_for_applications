@@ -1,0 +1,47 @@
+Sub ReconcileWoodcutting()
+    ' Variables for the Mechanic
+    Dim treeHealth As Integer
+    Dim swingDamage As Integer
+    Dim woodLogsCollected As Integer
+    Dim assetStatus As String
+    
+    ' Initial States
+    treeHealth = 100
+    swingDamage = 25
+    woodLogsCollected = 0
+    assetStatus = "StandingTree_Model"
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Simulating the Woodcutting Process
+    ' We loop until the tree health is 0 or less
+    For i = 1 To 10 ' Maximum of 10 swings allowed for safety
+        
+        If treeHealth > 0 Then
+            ' 1. Logic Update
+            treeHealth = treeHealth - swingDamage
+            
+            ' 2. Asset Reconciliation Check
+            ' QA Step: Ensure the "Hit" animation and "Chips" asset triggered
+            Debug.Print "Swing " & i & ": Tree Health at " & treeHealth
+            Debug.Print "Checking Asset: Triggering [vfx_wood_chips]..."
+            
+            ' 3. Final Reconciliation (The "Big" Swap)
+            If treeHealth <= 0 Then
+                woodLogsCollected = 3
+                assetStatus = "FallenTree_Model"
+                
+                ' Validation Logic for QA
+                Debug.Print "SUCCESS: Logic health is 0. Asset swapped to: " & assetStatus
+                Debug.Print "RECONCILIATION COMPLETE: " & woodLogsCollected & " logs added to inventory."
+                Exit For
+            End If
+        End If
+        
+    Next i
+    
+    ' QA Final Report
+    If assetStatus <> "FallenTree_Model" And treeHealth <= 0 Then
+        Debug.Print "CRITICAL ERROR: Logic/Asset Mismatch. Tree is dead but model didn't swap!"
+    End If
+End Sub

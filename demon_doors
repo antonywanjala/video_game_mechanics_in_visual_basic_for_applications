@@ -1,0 +1,29 @@
+Sub ReconcileDemonDoors()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim doorName As String
+    Dim logicState As String
+    Dim assetPath As String
+    
+    ' Find the last row of data in Column A (Door Names)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Iterate through the asset manifest
+    For i = 2 To lastRow
+        doorName = Cells(i, 1).Value       ' Column A: Door ID
+        logicState = Cells(i, 2).Value     ' Column B: Unlocked/Locked
+        assetPath = Cells(i, 3).Value      ' Column C: Assigned Animation Asset
+        
+        ' Logic: If Unlocked, the asset path must contain the "OPEN" sequence
+        If logicState = "Unlocked" And InStr(1, assetPath, "ANIM_OPEN", vbTextCompare) = 0 Then
+            ' Highlight discrepancy for the QA Analyst
+            Cells(i, 4).Value = "RECONCILIATION FAIL: Asset/Code Mismatch"
+            Cells(i, 4).Interior.Color = RGB(255, 0, 0)
+        Else
+            Cells(i, 4).Value = "Verified"
+            Cells(i, 4).Interior.Color = RGB(0, 255, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for all Demon Doors.", vbInformation
+End Sub

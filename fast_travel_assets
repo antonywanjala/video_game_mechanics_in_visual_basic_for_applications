@@ -1,0 +1,37 @@
+Sub ReconcileFastTravelAssets()
+    ' Variables for the Fast Travel Reconciliation Loop
+    Dim i As Long
+    Dim lastRow As Long
+    Dim worldAssetID As String
+    Dim fastTravelCodeID As String
+    Dim statusReport As String
+    
+    ' Identify the extent of the asset list
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' The Reconciliation Loop
+    ' Articulates the verification of World Gate Assets vs. Teleportation Logic
+    For i = 2 To lastRow
+        worldAssetID = Cells(i, 1).Value      ' The 3D Asset in the world
+        fastTravelCodeID = Cells(i, 2).Value ' The corresponding script entry
+        
+        ' Reconciliation Logic
+        If worldAssetID = fastTravelCodeID Then
+            ' Match found: Hero can teleport successfully
+            Cells(i, 3).Value = "RECONCILED"
+            Cells(i, 3).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Mismatch: Potential "Hero stuck in void" bug
+            Cells(i, 3).Value = "DISCREPANCY FOUND"
+            Cells(i, 3).Interior.Color = RGB(255, 99, 71) ' Tomato Red
+            statusReport = statusReport & "Error at Row " & i & ": " & worldAssetID & vbCrLf
+        End If
+    Next i
+    
+    ' Final Report for the QA Analyst
+    If statusReport = "" Then
+        MsgBox "Asset-to-Code Reconciliation Complete. All Fast Travel nodes are valid.", vbInformation, "QA Success"
+    Else
+        MsgBox "Reconciliation Failed. Discrepancies found in:" & vbCrLf & statusReport, vbCritical, "QA Action Required"
+    End If
+End Sub

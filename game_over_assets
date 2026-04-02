@@ -1,0 +1,35 @@
+Sub ReconcileFableAssets()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim alignmentScore As Integer
+    Dim visualAsset As String
+    
+    ' Assuming Column A is PlayerID, B is AlignmentScore, C is AssetAssigned
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        alignmentScore = Cells(i, 2).Value
+        visualAsset = Cells(i, 3).Value
+        
+        ' Check for Game Over Logic first
+        If Cells(i, 4).Value <= 0 Then ' Column D is Health
+            MsgBox "Game Over for Player " & Cells(i, 1).Value
+            Cells(i, 5).Value = "TRIGGER_DEATH_UI"
+        End If
+        
+        ' Asset-to-Code Reconciliation logic
+        ' If Good (>500) but no Halo, or Evil (<-500) but no Horns
+        If alignmentScore > 500 And visualAsset <> "vfx_halo_lvl3" Then
+            Cells(i, 6).Value = "ERROR: Asset Mismatch - Needs Halo"
+            Cells(i, 6).Interior.Color = vbRed
+        ElseIf alignmentScore < -500 And visualAsset <> "vfx_horns_lvl3" Then
+            Cells(i, 6).Value = "ERROR: Asset Mismatch - Needs Horns"
+            Cells(i, 6).Interior.Color = vbRed
+        Else
+            Cells(i, 6).Value = "Reconciled"
+            Cells(i, 6).Interior.Color = vbGreen
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for QA Review."
+End Sub

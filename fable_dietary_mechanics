@@ -1,0 +1,49 @@
+Sub ReconcileFableDietaryMechanics()
+    ' Variables for Hero Stats
+    Dim heroFat As Double
+    Dim heroHealth As Double
+    Dim i As Integer
+    Dim lastRow As Long
+    
+    ' Initialize Stats (Starting values)
+    heroFat = 0
+    heroHealth = 100
+    
+    ' Find the last row of food assets in the reconciliation sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' The For Loop: Reconciling Assets to Code Behavior
+    ' Column A: Item Name | Column B: Type (Healthy/Fatty) | Column C: Potency
+    For i = 2 To lastRow
+        Dim itemType As String
+        Dim potency As Double
+        
+        itemType = Cells(i, 2).Value
+        potency = Cells(i, 3).Value
+        
+        Select Case itemType
+            Case "Healthy"
+                ' Celery/Fish logic: High health gain, fat reduction
+                heroHealth = heroHealth + potency
+                heroFat = heroFat - (potency * 0.5)
+                
+            Case "Fatty"
+                ' Pie/Meat logic: Low health gain, high fat gain
+                heroHealth = heroHealth + (potency * 0.2)
+                heroFat = heroFat + potency
+        End Select
+        
+        ' QA Constraint: Ensure values don't drop below zero
+        If heroFat < 0 Then heroFat = 0
+        If heroHealth > 1000 Then heroHealth = 1000 ' Level Cap
+    Next i
+    
+    ' Output Result for Reconciliation Report
+    MsgBox "Reconciliation Complete!" & vbCrLf & _
+           "Final Hero Health: " & heroHealth & vbCrLf & _
+           "Final Hero Fat Level: " & heroFat
+           
+    ' Log to Sheet
+    Range("E2").Value = heroHealth
+    Range("F2").Value = heroFat
+End Sub

@@ -1,0 +1,35 @@
+Sub ReconcileLegendaryWeapons()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim weaponName As String
+    Dim assetSlots As Integer
+    Dim codeSlots As Integer
+    Dim statusCell As Range
+    
+    ' Find the last row of data in Column A (Weapon Name)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Loop through the weapon repository
+    ' Column A: Weapon Name | Column B: Asset Slots | Column C: Code Slots | Column D: Status
+    For i = 2 To lastRow
+        weaponName = Cells(i, 1).Value
+        assetSlots = Cells(i, 2).Value
+        codeSlots = Cells(i, 3).Value
+        Set statusCell = Cells(i, 4)
+        
+        ' Reconciliation Logic
+        If assetSlots <> codeSlots Then
+            ' Flag discrepancy for the QA Analyst
+            statusCell.Value = "RECONCILIATION REQUIRED"
+            statusCell.Interior.Color = RGB(255, 0, 0) ' Red Highlight
+            
+            Debug.Print "Alert: " & weaponName & " has a mismatch! (Asset: " & assetSlots & " vs Code: " & codeSlots & ")"
+        Else
+            ' Validation successful
+            statusCell.Value = "Verified"
+            statusCell.Interior.Color = RGB(0, 255, 0) ' Green Highlight
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

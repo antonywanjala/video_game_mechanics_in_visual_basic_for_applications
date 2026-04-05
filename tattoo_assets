@@ -1,0 +1,33 @@
+Sub ReconcileTattooAssets()
+    ' Purpose: Reconcile Tattoo Art Assets with Gameplay Logic Stats
+    ' Targeted User: QA Analyst
+    
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetName As String
+    Dim renownValue As Integer
+    Dim expectedRenown As Integer
+    
+    ' Assume Column A is Asset Name, B is Current Renown Stat, C is Reference Data
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    MsgBox "Starting Tattoo Asset-to-Code Reconciliation...", vbInformation
+    
+    For i = 2 To lastRow ' Starting at row 2 to skip headers
+        assetName = Cells(i, 1).Value
+        renownValue = Cells(i, 2).Value
+        expectedRenown = Cells(i, 3).Value
+        
+        ' Reconciliation Logic
+        If renownValue <> expectedRenown Then
+            ' Highlight Mismatch for QA Review
+            Cells(i, 2).Interior.Color = RGB(255, 0, 0) 
+            Debug.Print "Alert: Asset " & assetName & " failed reconciliation. Stat mismatch."
+        Else
+            ' Successful Reconciliation
+            Cells(i, 2).Interior.Color = RGB(0, 255, 0)
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check highlighted cells.", vbOKOnly
+End Sub

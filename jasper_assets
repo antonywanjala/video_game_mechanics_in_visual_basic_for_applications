@@ -1,0 +1,75 @@
+Option Explicit
+
+' ==============================================================================
+' MODULE: JasperReconciliation
+' PURPOSE: Performs automated asset-to-code reconciliation for Sanctuary assets.
+' RUN BY: QA Analysts (Technical QA)
+' ==============================================================================
+
+Sub ReconcileJasperAssets()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Variables to hold iteration data
+    Dim assetID As String
+    Dim assetPath As String
+    Dim codeTrigger As String
+    Dim fso As Object
+    
+    ' Initialize FileSystemObject to check local game directories
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' Target the active sheet where the QA Analyst tracks assets
+    Set ws = ThisWorkbook.ActiveSheet
+    
+    ' Find the last populated row in Column A to dynamically set the loop limit
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Clear previous QA runs
+    ws.Range("D2:D" & lastRow).ClearContents
+    
+    ' ==========================================================================
+    ' THE MECHANIC LOOP: Iterating through Jasper's Sanctuary Behaviors
+    ' ==========================================================================
+    For i = 2 To lastRow
+        ' 1. Extract the current asset's metadata from the tracker
+        assetID = ws.Cells(i, 1).Value
+        assetPath = ws.Cells(i, 2).Value
+        codeTrigger = ws.Cells(i, 3).Value
+        
+        ' 2. Validation Checks
+        ' Check A: Does the asset physically exist in the local build directory?
+        Dim assetExists As Boolean
+        assetExists = fso.FileExists(assetPath)
+        
+        ' Check B: Is there a valid code trigger associated with it?
+        Dim triggerExists As Boolean
+        If Len(Trim(codeTrigger)) > 0 And Left(codeTrigger, 7) = "JASPER_" Then
+            triggerExists = True
+        Else
+            triggerExists = False
+        End If
+        
+        ' 3. Reconciliation Output & Formatting for QA Readability
+        If assetExists And triggerExists Then
+            ' Success: Asset and Code are reconciled
+            ws.Cells(i, 4).Value = "PASS: Fully Reconciled"
+            ws.Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Light Green
+        ElseIf Not assetExists Then
+            ' Failure: Missing Asset
+            ws.Cells(i, 4).Value = "FAIL: Missing Asset at Path"
+            ws.Cells(i, 4).Interior.Color = RGB(255, 182, 193) ' Light Red
+        ElseIf Not triggerExists Then
+            ' Failure: Missing Code Trigger
+            ws.Cells(i, 4).Value = "FAIL: Invalid/Missing Code Trigger"
+            ws.Cells(i, 4).Interior.Color = RGB(255, 255, 224) ' Light Yellow
+        End If
+    Next i
+    
+    ' Clean up memory
+    Set fso = Nothing
+    
+    MsgBox "Reconciliation Complete! " & (lastRow - 1) & " Jasper assets processed.", vbInformation, "QA Automation"
+    
+End Sub

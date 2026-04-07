@@ -1,0 +1,37 @@
+Sub ReconcileTreasuryAssets()
+    ' Variables for the Treasury Mechanic
+    Dim TotalGold As Long
+    Dim GoldPerStack As Long
+    Dim RequiredStacks As Integer
+    Dim i As Integer
+    Dim AssetStatus As String
+    
+    ' Initialize data from Game Design Document (GDD)
+    TotalGold = 1000000 ' Current Treasury Balance
+    GoldPerStack = 50000 ' Each visual pile represents 50k gold
+    RequiredStacks = TotalGold / GoldPerStack
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    Debug.Print "Current Balance: " & TotalGold
+    Debug.Print "Required Visual Assets: " & RequiredStacks
+    
+    ' The For Loop: Articulating the mechanic for QA Validation
+    For i = 1 To RequiredStacks
+        ' Logic: Check if the visual asset index exists in the engine manifest
+        ' In a real QA tool, this would call an API or check a file path
+        AssetStatus = ValidateAssetExistence("obj_gold_pile_" & i)
+        
+        If AssetStatus = "Verified" Then
+            Debug.Print "Stack " & i & ": [MATCH] Code balance aligns with Asset ID."
+        Else
+            Debug.Print "Stack " & i & ": [ERROR] Asset missing for reconciled balance!"
+        End If
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub
+
+Function ValidateAssetExistence(assetName As String) As String
+    ' Mock function simulating a check against the game's asset repository
+    ValidateAssetExistence = "Verified"
+End Function

@@ -1,0 +1,34 @@
+Sub ReconcileDyeSystem()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim assetName As String
+    Dim hasDyeMask As Boolean
+    Dim dyeColor As String
+    
+    ' Assuming Column A is Asset Name, B is HasDyeMask (Boolean), C is Target Color
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation: Dye System ---"
+    
+    For i = 2 To lastRow
+        assetName = Cells(i, 1).Value
+        hasDyeMask = Cells(i, 2).Value
+        dyeColor = Cells(i, 3).Value
+        
+        ' Reconciliation Logic
+        If hasDyeMask = True Then
+            ' Simulate the code applying the texture tint
+            Cells(i, 4).Value = "Success: Applied " & dyeColor
+            Cells(i, 4).Interior.ColorIndex = 4 ' Green highlight for pass
+        Else
+            ' The Reconciliation failure: Code expects dyeable, Asset is not prepared
+            Cells(i, 4).Value = "FAILED: Asset Missing Dye Mask"
+            Cells(i, 4).Interior.ColorIndex = 3 ' Red highlight for QA flag
+            
+            ' Log for the Art Dept
+            Debug.Print "RECONCILIATION ERROR: Item [" & assetName & "] lacks alpha mask."
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Column D for QA Flags.", vbInformation
+End Sub

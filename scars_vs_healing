@@ -1,0 +1,35 @@
+Sub ReconcileScarsVsHealing()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim damageThreshold As Integer
+    Dim damageAmount As Integer
+    Dim statusUpdate As String
+    
+    ' Define the threshold where a wound becomes a permanent scar
+    damageThreshold = 50
+    
+    ' Find the last row of data in the Combat Log sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Loop through the combat log for Asset-to-Code Reconciliation
+    For i = 2 To lastRow
+        damageAmount = Cells(i, 2).Value
+        
+        If damageAmount >= damageThreshold Then
+            ' Logic for Scarring (Permanent Asset Change)
+            Cells(i, 3).Value = "SCAR_ASSET_REQ"
+            Cells(i, 3).Interior.Color = RGB(255, 200, 200) ' Highlight for QA Review
+            statusUpdate = "Permanent Scarring: Reconcile with Mesh_Texture_" & i
+        Else
+            ' Logic for Healing (Temporary Variable Change)
+            Cells(i, 3).Value = "HEAL_SUCCESS"
+            Cells(i, 3).Interior.Color = RGB(200, 255, 200)
+            statusUpdate = "Standard Healing: No Asset Change"
+        End If
+        
+        ' Output reconciliation status to the log column
+        Cells(i, 4).Value = statusUpdate
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

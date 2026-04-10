@@ -1,0 +1,37 @@
+Sub ReconcileWeightMechanic()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AssetReconciliation")
+    
+    Dim lastRow As Long
+    Dim currentFatness As Double
+    Dim maxFatness As Double
+    Dim i As Long
+    
+    ' Configuration
+    maxFatness = 1000
+    currentFatness = ws.Range("B2").Value ' Initial Fatness
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' The Reconciliation Loop
+    ' Column A: Item Name | Column B: Caloric Value
+    For i = 5 To lastRow
+        ' Update internal data
+        currentFatness = currentFatness + ws.Cells(i, 2).Value
+        
+        ' Cap the fatness at maximum
+        If currentFatness > maxFatness Then currentFatness = maxFatness
+        
+        ' Asset-to-Code Reconciliation Output
+        ' This calculates the "Morph Weight" (0 to 1) for the 3D Model
+        ws.Cells(i, 3).Value = currentFatness / maxFatness
+        
+        ' Visual feedback for QA Analyst
+        If ws.Cells(i, 3).Value >= 1 Then
+            ws.Cells(i, 4).Value = "MAX MORPH REACHED"
+        Else
+            ws.Cells(i, 4).Value = "Synced"
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Asset Morph Targets calculated.", vbInformation
+End Sub

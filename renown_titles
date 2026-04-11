@@ -1,0 +1,47 @@
+' VBA Logic for Asset-to-Code Reconciliation
+' Objective: Verify that the "Renown_Value" (Code) matches the "Title_String" (Asset)
+
+Sub ReconcileRenownTitles()
+    Dim i As Integer
+    Dim currentRenown As Long
+    Dim currentTitle As String
+    Dim expectedTitle As String
+    
+    ' We iterate through a range of Renown levels to test boundary cases
+    ' This makes it easier for a QA Analyst to spot "off-by-one" errors
+    For i = 0 To 1000 Step 50
+        currentRenown = i
+        
+        ' Logic mimicking the game's engine behavior
+        Select Case currentRenown
+            Case 0 To 100
+                currentTitle = "Chicken Chaser"
+            Case 101 To 500
+                currentTitle = "Ranger"
+            Case 501 To 900
+                currentTitle = "Hero"
+            Case Is > 900
+                currentTitle = "Legend"
+        End Select
+        
+        ' RECONCILIATION STEP:
+        ' The QA Analyst compares the 'currentTitle' (calculated by code)
+        ' against a spreadsheet of 'Expected Assets'.
+        
+        expectedTitle = Cells(i / 50 + 2, 2).Value ' Assuming assets are in Column B
+        
+        If currentTitle <> expectedTitle Then
+            ' Flagging a mismatch between the Asset Manifest and the Code Logic
+            Cells(i / 50 + 2, 3).Value = "FAIL: Mismatch detected"
+            Cells(i / 50 + 2, 3).Interior.Color = vbRed
+        Else
+            Cells(i / 50 + 2, 3).Value = "PASS"
+            Cells(i / 50 + 2, 3).Interior.Color = vbGreen
+        End If
+        
+        ' Debug output for the reconciliation log
+        Debug.Print "Renown: " & currentRenown & " | Result: " & currentTitle
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check the log for mismatches.", vbInformation
+End Sub

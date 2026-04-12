@@ -1,0 +1,35 @@
+Sub ReconcileArmoryAssets()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetName As String
+    Dim matchFound As Range
+    
+    Set ws = ThisWorkbook.Sheets("ArmoryData")
+    
+    ' Find the last asset in the reconciliation list (Column A)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' The For Loop: Articulating the Armory reconciliation
+    For i = 2 To lastRow
+        assetName = ws.Cells(i, 1).Value ' The visual asset name
+        
+        ' QA Check: Look for the asset name in the Code Database (Column D)
+        Set matchFound = ws.Columns("D").Find(What:=assetName, LookIn:=xlValues, LookAt:=xlWhole)
+        
+        If Not matchFound Is Nothing Then
+            ' Success: Asset and Code are reconciled
+            ws.Cells(i, 2).Value = "RECONCILED"
+            ws.Cells(i, 2).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Failure: QA Analyst needs to investigate this Orphaned Asset
+            ws.Cells(i, 2).Value = "MISSING CODE DATA"
+            ws.Cells(i, 2).Interior.Color = RGB(255, 182, 193) ' Light Red
+            
+            ' Output to Immediate Window for the QA log
+            Debug.Print "QA ALERT: Asset '" & assetName & "' has no matching code entry."
+        End If
+    Next i
+    
+    MsgBox "Armory Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

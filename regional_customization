@@ -1,0 +1,42 @@
+Sub ReconcileRegionalCustomization()
+    ' Variables for the QA Analyst to track reconciliation
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim basePrice As Double
+    Dim regionalMarkup As Double
+    Dim expectedPrice As Double
+    Dim assetPrice As Double
+    Dim itemName As String
+    
+    ' Assume Markup for "Bowerstone North" is 1.2x (20% increase)
+    regionalMarkup = 1.2
+    
+    ' Find the last row of the asset list in the active sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The Loop: Articulating the Regional Customization Mechanic
+    For i = 2 To lastRow ' Assuming row 1 is headers
+        itemName = Cells(i, 1).Value      ' Column A: Item Name
+        basePrice = Cells(i, 2).Value     ' Column B: Global Base Price
+        assetPrice = Cells(i, 3).Value    ' Column C: Current Price in Asset File
+        
+        ' Logic: Calculate what the code expects the price to be
+        expectedPrice = basePrice * regionalMarkup
+        
+        ' Reconciliation Check
+        If Abs(assetPrice - expectedPrice) > 0.01 Then
+            ' Discrepancy found: Highlight cell Red for QA Review
+            Cells(i, 3).Interior.Color = RGB(255, 0, 0)
+            Debug.Print "ERROR: " & itemName & " Reconciliation Failed!"
+            Debug.Print "   Expected: " & expectedPrice & " | Found: " & assetPrice
+        Else
+            ' Success: Highlight cell Green
+            Cells(i, 3).Interior.Color = RGB(0, 255, 0)
+            Debug.Print "SUCCESS: " & itemName & " Reconciled."
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check highlighted cells for discrepancies.", vbInformation
+End Sub

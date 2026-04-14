@@ -1,0 +1,40 @@
+Sub ReconcileFableExperience()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim totalXP As Long
+    Dim assetStatus As String
+    Dim ws As Worksheet
+    
+    Set ws = ThisWorkbook.Sheets("AssetExport")
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Initialize Reconciler
+    totalXP = 0
+    
+    ' The Loop: Articulating Asset-to-Code Reconciliation
+    For i = 2 To lastRow
+        ' Check if Asset exists in the "Type" column (Column B)
+        If ws.Cells(i, 2).Value = "ExperienceOrb" Then
+            
+            ' QA Validation: Ensure the XP value (Column C) is not Null or Negative
+            If IsNumeric(ws.Cells(i, 3).Value) And ws.Cells(i, 3).Value >= 0 Then
+                
+                ' Successfully Reconciled: Add Asset value to Code-side variable
+                totalXP = totalXP + ws.Cells(i, 3).Value
+                ws.Cells(i, 4).Value = "Reconciled"
+                ws.Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Green
+                
+            Else
+                ' QA Flag: Asset exists but data is corrupted/mismatched
+                ws.Cells(i, 4).Value = "ERROR: Invalid Value"
+                ws.Cells(i, 4).Interior.Color = RGB(255, 182, 193) ' Red
+                Debug.Print "QA Alert: Asset at Row " & i & " failed reconciliation."
+            End If
+            
+        End If
+    Next i
+    
+    ' Final Reconciliation Output to Code Repository
+    MsgBox "Reconciliation Complete!" & vbCrLf & _
+           "Total Experience Points Reconciled: " & totalXP, vbInformation, "Fable Engine Sync"
+End Sub

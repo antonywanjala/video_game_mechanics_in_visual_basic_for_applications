@@ -1,0 +1,14 @@
+Sub SimulateFableDrunkenness()
+    Dim sobrietyLevel As Integer
+    Dim screenBlurIntensity As Double
+    Dim playerXOffset As Double
+    sobrietyLevel = 100
+    For i = 1 To 100
+        If sobrietyLevel > 0 Then
+            playerXOffset = Rnd() * (100 - sobrietyLevel)
+            screenBlurIntensity = (100 - sobrietyLevel) / 100
+            Debug.Print "QA Check - Frame: " & i & " | Blur: " & screenBlurIntensity & " | Offset: " & playerXOffset
+            sobrietyLevel = sobrietyLevel - 5
+        End If
+    Next i
+End Sub

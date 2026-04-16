@@ -1,0 +1,74 @@
+Attribute VB_Name = "HairAssetReconciliation"
+Option Explicit
+
+Sub QA_Reconcile_Hair_Assets()
+    ' -------------------------------------------------------------------------
+    ' Purpose: Automates asset-to-code reconciliation for Hair/Facial Hair.
+    ' Helps QA Analysts quickly identify mismatches between game code parameters
+    ' (Age, Alignment) and the physical asset files (Meshes, Textures).
+    ' -------------------------------------------------------------------------
+    
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Code/Metadata Variables
+    Dim assetName As String
+    Dim requiredAge As Integer
+    Dim alignmentNeeded As String
+    
+    ' Physical Asset Flags
+    Dim meshExists As Boolean
+    Dim textureExists As Boolean
+    
+    ' Output Variable
+    Dim reconciliationStatus As String
+
+    ' Assume the active worksheet is the QA Asset Tracking Database
+    ' Columns: A=AssetName, B=RequiredAge, C=Alignment, D=MeshExists, E=TextureExists, F=QA_Status
+    lastRow = ActiveSheet.Cells(ActiveSheet.Rows.Count, "A").End(xlUp).Row
+
+    ' The For Loop: Iterating through the asset database
+    For i = 2 To lastRow
+        ' 1. Read the code requirements and asset flags
+        assetName = Cells(i, 1).Value
+        requiredAge = Cells(i, 2).Value
+        alignmentNeeded = Cells(i, 3).Value
+        meshExists = Cells(i, 4).Value
+        textureExists = Cells(i, 5).Value
+
+        ' 2. Base Reconciliation Logic (Do the files exist for the code?)
+        If meshExists And textureExists Then
+            reconciliationStatus = "[PASS] Asset files match code parameters."
+        ElseIf Not meshExists And Not textureExists Then
+            reconciliationStatus = "[FAIL] Missing both mesh and texture. Check code references."
+        Else
+            reconciliationStatus = "[FAIL] Partial asset load. Code-to-asset mismatch."
+        End If
+
+        ' 3. Game-Specific Mechanic Logic (Fable: Age & Alignment Checks)
+        ' If the hero's code age is high, the asset name/metadata should reflect aging.
+        If requiredAge >= 65 And InStr(1, assetName, "Grey", vbTextCompare) = 0 Then
+            reconciliationStatus = reconciliationStatus & " | [WARNING] Hero age >= 65 but hair asset lacks 'Grey' parameter."
+        End If
+        
+        ' If the hero's alignment is strictly evil, the hair should reflect corruption.
+        If alignmentNeeded = "Evil" And InStr(1, assetName, "Dark", vbTextCompare) = 0 Then
+            reconciliationStatus = reconciliationStatus & " | [WARNING] Evil alignment code missing 'Dark/Corruption' texture link."
+        End If
+
+        ' 4. Write the final QA status back to the database sheet
+        Cells(i, 6).Value = reconciliationStatus
+        
+        ' Optional: Color code the cells for the QA Analyst's visibility
+        If Left(reconciliationStatus, 6) = "[PASS]" Then
+            Cells(i, 6).Interior.Color = vbGreen
+        Else
+            Cells(i, 6).Interior.Color = vbRed
+        End If
+        
+    Next i
+    
+    ' Notify the QA Analyst that the batch process is complete
+    MsgBox "Asset-to-code reconciliation complete. Please review the highlighted mismatches.", vbInformation, "QA Automation"
+
+End Sub

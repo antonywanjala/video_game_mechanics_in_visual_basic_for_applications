@@ -1,0 +1,12 @@
+Sub ReconcileLegendaryWeapons()
+    Dim weaponAssets As Variant
+    Dim i As Integer
+    weaponAssets = Array("TheHarbinger", "SkormsBow", "TheSentinus", "WellowsHammer")
+    For i = LBound(weaponAssets) To UBound(weaponAssets)
+        If CheckAssetIntegrity(weaponAssets(i)) = True Then
+            Debug.Print "Asset-to-Code Reconciliation Successful for: " & weaponAssets(i)
+        Else
+            MsgBox "Data Mismatch Detected in Legendary Weapon: " & weaponAssets(i)
+        End If
+    Next i
+End Sub

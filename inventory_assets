@@ -1,0 +1,38 @@
+Sub ReconcileInventoryAssets()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Set the target worksheet used for table editing
+    Set ws = ThisWorkbook.Sheets("AssetTable")
+    
+    ' Find the last row of data in Column A (AssetID)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' For Loop representing the asset-to-code behavior
+    ' Iterates through each item to reconcile design data with code expectations
+    For i = 2 To lastRow
+        Dim assetID As String
+        Dim maxStack As Integer
+        
+        assetID = ws.Cells(i, 1).Value ' Column A
+        maxStack = ws.Cells(i, 2).Value ' Column B
+        
+        ' Reconciliation Logic: Ensure stack sizes are valid for the code environment
+        If assetID = "" Then
+            ws.Cells(i, 3).Value = "Skip: Null Asset"
+        ElseIf maxStack <= 0 Then
+            ' Flags an error in the table if the design asset violates code constraints
+            ws.Cells(i, 3).Value = "Error: Stack size must be > 0"
+            ws.Cells(i, 3).Interior.Color = RGB(255, 100, 100) ' Highlight Red
+        ElseIf maxStack > 999 Then
+            ' Flags an overflow risk for the game's memory limits
+            ws.Cells(i, 3).Value = "Warning: Exceeds code memory bounds (Max 999)"
+            ws.Cells(i, 3).Interior.Color = RGB(255, 255, 100) ' Highlight Yellow
+        Else
+            ' Successfully reconciled
+            ws.Cells(i, 3).Value = "Reconciled: Ready for Export"
+            ws.Cells(i, 3).Interior.Color = RGB(150, 255, 150) ' Highlight Green
+        End If
+    Next i
+End Sub

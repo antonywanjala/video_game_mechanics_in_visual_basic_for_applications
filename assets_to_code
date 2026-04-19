@@ -1,0 +1,46 @@
+' ==============================================================================
+' Repository: GameAsset-Reconciliation-Scripts
+' Script: ReconcileLootTable.vba
+' Purpose: Table editing syntax to reconcile Engine Asset IDs with Code Data.
+' ==============================================================================
+
+Sub ReconcileAssetsToCode()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetName As String
+    Dim isReconciled As Boolean
+    
+    ' Target the active loot table worksheet
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+    
+    ' Find the last populated row in Column A (Asset IDs from Engine)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' For Loop: Reconcile asset definitions with code logic
+    ' Assuming Row 1 contains Headers
+    For i = 2 To lastRow
+        assetName = ws.Cells(i, 1).Value
+        
+        ' Check if the engine asset has a corresponding valid code syntax/prefix
+        If Len(assetName) > 0 Then
+            ' Example: All valid code-ready loot assets must start with "LOOT_"
+            If Left(assetName, 5) = "LOOT_" Then
+                isReconciled = True
+            Else
+                isReconciled = False
+            End If
+            
+            ' Edit the table based on the reconciliation result
+            If isReconciled Then
+                ws.Cells(i, 2).Value = "Linked to Code"
+                ws.Cells(i, 2).Interior.Color = vbGreen ' Visual confirmation
+            Else
+                ws.Cells(i, 2).Value = "Orphaned Asset"
+                ws.Cells(i, 2).Interior.Color = vbRed   ' Flag for developer review
+            End If
+        End If
+    Next i
+    
+    MsgBox "Asset-to-code reconciliation complete.", vbInformation, "Reconciliation Status"
+End Sub

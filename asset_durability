@@ -1,0 +1,28 @@
+Sub ReconcileAssetDurability()
+    Dim lastRow As Long
+    Dim i As Long
+    Dim usageDecrement As Integer
+    
+    ' Assuming Column A is Item Name, B is Current Durability, C is "Used Today" (Boolean)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    usageDecrement = 10 ' The amount of durability lost per use
+    
+    ' The For Loop representing reconciliation behavior
+    For i = 2 To lastRow
+        If Cells(i, 3).Value = True Then
+            ' Reduce durability
+            Cells(i, 2).Value = Cells(i, 2).Value - usageDecrement
+            
+            ' Check for "Broken" status
+            If Cells(i, 2).Value <= 0 Then
+                Cells(i, 2).Value = 0
+                Cells(i, 1).Font.Strikethrough = True ' Visual cue for broken asset
+            End If
+            
+            ' Reset usage flag after reconciliation
+            Cells(i, 3).Value = False
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub

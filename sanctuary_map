@@ -1,0 +1,48 @@
+Sub ReconcileSanctuaryMap()
+    ' VBA Script for QA Asset-to-Code Reconciliation
+    ' Target Mechanic: Fable Sanctuary Map
+    
+    Dim mapLocations As Variant
+    Dim i As Integer
+    Dim assetStatus As String
+    Dim codeStatus As String
+    
+    ' Array representing Sanctuary Map Regions
+    mapLocations = Array("Brightwall", "Bowerstone Market", "Mourningwood", "Aurora")
+    
+    Debug.Print "--- Starting Sanctuary Map Reconciliation ---"
+    
+    ' The For Loop: Articulating the map mechanics
+    For i = LBound(mapLocations) To UBound(mapLocations)
+        
+        ' Simulate fetching asset data vs internal code state
+        ' In a real QA scenario, these would reference Spreadsheet Cells or APIs
+        assetStatus = GetAssetVisibility(mapLocations(i)) 
+        codeStatus = GetCodeUnlockedState(mapLocations(i))
+        
+        ' QA Validation Logic
+        If assetStatus <> codeStatus Then
+            Debug.Print "[ALERT] Mismatch at: " & mapLocations(i)
+            Debug.Print "        UI shows: " & assetStatus & " | Code expects: " & codeStatus
+            ' Flagging the cell red for the QA Analyst
+            Cells(i + 2, 1).Interior.Color = RGB(255, 0, 0) 
+        Else
+            Debug.Print "[SUCCESS] " & mapLocations(i) & " is reconciled."
+            Cells(i + 2, 1).Interior.Color = RGB(0, 255, 0)
+        End If
+        
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub
+
+' Mock functions for demonstration
+Function GetAssetVisibility(locName As String) As String
+    ' Simulates checking if the icon is visible on the Sanctuary Map
+    GetAssetVisibility = "Active"
+End Function
+
+Function GetCodeUnlockedState(locName As String) As String
+    ' Simulates checking if the player has actually unlocked the area
+    GetCodeUnlockedState = "Active"
+End Function

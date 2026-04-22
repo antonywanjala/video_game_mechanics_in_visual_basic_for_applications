@@ -1,0 +1,32 @@
+Sub ReconcileChickenChaser()
+    ' Purpose: Asset-to-Code Reconciliation for QA Analysts
+    ' Validates "Chicken" assets against defined Game Logic Constants
+    
+    Dim i As Integer
+    Dim LastRow As Long
+    Dim KickForceConstant As Double
+    Dim AssetFlightDistance As Double
+    
+    ' The "Code" value we are reconciling against
+    KickForceConstant = 15.5
+    
+    ' Find the last chicken asset in the QA Sheet
+    LastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To LastRow
+        AssetFlightDistance = Cells(i, 2).Value ' Column B: Asset Data
+        
+        ' Perform Reconciliation Check
+        If AssetFlightDistance <> KickForceConstant Then
+            ' Highlight discrepancies for the QA Analyst
+            Cells(i, 3).Value = "FAILED RECONCILIATION"
+            Cells(i, 3).Interior.Color = RGB(255, 0, 0)
+        Else
+            ' Reconciliation Successful
+            Cells(i, 3).Value = "Verified: Chicken Chaser Status Active"
+            Cells(i, 3).Interior.Color = RGB(0, 255, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for 'Chicken Chaser' Mechanic.", vbInformation
+End Sub

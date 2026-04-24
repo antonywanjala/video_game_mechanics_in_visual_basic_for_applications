@@ -1,0 +1,51 @@
+Sub ReconcileHeroAlignment()
+    ' Logic: Reconciles Player Action Assets to the Hero's Moral Code
+    
+    Dim moralScore As Long
+    Dim actionAsset As Variant
+    Dim actionList As Variant
+    Dim i As Integer
+    
+    ' Initial Hero State
+    moralScore = 0
+    
+    ' Simulated Assets: An array of actions performed by the player
+    ' "G" = Good Action, "E" = Evil Action, "U" = Unknown (for QA error handling)
+    actionList = Array("G", "G", "E", "G", "U", "E", "G")
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating [The Reward] / Alignment Shift
+    For i = LBound(actionList) To UBound(actionList)
+        actionAsset = actionList(i)
+        
+        ' QA Validation Step: Check if the asset is recognized in the manifest
+        Select Case actionAsset
+            Case "G"
+                moralScore = moralScore + 10
+                Debug.Print "Step " & i & ": Valid Good Action Reconciled (+10)"
+                
+            Case "E"
+                moralScore = moralScore - 10
+                Debug.Print "Step " & i & ": Valid Evil Action Reconciled (-10)"
+                
+            Case Else
+                ' Error handling to help QA identify unmapped or "broken" assets
+                Debug.Print "Critical: Step " & i & " contains an Unrecognized Asset! Skipping..."
+        End Select
+    Next i
+    
+    ' Output the final reconciled state
+    Debug.Print "--- Reconciliation Complete ---"
+    Debug.Print "Final Hero Moral Alignment: " & moralScore
+    
+    ' Morph Logic: The "Reward" or Visual Consequence
+    If moralScore > 20 Then
+        MsgBox "Reconciliation Success: Hero has developed a Halo (Good Alignment)."
+    ElseIf moralScore < -20 Then
+        MsgBox "Reconciliation Success: Hero has grown Horns (Evil Alignment)."
+    Else
+        MsgBox "Reconciliation Success: Hero remains Neutral."
+    End If
+
+End Sub

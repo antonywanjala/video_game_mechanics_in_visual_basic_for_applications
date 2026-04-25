@@ -1,0 +1,29 @@
+Sub ReconcileHiltMorphing()
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim assetID As String
+    Dim codeID As String
+    Dim statusCell As Range
+    
+    ' Assuming Column A is Asset Names, Column B is Morph Indices
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        assetID = Cells(i, 1).Value ' Asset name from the 3D folder
+        codeID = Cells(i, 2).Value  ' Expected ID from the game's source code
+        
+        Set statusCell = Cells(i, 3)
+        
+        ' Reconciliation Logic
+        If assetID <> "" And assetID = "Hilt_Morph_" & codeID Then
+            statusCell.Value = "MATCHED"
+            statusCell.Interior.Color = vbGreen
+        Else
+            statusCell.Value = "MISMATCH - RECONCILE REQD"
+            statusCell.Interior.Color = vbRed
+            ' Flagging for QA Analyst to check the vertex offset mapping
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for Hilt Morphing.", vbInformation
+End Sub

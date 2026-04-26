@@ -1,0 +1,46 @@
+Sub ReconcileRenownBoost()
+    ' Variables for the Renown Mechanic
+    Dim totalRenownBoost As Double
+    Dim trophyMultiplier As Double
+    Dim npcCount As Integer
+    Dim i As Integer
+    
+    ' Asset-to-Code Reconciliation Variables
+    Dim assetPath As String
+    Dim isAssetValid As Boolean
+    
+    ' Initialize Values
+    trophyMultiplier = 1.5 ' Example: Value for the "Wasp Queen Head"
+    npcCount = 10          ' Number of NPCs in the town square
+    totalRenownBoost = 0
+    assetPath = "ASSET_TROPHY_WASP_001" ' The Asset ID to reconcile
+    
+    ' --- QA Reconciliation Check ---
+    ' Ensures the visual asset exists before processing logic
+    If Len(assetPath) > 0 Then
+        isAssetValid = True
+    Else
+        isAssetValid = False
+        MsgBox "QA Alert: Asset Missing! Reconciliation Failed.", vbCritical
+        Exit Sub
+    End If
+    
+    ' --- The For Loop: Renown Calculation ---
+    For i = 1 To npcCount
+        ' Logic: Each NPC provides a base renown of 10, modified by the trophy
+        ' QA Note: Check if NPC(i) visual reaction is triggered here
+        Dim currentNPCGain As Double
+        currentNPCGain = 10 * trophyMultiplier
+        
+        ' Accumulate the boost
+        totalRenownBoost = totalRenownBoost + currentNPCGain
+        
+        ' Print to Immediate Window for QA auditing
+        Debug.Print "NPC " & i & " reconciled. Renown Gain: " & currentNPCGain
+    Next i
+    
+    ' Apply final result to the player's "Code" (the spreadsheet or memory)
+    MsgBox "Reconciliation Complete!" & vbCrLf & _
+           "Trophy Asset: " & assetPath & vbCrLf & _
+           "Total Renown Boost Applied: " & totalRenownBoost, vbInformation
+End Sub

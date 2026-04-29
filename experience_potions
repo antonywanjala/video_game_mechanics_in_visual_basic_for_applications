@@ -1,0 +1,41 @@
+Sub ReconcileExperiencePotions()
+    ' Variables for the Mechanic
+    Dim PotionStack As Integer
+    Dim BaseXP As Long
+    Dim CombatMultiplier As Double
+    Dim TotalXPGained As Long
+    Dim i As Integer
+    
+    ' Simulation Data (Asset Values)
+    PotionStack = 5 ' Number of potions to process
+    BaseXP = 1000   ' The "Asset" value defined in the game data
+    CombatMultiplier = 1.5 ' The current in-game state
+    TotalXPGained = 0
+
+    ' QA RECONCILIATION LOOP
+    ' This loop simulates checking the asset integrity before applying logic
+    For i = 1 To PotionStack
+        
+        ' 1. QA Validation Check: Ensure multiplier is not below 1.0 (Safety Reconciliation)
+        If CombatMultiplier < 1# Then
+            MsgBox "Reconciliation Error: Combat Multiplier cannot be less than 1.0", vbCritical
+            Exit Sub
+        End If
+        
+        ' 2. Calculate behavior: XP = BaseValue * Multiplier
+        ' In Fable, the higher your multiplier, the more value you get from the asset.
+        Dim CalculatedXP As Long
+        CalculatedXP = BaseXP * CombatMultiplier
+        
+        ' 3. Log the Reconciliation for the QA Analyst
+        Debug.Print "Reconciling Potion #" & i & ": Base " & BaseXP & " | Multiplied: " & CalculatedXP
+        
+        ' 4. Commit to the character state
+        TotalXPGained = TotalXPGained + CalculatedXP
+        
+    Next i
+
+    ' Final Output
+    MsgBox "Asset-to-Code Reconciliation Complete." & vbCrLf & _
+           "Total XP Distributed: " & TotalXPGained, vbInformation, "Fable XP System"
+End Sub

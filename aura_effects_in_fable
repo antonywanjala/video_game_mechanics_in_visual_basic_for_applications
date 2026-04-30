@@ -1,0 +1,39 @@
+Sub ReconcileAuraEffects()
+    ' Variables for the QA Reconciliation Process
+    Dim lastRow As Long
+    Dim i As Long
+    Dim alignmentScore As Integer
+    Dim assignedAura As String
+    Dim expectedAura As String
+    
+    ' Identify the range of heroes in the QA Audit Sheet
+    lastRow = Cells(Rows.Count, "A").End(xlUp).Row
+    
+    ' Loop through each hero entry (Assuming Row 1 is Header)
+    For i = 2 To lastRow
+        alignmentScore = Cells(i, 2).Value ' Column B: Alignment Score (-100 to 100)
+        assignedAura = Cells(i, 3).Value    ' Column C: Current Asset Linked
+        
+        ' Logic to determine the expected Aura Asset
+        If alignmentScore >= 80 Then
+            expectedAura = "vfx_halo_lvl3"
+        ElseStepIf alignmentScore <= -80 Then
+            expectedAura = "vfx_horns_lvl3"
+        Else
+            expectedAura = "vfx_neutral_none"
+        End If
+        
+        ' RECONCILIATION: Compare Asset to Code/Data
+        If assignedAura <> expectedAura Then
+            ' Flag for QA Analyst: Highlighting mismatch in Red
+            Cells(i, 3).Interior.Color = RGB(255, 0, 0)
+            Cells(i, 4).Value = "MISMATCH: Expected " & expectedAura
+        Else
+            ' Reconciled successfully
+            Cells(i, 3).Interior.Color = RGB(0, 255, 0)
+            Cells(i, 4).Value = "Reconciled"
+        End If
+    Next i
+
+    MsgBox "Aura Reconciliation Complete. Please review Red flags.", vbInformation, "QA Audit Tool"
+End Sub

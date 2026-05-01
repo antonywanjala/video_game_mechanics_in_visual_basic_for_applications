@@ -1,0 +1,51 @@
+Sub ReconcileBladeMaterials()
+    ' Variables for the Asset-to-Code Reconciliation
+    Dim weaponList As Variant
+    Dim i As Long
+    Dim materialType As String
+    Dim currentDamage As Double
+    Dim expectedDamage As Double
+    Dim reconciliationStatus As String
+    
+    ' Representing the Asset Data (Name, Material, Current Code Value)
+    ' In a real scenario, this would be pulled from a GameData.json or SQL export
+    weaponList = Array( _
+        Array("Rusty Cutlass", "Iron", 15), _
+        Array("Hero's Blade", "Steel", 25), _
+        Array("Will-Forged Longsword", "Masterwork", 55), _
+        Array("Worn Cleaver", "Iron", 12) _
+    )
+
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION ---"
+
+    ' The For Loop: Articulating Blade Material Behavior
+    For i = LBound(weaponList) To UBound(weaponList)
+        materialType = weaponList(i)(1)
+        currentDamage = weaponList(i)(2)
+        
+        ' Determine Expected Damage based on Blade Material Mechanic
+        Select Case materialType
+            Case "Iron"
+                expectedDamage = 15.0
+            Case "Steel"
+                expectedDamage = 25.0
+            Case "Masterwork"
+                expectedDamage = 50.0
+            Case Else
+                expectedDamage = 0
+        End Select
+        
+        ' The Reconciliation Check
+        If currentDamage = expectedDamage Then
+            reconciliationStatus = "PASS"
+        Else
+            ' Higher likelihood of QA catching errors via explicit flagging
+            reconciliationStatus = "FAIL: Damage mismatch for " & materialType
+        End If
+        
+        ' Output results to the Immediate Window (Simulating Repository Logging)
+        Debug.Print "Asset: " & weaponList(i)(0) & " | Status: " & reconciliationStatus
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+End Sub

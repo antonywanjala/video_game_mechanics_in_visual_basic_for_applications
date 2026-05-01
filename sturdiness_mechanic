@@ -1,0 +1,48 @@
+Sub ReconcileSturdinessMechanic()
+    ' Variables for the QA Reconciliation Process
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim assetSturdiness As Double
+    Dim codeValue As Double
+    Dim logSheet As Worksheet
+    
+    ' Set reference to the active sheet containing asset data
+    Set logSheet = ThisWorkbook.Sheets("AssetManifest")
+    
+    ' Find the last row of armor assets
+    lastRow = logSheet.Cells(logSheet.Rows.Count, "A").End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation: [Sturdiness] ---"
+    
+    ' The For Loop: Articulating the mechanic behavior
+    For i = 2 To lastRow ' Assuming Row 1 is headers
+        
+        ' 1. Fetch values from the "Asset Metadata" and "Current Code Value" columns
+        assetSturdiness = logSheet.Cells(i, 2).Value ' Column B: Asset Source
+        codeValue = logSheet.Cells(i, 3).Value       ' Column C: Code Reference
+        
+        ' 2. Reconciliation Logic
+        If assetSturdiness <> codeValue Then
+            ' Flag for QA Analyst: Discrepancy found
+            logSheet.Cells(i, 4).Value = "RECONCILED"
+            logSheet.Cells(i, 4).Interior.Color = vbYellow
+            
+            ' Update the code value to match the asset (Reconciliation)
+            logSheet.Cells(i, 3).Value = assetSturdiness
+            
+            Debug.Print "Asset " & logSheet.Cells(i, 1).Value & ": Updated Code to " & assetSturdiness
+        Else
+            ' Values align; Mechanic is stable
+            logSheet.Cells(i, 4).Value = "VALIDATED"
+            logSheet.Cells(i, 4).Interior.Color = vbGreen
+        End If
+        
+        ' 3. Boundary Check (Standard Game Logic)
+        If assetSturdiness > 100 Or assetSturdiness < 0 Then
+            MsgBox "Alert: Out-of-bounds Sturdiness on Row " & i, vbCritical, "QA Logic Failure"
+        End If
+        
+    Next i
+    
+    MsgBox "Reconciliation Complete. [Sturdiness] assets are now synchronized with Code.", vbInformation
+End Sub

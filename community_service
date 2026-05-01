@@ -1,0 +1,46 @@
+Sub AssetToCodeReconciliation_CommunityService()
+    ' Variables for the Mechanic
+    Dim i As Integer
+    Dim PlayerBounty As Double
+    Dim ServiceRequired As Integer
+    Dim RenownGain As Integer
+    Dim AssetDisplayValue As Double
+    
+    ' Initial States
+    PlayerBounty = 500.0 ' The "Code" value
+    ServiceRequired = 10 ' Total iterations of community service
+    RenownGain = 5
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The Loop: Representing the Mechanic Behavior
+    For i = 1 To ServiceRequired
+        
+        ' 1. The Mechanic Logic
+        PlayerBounty = PlayerBounty - 50
+        
+        ' 2. QA Reconciliation Step
+        ' Simulating fetching the value currently shown by the UI/Asset
+        AssetDisplayValue = PlayerBounty 
+        
+        ' 3. The Validation (Ensuring Code and Asset are in sync)
+        If PlayerBounty <> AssetDisplayValue Then
+            Debug.Print "RECONCILIATION ERROR at Step " & i & ": Asset does not match Code!"
+            ' In a real scenario, the QA Analyst would flag this bug here.
+            Exit Sub
+        Else
+            Debug.Print "Step " & i & ": Reconciliation Successful. Bounty at " & PlayerBounty
+        End If
+        
+        ' 4. Secondary Mechanic Effect
+        ' Fable-style Renown increase for doing "Good" deeds
+        Call IncreaseRenown(RenownGain)
+        
+    Next i
+    
+    Debug.Print "--- Community Service Complete: Bounty Cleared ---"
+End Sub
+
+Sub IncreaseRenown(amount As Integer)
+    ' Placeholder for Renown Logic
+End Sub

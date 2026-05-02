@@ -1,0 +1,47 @@
+Sub ReconcileFableMorphing()
+    ' Variables for the Hero's Alignment Scale (-100 to 100)
+    Dim alignmentScore As Integer
+    Dim assetPath As String
+    Dim lastRow As Long
+    
+    ' Assuming column A is Alignment Score and Column B is the Asset Status
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        alignmentScore = Cells(i, 1).Value
+        
+        ' --- Asset-to-Code Logic ---
+        Select Case alignmentScore
+            Case Is >= 80
+                assetPath = "ASSET_HERO_EXTREME_GOOD_HALO.fbx"
+            Case 1 To 79
+                assetPath = "ASSET_HERO_LIGHT_BRIGHT.fbx"
+            Case 0
+                assetPath = "ASSET_HERO_NEUTRAL.fbx"
+            Case -79 To -1
+                assetPath = "ASSET_HERO_SHADOW_VEINS.fbx"
+            Case Is <= -80
+                assetPath = "ASSET_HERO_EXTREME_EVIL_HORNS.fbx"
+        End Select
+        
+        ' --- QA Reconciliation Logic ---
+        ' Checks if the mapped asset actually exists in the build directory
+        If CheckAssetExists(assetPath) Then
+            Cells(i, 2).Value = "Verified: " & assetPath
+            Cells(i, 2).Interior.Color = vbGreen
+        Else
+            Cells(i, 2).Value = "MISSING ASSET: " & assetPath
+            Cells(i, 2).Interior.Color = vbRed
+            ' Alerts the QA Analyst to a reconciliation failure
+            Debug.Print "Reconciliation Error at Row " & i & ": " & assetPath & " not found."
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation
+End Sub
+
+Function CheckAssetExists(path As String) As Boolean
+    ' Simulating a file system check for the QA Analyst
+    ' In a live environment, this would use Dir() or FileSystemObject
+    If path <> "" Then CheckAssetExists = True Else CheckAssetExists = False
+End Function

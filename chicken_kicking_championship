@@ -1,0 +1,48 @@
+Sub ReconcileChickenKicking()
+    ' Variables for the Championship
+    Dim i As Integer
+    Dim kickPower As Double
+    Dim flightDistance As Double
+    Dim expectedScore As Long
+    Dim totalScore As Long
+    Dim lastRow As Long
+    
+    ' Define constants for reconciliation (The "Physics" Engine)
+    Const GRAVITY_ADJUSTER As Double = 9.81
+    Const MULTIPLIER As Double = 1.5
+    
+    ' Find the last row of data in the QA Log
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' --- THE FOR LOOP ---
+    ' Iterates through each "Kick Asset" to reconcile with Code Logic
+    For i = 2 To lastRow
+        ' 1. Fetch Asset Data (Kick Power from Column A)
+        kickPower = Cells(i, 1).Value
+        
+        ' 2. Execute Game Logic (The "Code" side of the mechanic)
+        ' Distance = (Power * Multiplier) / Gravity simulation
+        flightDistance = (kickPower * MULTIPLIER) / (GRAVITY_ADJUSTER * 0.1)
+        
+        ' 3. Reconcile Score
+        ' In Fable, the further the flight, the higher the points
+        expectedScore = Round(flightDistance * 10, 0)
+        
+        ' 4. Output Reconciliation Results
+        Cells(i, 2).Value = flightDistance ' Calculated Flight
+        Cells(i, 3).Value = expectedScore  ' Calculated Score
+        
+        ' 5. QA Validation Check
+        If Cells(i, 4).Value <> expectedScore Then
+            Cells(i, 5).Value = "FAIL: Asset/Code Mismatch"
+            Cells(i, 5).Font.Color = vbRed
+        Else
+            Cells(i, 5).Value = "PASS"
+            Cells(i, 5).Font.Color = vbGreen
+        End If
+        
+        totalScore = totalScore + expectedScore
+    Next i
+    
+    MsgBox "Reconciliation Complete. Total Championship Score: " & totalScore
+End Sub

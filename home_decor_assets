@@ -1,0 +1,37 @@
+Sub ReconcileHomeDecorAssets()
+    ' Variables for the Reconciliation Loop
+    Dim i As Integer
+    Dim lastRow As Long
+    Dim assetID As String
+    Dim isValidated As Boolean
+    
+    ' Target the sheet containing the Home Decor Manifest
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("DecorManifest")
+    
+    ' Find the last row of decor assets
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop: Articulating the Home Decor Logic
+    For i = 2 To lastRow
+        assetID = ws.Cells(i, 1).Value ' Column A: Asset Name (e.g., "Oak_Table_01")
+        isValidated = ws.Cells(i, 2).Value ' Column B: Found in Build (Boolean)
+        
+        ' QA Analyst Validation Logic
+        If isValidated = True Then
+            ' Logic: If asset exists, apply the Fable "Renown" bonus to the house
+            Debug.Print "Success: " & assetID & " reconciled. Applying stat modifiers."
+            ws.Cells(i, 3).Value = "RECONCILED"
+            ws.Cells(i, 3).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Logic: If asset is missing from code, flag for the Art Dept
+            Debug.Print "CRITICAL ERROR: " & assetID & " not found in game files!"
+            ws.Cells(i, 3).Value = "MISSING ASSET"
+            ws.Cells(i, 3).Interior.Color = RGB(255, 99, 71) ' Tomato Red
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Debug Output for discrepancies.", vbInformation
+End Sub

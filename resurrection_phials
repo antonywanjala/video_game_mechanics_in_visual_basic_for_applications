@@ -1,0 +1,37 @@
+Sub ReconcileResurrectionPhials()
+    ' Variables for the QA Simulation
+    Dim inventoryCount As Integer
+    Dim playerHealth As Double
+    Dim i As Integer
+    Dim reconciliationLog As String
+    
+    ' Initial Asset State (Mock data from a game export)
+    inventoryCount = 3
+    playerHealth = 0 ' Player has fallen in battle
+    
+    ' The Loop: Reconciling the asset use against the game state
+    For i = inventoryCount To 1 Step -1
+        If playerHealth <= 0 Then
+            ' Process the mechanic
+            inventoryCount = inventoryCount - 1
+            playerHealth = 100 ' Health restored to Max
+            
+            ' QA Reconciliation Logging
+            reconciliationLog = "Trigger Hit: Phial Consumed. " & _
+                               "Remaining Assets: " & inventoryCount & _
+                               " | Player Health: " & playerHealth
+            Debug.Print reconciliationLog
+        Else
+            ' Logic for when the player is still alive
+            Debug.Print "Reconciliation Verified: Player alive, Phial " & i & " remains in asset stack."
+            Exit For
+        End If
+    Next i
+
+    ' Final check for the QA Analyst
+    If inventoryCount < 0 Then
+        MsgBox "Error: Asset-to-Code Mismatch. Phials used exceed inventory!", vbCritical
+    Else
+        MsgBox "Reconciliation Complete. Final Phial Count: " & inventoryCount
+    End If
+End Sub

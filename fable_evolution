@@ -1,0 +1,31 @@
+Sub ReconcileFableEvolution()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("EvolutionRegistry")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim statValue As Integer
+    Dim assetPath As String
+    
+    ' Loop through the Evolution Hooks (Strength, Will, Skill, Alignment)
+    For i = 2 To lastRow
+        statValue = ws.Cells(i, 2).Value ' The "Code" value (e.g., Strength 50)
+        assetPath = ws.Cells(i, 3).Value ' The "Asset" link (e.g., /meshes/buff_hero.fbx)
+        
+        ' QA Reconciliation Logic: Verify data integrity
+        If statValue > 0 And assetPath <> "" Then
+            ' Simulate successful reconciliation
+            ws.Cells(i, 4).Value = "Verified"
+            ws.Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Green
+        Else
+            ' Highlight mismatch for the QA Analyst
+            ws.Cells(i, 4).Value = "RECONCILIATION FAILURE"
+            ws.Cells(i, 4).Interior.Color = RGB(255, 102, 102) ' Red
+            MsgBox "Asset Mismatch detected at Row " & i & ": Missing link for Evolution Hook.", vbCritical
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete.", vbInformation
+End Sub

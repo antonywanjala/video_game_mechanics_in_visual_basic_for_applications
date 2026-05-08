@@ -1,0 +1,44 @@
+Sub ReconcileChestMechanics()
+    ' Define variables for the QA Reconciliation process
+    Dim chestRequirements As Variant
+    Dim playerKeyCount As Integer
+    Dim i As Integer
+    Dim chestName As String
+    Dim reqKeys As Integer
+    
+    ' Simulated Asset Data: {Chest Name, Required Keys}
+    ' This represents the "Asset" side of reconciliation
+    chestRequirements = Array("Guild of Heroes Chest", 5, "Greatwood Chest", 10, "Hobbe Cave Chest", 15)
+    
+    ' Current Player State
+    playerKeyCount = 12
+    
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION ---"
+    
+    ' The For Loop: Articulating the Unlocking Mechanic
+    ' Step 2 because the array stores Name and Value pairs
+    For i = LBound(chestRequirements) To UBound(chestRequirements) Step 2
+        
+        chestName = chestRequirements(i)
+        reqKeys = chestRequirements(i + 1)
+        
+        ' QA Reconciliation Logic: Check if the asset data is valid
+        If reqKeys < 0 Then
+            Debug.Print "RECONCILIATION ERROR: Chest '" & chestName & "' has a negative key requirement."
+        Else
+            ' The Game Mechanic Logic
+            If playerKeyCount >= reqKeys Then
+                ' Logic for Unlocking
+                Debug.Print "[SUCCESS] " & chestName & ": Unlocked. " & _
+                            "(Player: " & playerKeyCount & " / Req: " & reqKeys & ")"
+            Else
+                ' Logic for Locked State
+                Debug.Print "[LOCKED] " & chestName & ": Insufficient Keys. " & _
+                            "(Player: " & playerKeyCount & " / Req: " & reqKeys & ")"
+            End If
+        End If
+        
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+End Sub

@@ -1,0 +1,46 @@
+Sub ReconcileElixirAssets()
+    ' Purpose: Perform Asset-to-Code Reconciliation for Elixirs
+    ' Role: QA Analyst Validation Script
+    
+    Dim i As Integer
+    Dim lastRow As Integer
+    Dim assetPath As String
+    Dim elixirValue As Double
+    Dim isAssetValid As Boolean
+    
+    ' Assuming data is in Sheet1: Column A (Name), Column B (AssetPath), Column C (EffectValue)
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    For i = 2 To lastRow
+        assetPath = Cells(i, 2).Value
+        elixirValue = Cells(i, 3).Value
+        
+        ' Simulate Asset Check (Reconciliation)
+        ' In a real scenario, this would check a file directory or GUID
+        If assetPath <> "" And InStr(1, assetPath, "models/items/") > 0 Then
+            isAssetValid = True
+        Else
+            isAssetValid = False
+        End If
+        
+        ' The Reconciliation Loop
+        If isAssetValid Then
+            If elixirValue > 0 Then
+                ' Logic: Asset matches Code requirements
+                Debug.Print "Reconciled: " & Cells(i, 1).Value & " - Status: READY"
+                Cells(i, 4).Value = "Verified"
+                Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Green for QA Pass
+            Else
+                Debug.Print "Error: " & Cells(i, 1).Value & " has no stat value."
+                Cells(i, 4).Value = "Data Missing"
+                Cells(i, 4).Interior.Color = RGB(255, 204, 203) ' Red for QA Fail
+            End If
+        Else
+            Debug.Print "Reconciliation Failed: Asset path invalid for " & Cells(i, 1).Value
+            Cells(i, 4).Value = "Asset Broken"
+            Cells(i, 4).Interior.Color = RGB(255, 0, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete for " & (lastRow - 1) & " items.", vbInformation
+End Sub

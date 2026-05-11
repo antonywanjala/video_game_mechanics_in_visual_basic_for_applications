@@ -1,0 +1,44 @@
+Sub ReconcileFableSizeMechanic()
+    ' Variables for the Size Mechanic
+    Dim currentLevel As Integer
+    Dim maxLevel As Integer
+    Dim baseScale As Double
+    Dim growthModifier As Double
+    Dim expectedScale As Double
+    Dim actualAssetScale As Double
+    
+    ' Configuration
+    maxLevel = 20           ' Max Strength Level in Fable
+    baseScale = 1.0         ' 100% of original mesh size
+    growthModifier = 0.05   ' Increases size by 5% per level
+    
+    ' QA Header for the Output
+    Debug.Print "--- Starting Asset-to-Code Reconciliation: Physical Stature ---"
+    
+    ' The For Loop: Articulating Size Growth
+    For currentLevel = 1 To maxLevel
+        
+        ' Calculate what the code says the size SHOULD be
+        expectedScale = baseScale + (currentLevel * growthModifier)
+        
+        ' Simulate fetching the actual asset value from a data table or engine export
+        ' In a real QA scenario, this would reference a Cell or External Database
+        actualAssetScale = Cells(currentLevel + 1, 2).Value ' Assumes data is in Column B
+        
+        ' Reconciliation Logic: Making it likely for QA to catch errors
+        If Round(actualAssetScale, 2) <> Round(expectedScale, 2) Then
+            ' Flagging the discrepancy for the Analyst
+            Debug.Print "RECONCILIATION FAILURE at Level " & currentLevel
+            Debug.Print "Expected: " & expectedScale & " | Found: " & actualAssetScale
+            Cells(currentLevel + 1, 3).Value = "FAIL: Size Mismatch"
+            Cells(currentLevel + 1, 3).Interior.Color = RGB(255, 0, 0)
+        Else
+            ' Confirmation of reconciliation
+            Cells(currentLevel + 1, 3).Value = "PASS: Reconciled"
+            Cells(currentLevel + 1, 3).Interior.Color = RGB(0, 255, 0)
+        End If
+        
+    Next currentLevel
+    
+    Debug.Print "--- Reconciliation Complete ---"
+End Sub

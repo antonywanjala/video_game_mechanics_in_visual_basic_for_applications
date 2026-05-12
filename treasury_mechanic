@@ -1,0 +1,49 @@
+Sub ReconcileTreasuryMechanic()
+    ' Variables for the Treasury vs Promise Logic
+    Dim i As Integer
+    Dim treasuryBalance As Long
+    Dim promiseStatus As String ' "Kept" or "Broken"
+    Dim alignmentScore As Integer
+    Dim assetUIValue As Integer
+    Dim lastRow As Integer
+    
+    ' Assume data is in Sheet1, with columns:
+    ' A: PromiseID, B: TreasuryImpact, C: UI_Alignment_Asset, D: Backend_Alignment_Code
+    
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Debug.Print "--- Starting Asset-to-Code Reconciliation ---"
+    
+    ' The For Loop articulating the mechanic behavior
+    For i = 2 To lastRow
+        treasuryBalance = Cells(i, 2).Value
+        assetUIValue = Cells(i, 3).Value ' What the player sees
+        alignmentScore = Cells(i, 4).Value ' What the code calculates
+        
+        ' Logic: Keeping promises (Good) drains gold. 
+        ' Breaking promises (Evil) saves gold for the war.
+        
+        If assetUIValue <> alignmentScore Then
+            ' QA ALERT: Reconciliation Failure
+            Cells(i, 5).Value = "RECONCILIATION ERROR"
+            Cells(i, 5).Interior.Color = RGB(255, 0, 0)
+            Debug.Print "Mismatch found at ID: " & Cells(i, 1).Value & _
+                        " | Asset: " & assetUIValue & " vs Code: " & alignmentScore
+        Else
+            ' Reconciliation Success
+            Cells(i, 5).Value = "Synced"
+            Cells(i, 5).Interior.Color = RGB(0, 255, 0)
+        End If
+        
+        ' Logic check for the "Promise" mechanic
+        If treasuryBalance < 0 And alignmentScore > 0 Then
+            ' The "Good" King: Kept promises, empty pockets.
+            promiseStatus = "The People are Happy, The Kingdom is Broke."
+        ElseIf treasuryBalance > 1000000 And alignmentScore < 0 Then
+            ' The "Evil" Tyrant: Broken promises, full pockets.
+            promiseStatus = "The Kingdom is Safe, The People Hate You."
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Check Column E for discrepancies.", vbInformation
+End Sub

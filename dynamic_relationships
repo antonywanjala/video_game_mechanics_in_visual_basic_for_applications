@@ -1,0 +1,40 @@
+Sub ReconcileDynamicRelationships()
+    ' Variables for Asset-to-Code Reconciliation
+    Dim i As Long
+    Dim lastRow As Long
+    Dim playerMorality As Double
+    Dim npcSusceptibility As Double
+    Dim expectedValue As Double
+    Dim actualValue As Double
+    
+    ' Assume Player Morality is stored in a named cell or constant
+    ' Range of -100 (Evil) to 100 (Good)
+    playerMorality = Range("B1").Value 
+    
+    ' Find the last NPC entry in the Asset Sheet
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ' Start the loop for reconciliation
+    For i = 2 To lastRow
+        ' Load Asset Data
+        npcSusceptibility = Cells(i, 2).Value ' Column B: How much they care
+        expectedValue = Cells(i, 3).Value    ' Column C: What the asset says the reaction is
+        
+        ' Simulate Game Code Logic
+        ' Formula: Reaction = Morality * Susceptibility
+        actualValue = playerMorality * npcSusceptibility
+        
+        ' RECONCILIATION CHECK
+        If actualValue <> expectedValue Then
+            ' Flag for QA: Highlight row Red if code logic deviates from asset entry
+            Rows(i).Interior.Color = RGB(255, 200, 200)
+            Cells(i, 4).Value = "MISMATCH: Code calculates " & actualValue
+        Else
+            ' Reconciliation Successful
+            Rows(i).Interior.Color = RGB(200, 255, 200)
+            Cells(i, 4).Value = "Verified"
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete.", vbInformation, "QA Tools"
+End Sub

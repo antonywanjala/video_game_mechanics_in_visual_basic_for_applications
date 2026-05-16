@@ -1,0 +1,64 @@
+Sub Reconcile_ArcaneEffects_Assets()
+    ' Purpose: Reconcile "Arcane Tattoos & Glowing Hands" asset states with code logic.
+    ' Tailored for QA Analysts to flag missing or misconfigured visual assets.
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AssetManifest")
+    
+    Dim maxLevel As Integer
+    Dim expectedGlow As Integer
+    Dim actualGlow As Integer
+    Dim assetRow As Long
+    Dim lastRow As Long
+    
+    maxLevel = 5 ' Maximum Will/Magic Level in-game
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    MsgBox "Starting Asset-to-Code Reconciliation for Arcane Effects...", vbInformation, "QA Audit Start"
+    
+    ' Loop through each magical progression tier
+    Dim currentLevel As Integer
+    For currentLevel = 1 To maxLevel
+        
+        ' 1. Calculate what the code expects (Formula: Level * 25% opacity/intensity)
+        expectedGlow = currentLevel * 25
+        
+        ' 2. Find the corresponding asset row in the QA Manifest sheet
+        assetRow = 0
+        Dim i As Long
+        For i = 2 To lastRow
+            If ws.Cells(i, 1).Value = "FX_GlowingHands_Level_" & currentLevel Then
+                assetRow = i
+                Exit For
+            End If
+        Next i
+        
+        ' 3. Reconcile data
+        If assetRow = 0 Then
+            ' QA Flag: Asset is completely missing from the build directory
+            Debug.Print "CRITICAL ERROR: Asset 'FX_GlowingHands_Level_" & currentLevel & "' is MISSING in repository!"
+            ws.Cells(lastRow + 1, 1).Value = "FX_GlowingHands_Level_" & currentLevel
+            ws.Cells(lastRow + 1, 2).Value = "MISSING"
+            ws.Cells(lastRow + 1, 2).Interior.Color = RGB(255, 0, 0) ' Red Highlight
+            lastRow = lastRow + 1
+        Else
+            ' Grab actual value from the spreadsheet/manifest
+            actualGlow = ws.Cells(assetRow, 2).Value
+            
+            ' Verify if code and asset values match
+            If expectedGlow <> actualGlow Then
+                ' QA Flag: Mismatch found between design/code values and actual asset configuration
+                ws.Cells(assetRow, 3).Value = "MISMATCH! Expected: " & expectedGlow & " got: " & actualGlow
+                ws.Cells(assetRow, 3).Interior.Color = RGB(255, 192, 0) ' Orange Highlight
+                Debug.Print "QA MISMATCH: Level " & currentLevel & " - Expected " & expectedGlow & ", found " & actualGlow
+            Else
+                ' Pass condition
+                ws.Cells(assetRow, 3).Value = "Verified & Reconciled"
+                ws.Cells(assetRow, 3).Interior.Color = RGB(0, 255, 0) ' Green Highlight
+            End If
+        End If
+        
+    Next currentLevel
+    
+    MsgBox "Reconciliation Audit Complete. Check highlighted rows.", vbInformation, "QA Audit Success"
+End Sub

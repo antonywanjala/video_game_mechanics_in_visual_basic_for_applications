@@ -1,0 +1,70 @@
+Sub ReconcileHeroSaveGlitch()
+    ' =========================================================================
+    ' QA ANALYST TOOL: Asset-to-Code Reconciliation Simulator
+    ' Detects inventory duplication via Quest-Reset Exploits ("Hero Save")
+    ' =========================================================================
+    
+    Dim questAttempts As Integer
+    Dim maxQuestAttempts As Integer
+    
+    ' Simulated Character State
+    Dim playerExperience As Long
+    Dim silverKeyInventoryCount As Integer
+    
+    ' Simulated World State (Asset Tracker)
+    Dim silverKeyWorldCount As Integer
+    Dim maxAllowedKeysInWorld As Integer
+    
+    ' Initialization
+    playerExperience = 0
+    silverKeyInventoryCount = 0
+    maxQuestAttempts = 5 ' Simulating the player repeating the exploit 5 times
+    
+    ' QA Reference Rule: There should only ever be 1 specific key available in this quest zone
+    maxAllowedKeysInWorld = 1
+    
+    Debug.Print "=== STARTING ASSET RECONCILIATION TEST ==="
+    Debug.Print "Initial State -> Inventory Keys: " & silverKeyInventoryCount & " | XP: " & playerExperience
+    Debug.Print "--------------------------------------------------------"
+
+    ' Loop simulating successive Hero Saves / Quest Resets
+    For questAttempts = 1 To maxQuestAttempts
+        
+        ' 1. World Asset Initialization (The bug: World resets, respawning the asset)
+        silverKeyWorldCount = maxAllowedKeysInWorld
+        
+        ' 2. Player Action (Player plays the quest, gains XP, and loots the key)
+        playerExperience = playerExperience + 500
+        If silverKeyWorldCount > 0 Then
+            silverKeyInventoryCount = silverKeyInventoryCount + 1
+            silverKeyWorldCount = silverKeyWorldCount - 1
+        End If
+        
+        ' 3. The "Hero Save" Trigger
+        ' The game writes character data to permanent storage, but discards world data.
+        Debug.Print "Quest Attempt #" & questAttempts & " -> Player triggered 'Hero Save' and restarted."
+        
+        ' 4. QA RECONCILIATION CHECK
+        ' A robust QA reconciliation script calculates: (Current Inventory + Respawining World Assets)
+        ' If it exceeds the hard limit coded into the game design, flag it instantly.
+        If (silverKeyInventoryCount + maxAllowedKeysInWorld) > maxAllowedKeysInWorld Then
+            Debug.Print "   [QA ALERT] ASSET-TO-CODE MISMATCH DETECTED!"
+            Debug.Print "   Reason: Total potential assets (" & (silverKeyInventoryCount + maxAllowedKeysInWorld) & ") " & _
+                        "exceeds Max Allowed Unique Assets (" & maxAllowedKeysInWorld & ")."
+            Debug.Print "   Current Inventory: " & silverKeyInventoryCount & " | XP Preserved: " & playerExperience
+            Debug.Print "--------------------------------------------------------"
+        End If
+        
+    Next questAttempts
+    
+    ' Final Audit Report
+    Debug.Print "=== RECONCILIATION REPORT SUMMARY ==="
+    Debug.Print "Expected Max Unique Keys: " & maxAllowedKeysInWorld
+    Debug.Print "Actual Player Inventory Keys: " & silverKeyInventoryCount
+    If silverKeyInventoryCount > maxAllowedKeysInWorld Then
+        Debug.Print "CRITICAL VERDICT: CRITICAL FAIL - 'Hero Save' Exploit is Active."
+    Else
+        Debug.Print "CRITICAL VERDICT: PASS - Asset state is secure."
+    End If
+    Debug.Print "========================================================"
+End Sub

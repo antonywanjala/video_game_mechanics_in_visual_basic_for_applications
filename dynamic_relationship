@@ -1,0 +1,56 @@
+Sub ReconcileDynamicRelationships()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("NPC_Reconciliation")
+    
+    ' Mocking Hero State (In a full tool, these could be pulled from cell inputs)
+    Dim heroRenown As Integer
+    Dim heroAlignment As String
+    heroRenown = 100
+    heroAlignment = "Good" ' Options: "Good", "Evil"
+    
+    ' Find the last row of data in the asset sheet
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Iterators for reconciliation
+    Dim i As Long
+    Dim npcName As String
+    Dim renownThreshold As Integer
+    Dim assetExpectedReaction As String
+    Dim codeCalculatedReaction As String
+    
+    ' Loop through every NPC asset row to perform reconciliation
+    For i = 2 To lastRow ' Assuming Row 1 contains Headers
+        
+        ' Extract Asset Data
+        npcName = ws.Cells(i, 1).Value
+        renownThreshold = CInt(ws.Cells(i, 2).Value)
+        assetExpectedReaction = ws.Cells(i, 3).Value
+        
+        ' --- RUN GAME LOGIC RULES ---
+        If heroRenown >= renownThreshold Then
+            If heroAlignment = "Good" Then
+                codeCalculatedReaction = "Cheer"
+            Else
+                codeCalculatedReaction = "Cower"
+            End If
+        Else
+            codeCalculatedReaction = "Ignore"
+        End If
+        ' -----------------------------
+        
+        ' --- ASSET-TO-CODE RECONCILIATION ---
+        If codeCalculatedReaction = assetExpectedReaction Then
+            ' Match found: Code logic validates the asset layout
+            ws.Cells(i, 4).Value = "MATCH: " & codeCalculatedReaction
+            ws.Cells(i, 4).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            ' Mismatch found: Highlights human error in design assets or a bug in the code
+            ws.Cells(i, 4).Value = "MISMATCH! Code says: " & codeCalculatedReaction
+            ws.Cells(i, 4).Interior.Color = RGB(255, 182, 193) ' Light Red
+        End If
+        
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation, "QA Audit Tool"
+End Sub

@@ -1,0 +1,71 @@
+Sub ReconcileToughnessChestHair()
+    ' =========================================================================
+    ' QA Asset-to-Code Reconciliation Script
+    ' Mechanic: Dynamic "Toughness" Chest Hair (Fable-inspired)
+    ' Objective: Verify that character models with Toughness >= 5 have the 
+    '            Chest Hair asset flag enabled.
+    ' =========================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Variables for the Asset-to-Code states
+    Dim i As Long
+    Dim characterID As String
+    Dim toughnessStat As Integer
+    Dim hasChestHairAsset As Boolean
+    Dim reconciliationStatus As String
+    
+    ' QA Logging counters
+    Dim totalReconciled As Long
+    Dim totalErrorsFound As Long
+    totalReconciled = 0
+    totalErrorsFound = 0
+    
+    MsgBox "Starting QA Asset-to-Code Reconciliation for [Toughness Chest Hair]...", vbInformation, "QA Tools"
+    
+    ' The For Loop: Iterating through the asset registry table
+    ' Column A: Character/Model ID
+    ' Column B: Toughness Level (Integer)
+    ' Column C: Chest Hair Asset Assigned (Boolean: TRUE/FALSE)
+    ' Column D: Reconciliation Output (To be written by QA script)
+    
+    For i = 2 To lastRow
+        characterID = ws.Cells(i, 1).Value
+        toughnessStat = ws.Cells(i, 2).Value
+        hasChestHairAsset = ws.Cells(i, 3).Value
+        
+        ' --- RECONCILIATION LOGIC ---
+        ' If Toughness is 5 or higher, the engine code demands the chest hair asset.
+        If toughnessStat >= 5 Then
+            If hasChestHairAsset = True Then
+                reconciliationStatus = "MATCH - Asset & Code Aligned"
+            Else
+                reconciliationStatus = "MISMATCH - Error: Missing Chest Hair Texture!"
+                totalErrorsFound = totalErrorsFound + 1
+            End If
+        Else
+            ' If toughness is below 5, they shouldn't have the asset assigned yet
+            If hasChestHairAsset = False Then
+                reconciliationStatus = "MATCH - Asset & Code Aligned"
+            Else
+                reconciliationStatus = "MISMATCH - Error: Unexpected Chest Hair Texture for low stat!"
+                totalErrorsFound = totalErrorsFound + 1
+            End If
+        End If
+        
+        ' Write the reconciliation results back to the QA sheet
+        ws.Cells(i, 4).Value = reconciliationStatus
+        totalReconciled = totalReconciled + 1
+    Next i
+    
+    ' --- FINAL REPORT ---
+    MsgBox "Reconciliation Complete!" & vbCrLf & _
+           "Total Rows Checked: " & totalReconciled & vbCrLf & _
+           "Discrepancies Found: " & totalErrorsFound, _
+           IIf(totalErrorsFound > 0, vbCritical, vbInformation), "QA Audit Report"
+
+End Sub

@@ -1,0 +1,60 @@
+Sub ReconcileCombatFinishers()
+    ' --- ASSET PARAMETERS (Typically pulled from a design sheet) ---
+    Dim FinisherThreshold As Double
+    Dim FinisherChance As Integer
+    
+    FinisherThreshold = 0.30 ' 30% Health or lower allows a finisher
+    FinisherChance = 50      ' 50% chance to trigger when eligible
+    
+    ' --- MOCK DATA FOR ACTIVE ENEMIES ---
+    ' Using arrays to simulate 5 enemies: (CurrentHealth, MaxHealth)
+    Dim EnemyHealth(1 To 5) As Double
+    Dim EnemyMaxHealth(1 To 5) As Double
+    Dim i As Integer
+    Dim HealthPercentage As Double
+    Dim RandomRoll As Integer
+    
+    ' Populating mock enemy data for the QA simulation
+    EnemyHealth(1) = 25:    EnemyMaxHealth(1) = 100  ' Eligible (25%)
+    EnemyHealth(2) = 80:    EnemyMaxHealth(2) = 100  ' Ineligible (80%)
+    EnemyHealth(3) = 5:     EnemyMaxHealth(3) = 50   ' Eligible (10%)
+    EnemyHealth(4) = 150:   EnemyMaxHealth(4) = 150  ' Ineligible (100%)
+    EnemyHealth(5) = 12:    EnemyMaxHealth(5) = 100  ' Eligible (12%)
+    
+    ' --- ASSET-TO-CODE RECONCILIATION FOR LOOP ---
+    Debug.Print "=== STARTING QA COMBAT FINISHER RECONCILIATION ==="
+    Debug.Print "Config Threshold: " & (FinisherThreshold * 100) & "% | Config Chance: " & FinisherChance & "%"
+    Debug.Print "--------------------------------------------------"
+    
+    For i = 1 To 5
+        ' Calculate current state
+        HealthPercentage = EnemyHealth(i) / EnemyMaxHealth(i)
+        
+        ' Base QA Log for asset tracking
+        Debug.Print "Enemy #" & i & " -> HP: " & EnemyHealth(i) & "/" & EnemyMaxHealth(i) & " (" & Format(HealthPercentage, "0%") & ")"
+        
+        ' Step 1: Threshold Check
+        If HealthPercentage <= FinisherThreshold Then
+            
+            ' Step 2: Probability Roll (Random number between 1 and 100)
+            Randomize
+            RandomRoll = Int((100 * Rnd) + 1)
+            
+            ' Step 3: Resolution & QA Logging
+            If RandomRoll <= FinisherChance Then
+                Debug.Print "   [RECONCILED] -> STATUS: FINISHER TRIGGERED (Roll: " & RandomRoll & " <= " & FinisherChance & ")"
+                ' Code would trigger the animation asset here: TriggerFinisherAnim(i)
+            Else
+                Debug.Print "   [RECONCILED] -> STATUS: ELIGIBLE BUT MISSED ROLL (Roll: " & RandomRoll & " > " & FinisherChance & ")"
+            End If
+            
+        Else
+            ' Log failure to meet threshold to verify code isn't triggering prematurely
+            Debug.Print "   [RECONCILED] -> STATUS: INELIGIBLE (HP above threshold)"
+        End If
+        
+        Debug.Print "--------------------------------------------------"
+    Next i
+    
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

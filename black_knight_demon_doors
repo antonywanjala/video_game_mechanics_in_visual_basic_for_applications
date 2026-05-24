@@ -1,0 +1,59 @@
+Sub ReconcileBlackKnightDemonDoors()
+    ' Define arrays representing the Asset Manifest (from Art/Design) 
+    ' and the Code Registry (compiled in the game build)
+    Dim assetManifest(1 To 4) As String
+    Dim codeRegistry(1 To 4) As String
+    Dim doorRequirement(1 To 4) As String
+    
+    Dim i As Long
+    Dim j As Long
+    Dim matchFound As Boolean
+    
+    ' Populating sample data for the asset-to-code reconciliation
+    assetManifest(1) = "Heros_Welcome_Door"
+    assetManifest(2) = "Black_Knight_Gate"
+    assetManifest(3) = "Bowerstone_Crypt_Door"
+    assetManifest(4) = "Greatwood_Grotto_Door"
+    
+    codeRegistry(1) = "Heros_Welcome_Door"
+    codeRegistry(2) = "Black_Knight_Gate" ' The asset exists in code
+    codeRegistry(3) = "Bowerstone_Crypt_MIA" ' Intentional mismatch for QA testing
+    codeRegistry(4) = "Greatwood_Grotto_Door"
+    
+    ' Specific mechanics/requirements tied to the doors in-code
+    doorRequirement(1) = "Eat 25 Crunchy Chicks"
+    doorRequirement(2) = "Achieve Combat Multiplier of 10" ' Black Knight Mechanic
+    doorRequirement(3) = "Wear Full Plate Armor"
+    doorRequirement(4) = "Propose to the Door"
+
+    ' Clear previous QA log in the immediate window
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' The For Loop: Iterating through the Asset Manifest
+    For i = 1 To UBound(assetManifest)
+        matchFound = False
+        
+        ' Nested loop to reconcile against the Code Registry
+        For j = 1 To UBound(codeRegistry)
+            If assetManifest(i) = codeRegistry(j) Then
+                matchFound = True
+                
+                ' Special logic hook for the Black Knight mechanic
+                If InStr(1, assetManifest(i), "Black_Knight") > 0 Then
+                    Debug.Print "[SUCCESS] Black Knight Asset Matched!"
+                    Debug.Print "          Mechanic Verified: " & doorRequirement(j)
+                Else
+                    Debug.Print "[SUCCESS] Reconciled: " & assetManifest(i)
+                End If
+                Exit For
+            End If
+        Next j
+        
+        ' QA Alert if the asset failed to reconcile with the code build
+        If Not matchFound Then
+            Debug.Print "[CRITICAL ERROR] Asset '" & assetManifest(i) & "' is missing from the compiled game code!"
+        End If
+    Next i
+    
+    Debug.Print "=== RECONCILIATION PROCESS COMPLETE ==="
+End Sub

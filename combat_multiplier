@@ -1,0 +1,57 @@
+Sub ReconcileCombatMultiplier()
+    ' Declarations for QA Asset-to-Code Reconciliation
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Mechanic Variables
+    Dim combatMultiplier As Double
+    Dim actionType As String
+    Dim expectedMultiplier As Double
+    
+    ' Set workbook target
+    Set ws = ThisWorkbook.Sheets("CombatAssetLog")
+    
+    ' Initialize Multiplier (Fable starts at 1.0)
+    combatMultiplier = 1.0
+    
+    ' Find the last row of asset data in Column A (Action Type)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Loop through assets to reconcile code behavior with design data
+    For i = 2 To lastRow ' Assuming Row 1 has headers
+        actionType = ws.Cells(i, 1).Value
+        expectedMultiplier = ws.Cells(i, 2).Value
+        
+        ' Process Fable Combat Multiplier Mechanic
+        Select Case actionType
+            Case "Successful_Hit"
+                combatMultiplier = combatMultiplier + 1
+                
+            Case "Player_Damaged"
+                ' Fable punishes hits severely; typically drops by a massive percentage
+                combatMultiplier = Int(combatMultiplier * 0.3)
+                If combatMultiplier < 1 Then combatMultiplier = 1
+                
+            Case "Time_Decay"
+                ' Gradual drop if player wanders out of combat
+                combatMultiplier = combatMultiplier - 1
+                If combatMultiplier < 1 Then combatMultiplier = 1
+        End Select
+        
+        ' --- QA Asset-to-Code Reconciliation Check ---
+        ws.Cells(i, 3).Value = combatMultiplier ' Output calculated value
+        
+        If combatMultiplier <> expectedMultiplier Then
+            ' Flag mismatches in Red for the QA Analyst
+            ws.Cells(i, 4).Value = "MISMATCH"
+            ws.Cells(i, 4).Interior.Color = RGB(255, 200, 200)
+        Else
+            ' Pass verification
+            ws.Cells(i, 4).Value = "Reconciled"
+            ws.Cells(i, 4).Interior.Color = RGB(200, 255, 200)
+        End If
+    Next i
+
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation, "QA Tool"
+End Sub

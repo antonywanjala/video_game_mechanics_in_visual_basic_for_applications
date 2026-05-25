@@ -1,0 +1,106 @@
+Sub ReconcileGoodMageAssets()
+    ' =========================================================================
+    ' Purpose: Reconcile raw gameplay asset data into the game state engine.
+    ' Archetype: Good Mage (Fable-inspired Alignment System)
+    ' QA Optimization: Includes strict boundary validation and explicit logging.
+    ' =========================================================================
+    
+    ' Declare Player State Variables
+    Dim PlayerAlignment As Double
+    Dim PlayerPurity As Double
+    Dim MaxCap As Double
+    
+    ' Initialize baseline player assets
+    PlayerAlignment = 0.0   ' Scale: -1000 (Pure Evil) to 1000 (Pure Good)
+    PlayerPurity = 0.0      ' Scale: 0 to 100
+    MaxCap = 1000.0
+    
+    ' Mocking the Asset Data Array
+    ' Structure: Array(ActionName, ActionType, AlignmentReward)
+    Dim AssetRows As Variant
+    AssetRows = Array( _
+        Array("Cast Heal Life", "Spell", 50), _
+        Array("Defeat Bandit", "Combat", 20), _
+        Array("Cast Divine Shield", "Spell", 35), _
+        Array("Steal Apple", "Theft", -15), _
+        Array("Donate to Temple", "Donation", 100), _
+        Array("Cast Summon Wasp", "Spell", 15) _
+    )
+    
+    Dim i As Long
+    Dim ActionName As String
+    Dim ActionType As String
+    Dim RewardPoints As Double
+    Dim MageMultiplier As Double
+    
+    ' QA Log Header
+    Debug.Print "=== QA ASSET-TO-CODE RECONCILIATION LOG ==="
+    Debug.Print "Timestamp: " & Now
+    Debug.Print "Initial Alignment: " & PlayerAlignment & " | Initial Purity: " & PlayerPurity
+    Debug.Print "--------------------------------------------------"
+    
+    ' The Reconciliation For Loop
+    For i = LBound(AssetRows) To UBound(AssetRows)
+        
+        ' Extract data from the asset row
+        ActionName = AssetRows(i)(0)
+        ActionType = AssetRows(i)(1)
+        RewardPoints = CDbl(AssetRows(i)(2))
+        
+        ' Standard Mage Archetype Modifier: 
+        ' Spells yield 1.5x more alignment/purity shift for a Mage setup
+        If ActionType = "Spell" And RewardPoints > 0 Then
+            MageMultiplier = 1.5
+        Else
+            MageMultiplier = 1.0
+        End If
+        
+        ' Calculate the delta
+        Dim Delta As Double
+        Delta = RewardPoints * MageMultiplier
+        
+        ' QA Validation Step: Check for data anomalies before writing to state
+        If Delta = 0 Then
+            Debug.Print "[QA WARNING] Row " & i & " (" & ActionName & "): No alignment delta generated. Skipping reconciliation."
+            GoTo NextRow
+        End If
+        
+        ' Apply asset reconciliation to state
+        PlayerAlignment = PlayerAlignment + Delta
+        
+        ' Passive Purity gain for performing good spells
+        If ActionType = "Spell" And RewardPoints > 0 Then
+            PlayerPurity = PlayerPurity + (Delta * 0.1)
+        End If
+        
+        ' QA Boundary Reconciliation: Enforce hard caps defined by the design document
+        If PlayerAlignment > MaxCap Then
+            PlayerAlignment = MaxCap
+            Debug.Print "[QA INFO] Row " & i & ": Alignment hit MAX CAP (" & MaxCap & ")."
+        ElseIf PlayerAlignment < -MaxCap Then
+            PlayerAlignment = -MaxCap
+            Debug.Print "[QA INFO] Row " & i & ": Alignment hit MIN CAP (-" & MaxCap & ")."
+        End If
+        
+        If PlayerPurity > 100 Then PlayerPurity = 100
+        
+        ' Successful Reconciliation Log per Asset Row
+        Debug.Print "[QA SUCCESS] Reconciled: '" & ActionName & "' | Type: " & ActionType & _
+                    " | Raw Reward: " & RewardPoints & " | Modded Delta: " & Delta & _
+                    " | New Alignment: " & PlayerAlignment & " | New Purity: " & PlayerPurity
+
+NextRow:
+    Next i
+    
+    ' Final Reconciliation Summary
+    Debug.Print "--------------------------------------------------"
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+    Debug.Print "Final State -> Alignment: " & PlayerAlignment & " | Purity: " & PlayerPurity
+    If PlayerAlignment >= 200 And PlayerPurity >= 15 Then
+        Debug.Print "Result: Archetype successfully verified as [GOOD MAGE]."
+    Else
+        Debug.Print "Result: Archetype requirements NOT met."
+    End If
+    Debug.Print "=================================================="
+
+End Sub

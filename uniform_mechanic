@@ -1,0 +1,60 @@
+Sub ReconcileUniformMechanic()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AssetReconciliation")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Mechanics Variables
+    Dim requiredUniformID As String
+    Dim totalPenalty As Double
+    Dim i As Long
+    
+    requiredUniformID = "GUARDSMAN_01"
+    totalPenalty = 0#
+    
+    ' Clear previous QA notes
+    ws.Range("E2:F" & lastRow).ClearContents
+    
+    ' Headers for QA feedback
+    ws.Range("E1").Value = "Reconciliation Status"
+    ws.Range("F1").Value = "Applied Penalty"
+    
+    ' The Reconciliation For Loop
+    For i = 2 To lastRow
+        Dim slotName As String
+        Dim visualAssetID As String
+        Dim dbItemID As String
+        Dim penaltyValue As Double
+        
+        slotName = ws.Cells(i, 1).Value       ' e.g., "Chest", "Legs"
+        visualAssetID = ws.Cells(i, 2).Value  ' The 3D Asset reference
+        dbItemID = ws.Cells(i, 3).Value       ' The Code/DB reference
+        penaltyValue = ws.Cells(i, 4).Value   ' Base penalty for missing this slot
+        
+        ' CRITICAL QA CHECK: Asset-to-Code Sync
+        If visualAssetID <> dbItemID Then
+            ws.Cells(i, 5).Value = "⚠️ ASSET ERROR: Visual asset does not match Database ID!"
+            ws.Cells(i, 5).Font.Color = RGB(255, 0, 0)
+            
+        ' GAMEPLAY CHECK: Is the player out of uniform?
+        ElseIf dbItemID <> requiredUniformID Then
+            ws.Cells(i, 5).Value = "Out of Uniform"
+            ws.Cells(i, 5).Font.Color = RGB(255, 165, 0)
+            ws.Cells(i, 6).Value = penaltyValue
+            
+            totalPenalty = totalPenalty + penaltyValue
+        Else
+            ' Uniform matches perfectly
+            ws.Cells(i, 5).Value = "In Uniform (Synced)"
+            ws.Cells(i, 5).Font.Color = RGB(0, 128, 0)
+            ws.Cells(i, 6).Value = 0
+        End If
+    Next i
+    
+    ' Output final aggregate results for the QA report
+    ws.Range("H2").Value = "Total Out-of-Uniform Penalty:"
+    ws.Range("I2").Value = totalPenalty
+    
+    MsgBox "Asset-to-Code Reconciliation Complete! Total Penalty calculated: " & totalPenalty, vbInformation, "QA Engine Notice"
+End Sub

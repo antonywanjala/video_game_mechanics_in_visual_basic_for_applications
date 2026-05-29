@@ -1,0 +1,95 @@
+' ==============================================================================
+' Script: DistractionStrat_QATest.vba
+' Purpose: QA tool to reconcile NPC backend states with rendered frontend assets
+'          during the "Distraction" (Expression) mechanic.
+' Target: Fable / Bowerstone Market Shopkeepers & Guards
+' ==============================================================================
+
+Option Explicit
+
+' Mock Objects to represent Game Engine Data
+Type GameAsset
+    ID As Integer
+    Name As String
+    CodeState_IsDistracted As Boolean
+    CodeState_FacingTarget As String
+    AssetState_CurrentAnimation As String
+    AssetState_LookAtIK As String ' Inverse Kinematics for head tracking
+End Type
+
+Sub QAReconcileDistractionMechanic()
+    
+    Dim ActiveNPCs(1 To 5) As GameAsset
+    Dim i As Integer
+    Dim PlayerAction As String
+    Dim PassCount As Integer
+    Dim FailCount As Integer
+    
+    PassCount = 0
+    FailCount = 0
+    PlayerAction = "PlayLute" ' Simulating the player using a distraction expression
+    
+    ' --- MOCK DATA INJECTION (Simulating current active cell in engine) ---
+    ActiveNPCs(1).Name = "Shopkeeper"
+    ActiveNPCs(1).CodeState_IsDistracted = True
+    ActiveNPCs(1).AssetState_CurrentAnimation = "Anim_Clap"
+    ActiveNPCs(1).AssetState_LookAtIK = "Player"
+    
+    ActiveNPCs(2).Name = "Guard_01"
+    ActiveNPCs(2).CodeState_IsDistracted = True
+    ActiveNPCs(2).AssetState_CurrentAnimation = "Anim_Idle" ' BUG: Code says distracted, but asset is idle!
+    ActiveNPCs(2).AssetState_LookAtIK = "Forward"
+    ' ----------------------------------------------------------------------
+    
+    Debug.Print "======================================================="
+    Debug.Print "INITIATING QA ASSET-TO-CODE RECONCILIATION..."
+    Debug.Print "PLAYER ACTION TRIGGERED: [" & PlayerAction & "]"
+    Debug.Print "======================================================="
+
+    ' THE FOR LOOP: Iterating through loaded assets to reconcile with code
+    For i = LBound(ActiveNPCs) To UBound(ActiveNPCs)
+        
+        ' Skip empty array slots
+        If ActiveNPCs(i).Name <> "" Then
+            
+            ' Check if the game engine code says the NPC SHOULD be distracted
+            If ActiveNPCs(i).CodeState_IsDistracted = True Then
+                
+                ' RECONCILIATION: Does the visual asset match the code?
+                If (ActiveNPCs(i).AssetState_CurrentAnimation = "Anim_Clap" Or _
+                    ActiveNPCs(i).AssetState_CurrentAnimation = "Anim_Cheer") And _
+                    ActiveNPCs(i).AssetState_LookAtIK = "Player" Then
+                    
+                    ' QA SUCCESS LOG
+                    Debug.Print "[PASS] - " & ActiveNPCs(i).Name
+                    Debug.Print "         Code (Distracted) matches Asset (Animation & Head Tracking)."
+                    PassCount = PassCount + 1
+                    
+                Else
+                    ' QA FAILURE LOG - Makes it easy for QA to log a bug ticket immediately
+                    Debug.Print "[FAIL] - BUG DETECTED IN ASSET: " & ActiveNPCs(i).Name
+                    Debug.Print "         REASON: Code state is Distracted, but rendered asset state is:"
+                    Debug.Print "         -> Animation: " & ActiveNPCs(i).AssetState_CurrentAnimation
+                    Debug.Print "         -> Head IK:   " & ActiveNPCs(i).AssetState_LookAtIK
+                    Debug.Print "         IMPACT: Player may get caught stealing despite successful distraction."
+                    FailCount = FailCount + 1
+                End If
+                
+            End If
+            
+        End If
+        
+    Next i
+    
+    ' Output Summary for the QA Analyst
+    Debug.Print "======================================================="
+    Debug.Print "RECONCILIATION COMPLETE."
+    Debug.Print "PASSES: " & PassCount & " | FAILS: " & FailCount
+    If FailCount > 0 Then
+        Debug.Print "STATUS: DO NOT PUSH TO MAIN. ASSET FIX REQUIRED."
+    Else
+        Debug.Print "STATUS: READY FOR MERGE."
+    End If
+    Debug.Print "======================================================="
+
+End Sub

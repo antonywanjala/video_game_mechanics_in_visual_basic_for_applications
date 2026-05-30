@@ -1,0 +1,69 @@
+Sub ReconcileShopkeeperEyeballs()
+    ' =========================================================================
+    ' MECHANIC: Shopkeeper Eyeballs Asset-to-Code Reconciliation
+    ' PURPOSE: Validates NPC eye-tracking assets against code boundaries.
+    ' DESIGNED FOR: QA Analysts to quickly spot misaligned or missing assets.
+    ' =========================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AssetManifest") ' Assumes an asset log sheet
+    
+    Dim lastRowShopkeeper As Long
+    Dim lastRowTarget As Long
+    Dim i As Long, j As Long
+    
+    ' Simulation of data boundaries in Excel
+    lastRowShopkeeper = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    lastRowTarget = ws.Cells(ws.Rows.Count, "C").End(xlUp).Row
+    
+    Dim shopkeeperName As String
+    Dim maxAssetLookAngle As Double
+    Dim targetName As String
+    Dim calculatedCodeAngle As Double
+    Dim discrepancyDelta As Double
+    
+    ' CRITICAL QA LOGGING HEADER
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION: SHOPKEEPER EYEBALLS ==="
+    Debug.Print "Timestamp: " & Now
+    
+    ' OUTER LOOP: Iterate through all Shopkeeper NPCs found in the asset files
+    For i = 2 To lastRowShopkeeper
+        shopkeeperName = ws.Cells(i, 1).Value ' Col A: Shopkeeper ID/Name
+        maxAssetLookAngle = ws.Cells(i, 2).Value ' Col B: Max eyeball rotation asset limit (e.g., 85 degrees)
+        
+        ' QA Guardrail: Check if asset data is corrupt or missing
+        If maxAssetLookAngle <= 0 Then
+            Debug.Print "[QA ALERT] [CRITICAL] Shopkeeper '" & shopkeeperName & "' has invalid or zero-bound eye asset limits!"
+            GoTo NextShopkeeper
+        End If
+        
+        ' INNER LOOP: Iterate through all potential look targets (Player, Gold Stack, etc.)
+        For j = 2 To lastRowTarget
+            targetName = ws.Cells(j, 3).Value ' Col C: Target Object Name
+            calculatedCodeAngle = ws.Cells(j, 4).Value ' Col D: Live game engine tracking angle required
+            
+            ' Core Mechanic Math: Calculate if the code demands a visual angle the asset can't support
+            If calculatedCodeAngle > maxAssetLookAngle Then
+                discrepancyDelta = calculatedCodeAngle - maxAssetLookAngle
+                
+                ' QA-Optimized Reporting: High visibility error tracking
+                Debug.Print "[QA FAIL] [MISMATCH] Shopkeeper: " & shopkeeperName & _
+                            " | Target: " & targetName & _
+                            " | Code Required: " & calculatedCodeAngle & "°" & _
+                            " | Asset Max: " & maxAssetLookAngle & "°" & _
+                            " | EXCEEDED BY: " & discrepancyDelta & "° (Eyeballs will clip/glitch!)"
+                
+                ' Highlight the spreadsheet row in light red for visual QA review
+                ws.Rows(i).Interior.Color = RGB(255, 200, 200)
+            Else
+                ' Reconciliation Pass
+                Debug.Print "[QA PASS] Reconciled: " & shopkeeperName & " looking at " & targetName
+            End If
+            
+        Next j
+        
+NextShopkeeper:
+    Next i
+    
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Worksheet

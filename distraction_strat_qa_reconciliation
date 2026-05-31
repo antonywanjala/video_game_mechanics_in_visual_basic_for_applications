@@ -1,0 +1,62 @@
+Sub DistractionStratQAReconciliation()
+    ' QA Tool to verify that throwing a distraction object correctly parses 
+    ' distance logic AND successfully calls the necessary animation/audio assets.
+
+    Dim guards As Collection
+    Dim guard As Variant
+    Dim distractionRadius As Integer
+    Dim guardDistance As Integer
+    Dim fso As Object
+    Dim assetPath As String
+    Dim reqAnim As String
+    Dim reqAudio As String
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set guards = New Collection
+    assetPath = "C:\StealthGame\Assets\NPC_Guards\"
+    
+    ' Simulated Distraction object thrown with an audio radius of 15 meters
+    distractionRadius = 15
+    
+    ' Populating test guards with their distances from the thrown object
+    guards.Add Array("Guard_01", 5)   ' Within range
+    guards.Add Array("Guard_02", 12)  ' Within range
+    guards.Add Array("Guard_03", 25)  ' Out of range
+    
+    Debug.Print "--- STARTING [DISTRACTION STRAT] RECONCILIATION ---"
+    
+    ' The For Loop: Checking logic boundaries and required assets
+    Dim i As Integer
+    For i = 1 To guards.Count
+        guardDistance = guards(i)(1)
+        
+        ' Logic check: Is the guard close enough to hear the distraction?
+        If guardDistance <= distractionRadius Then
+            ' If yes, the code triggers the "Investigate" state.
+            ' QA RECONCILIATION: Verify the assets for this state transition exist.
+            reqAnim = guards(i)(0) & "_anim_investigate.fbx"
+            reqAudio = guards(i)(0) & "_voice_huh_what_was_that.wav"
+            
+            Debug.Print "Triggering Distraction State for " & guards(i)(0) & "..."
+            
+            ' Verify Animation Asset
+            If Not fso.FileExists(assetPath & "Animations\" & reqAnim) Then
+                Debug.Print "   [BUG LOGGED]: Code transitioned state, but missing animation: " & reqAnim
+            Else
+                Debug.Print "   [OK] Animation asset reconciled."
+            End If
+            
+            ' Verify Audio Asset
+            If Not fso.FileExists(assetPath & "Audio\" & reqAudio) Then
+                Debug.Print "   [BUG LOGGED]: Code triggered audio event, but missing sound file: " & reqAudio
+            Else
+                Debug.Print "   [OK] Audio asset reconciled."
+            End If
+            
+        Else
+            Debug.Print guards(i)(0) & " is " & guardDistance & "m away. Out of " & distractionRadius & "m radius. State remains: Patrol."
+        End If
+    Next i
+    
+    Set fso = Nothing
+End Sub

@@ -1,0 +1,51 @@
+Sub ReconcileHeroFatBias()
+    ' Define structures for our hero assets/states
+    Dim totalHeroes As Integer
+    Dim i As Integer
+    
+    ' Simulation variables
+    Dim currentFatPoints As Double
+    Dim assetMorphWeight As Double
+    Dim fatBiasFactor As Double
+    
+    ' Configuration
+    totalHeroes = 5 ' Simulating a batch of 5 hero save-states/variants
+    fatBiasFactor = 1.35 ' The "Fat Bias" flaw: over-indexing the visual scale
+    
+    Debug.Print "=== STARTING QA ASSET-TO-CODE RECONCILIATION ==="
+    Debug.Print "Checking for Fat Bias visual mismatches..."
+    Debug.Print "------------------------------------------------"
+
+    ' The For Loop simulating asset-to-code reconciliation
+    For i = 1 To totalHeroes
+        
+        ' 1. Fetching simulation data for the code state (e.g., from a data row or memory)
+        ' Let's assume heroes have varying levels of consumed food points
+        currentFatPoints = i * 20 
+        
+        ' 2. Apply the game mechanic logic with the "Fat Bias" included
+        ' The code calculates what the visual 3D asset scale *should* be
+        assetMorphWeight = (currentFatPoints / 100) * fatBiasFactor
+        
+        ' 3. QA Reconciliation & Assertion Check
+        ' To help the QA Analyst, we flag if the visual asset bias exceeds normal 
+        ' structural thresholds (e.g., max expected visual deformation is 1.0)
+        If assetMorphWeight > 1.0 Then
+            
+            ' Explicit QA Alert: Highlight the exact asset index and the deviation
+            Debug.Print "[QA ALERT] Hero Variant #" & i & " - ASSET/CODE MISMATCH DETECTED!"
+            Debug.Print "   -> Logical Fat Points: " & currentFatPoints
+            Debug.Print "   -> Resulting Asset Morph Weight: " & Format(assetMorphWeight, "0.00") & " (Exceeds Max Threshold of 1.0)"
+            Debug.Print "   -> Status: FAILED Reconciliation due to Fat Bias."
+            
+        Else
+            ' Normal behavior
+            Debug.Print "[OK] Hero Variant #" & i & " reconciled perfectly."
+            Debug.Print "   -> Asset Morph Weight: " & Format(assetMorphWeight, "0.00")
+        End If
+        
+        Debug.Print "------------------------------------------------"
+    Next i
+    
+    Debug.Print "=== RECONCILIATION PROCESS COMPLETE ==="
+End Sub

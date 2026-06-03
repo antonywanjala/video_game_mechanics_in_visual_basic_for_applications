@@ -1,0 +1,99 @@
+' =========================================================================
+' MECHANIC: Evil Mage - "Dark Siphon" Asset-to-Code Reconciliation
+' DESCRIPTION: Iterates through local entities, processes drain mechanics,
+'              and validates that visual/audio assets reconcile perfectly.
+' TARGET AUDIENCE: QA Automation / Asset Analysts
+' =========================================================================
+
+Public Sub ReconcileDarkSiphonMechanic()
+    
+    ' --- Simulation Data Setup ---
+    ' In a real QA tool, these would be populated from a spreadsheet or JSON dump
+    Dim entities(1 To 4) As String
+    Dim entityVFX(1 To 4) As String
+    Dim entityIsActive(1 To 4) As Boolean
+    
+    entities(1) = "Villager_Male_01"
+    entityVFX(1) = "vfx_siphon_drain_red"
+    entityIsActive(1) = True
+    
+    entities(2) = "Bowerstone_Guard_02"
+    entityVFX(2) = "vfx_siphon_drain_steel"
+    entityIsActive(2) = True
+    
+    entities(3) = "Albion_Chicken"
+    entityVFX(3) = "MISSING_VFX_FILE" ' QA Test Case: Intentional Asset Failure
+    entityIsActive(3) = True
+    
+    entities(4) = "Hobbe_Caster"
+    entityVFX(4) = "vfx_siphon_drain_purple"
+    entityIsActive(4) = False ' QA Test Case: Inactive entity should be skipped
+    
+    ' Mage Stats
+    Dim mageAlignment As String
+    Dim baseDrainDamage As Double
+    mageAlignment = "Pure Evil"
+    baseDrainDamage = 45.5
+    
+    ' QA Logging Utilities
+    Dim i As Integer
+    Dim totalProcessed As Integer
+    Dim failureCount As Integer
+    
+    totalProcessed = 0
+    failureCount = 0
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION: DARK SIPHON ==="
+    Debug.Print "Mage Alignment: " & mageAlignment
+    Debug.Print "--------------------------------------------------------"
+    
+    ' --- The Reconciliation For Loop ---
+    For i = LBound(entities) To UBound(entities)
+        
+        ' 1. Check if the entity is active in the current scene context
+        If entityIsActive(i) = True Then
+            totalProcessed = totalProcessed + 1
+            
+            Debug.Print "Processing Entity [" & i & "]: " & entities(i)
+            
+            ' 2. QA Asset-to-Code Validation Step
+            ' Simulate checking if the asset string matches engineering naming conventions
+            If InStr(1, entityVFX(i), "MISSING_") > 0 Or entityVFX(i) = "" Then
+                
+                ' Asset mismatch/reconciliation failure detected
+                Debug.Print "   [RECONCILIATION ERROR]: Asset pointer invalid for " & entityVFX(i)
+                failureCount = failureCount + 1
+                
+            Else
+                
+                ' Asset reconciled successfully -> Execute game logic simulation
+                Dim calculatedDamage As Double
+                calculatedDamage = baseDrainDamage * 1.5 ' Evil alignment multiplier
+                
+                Debug.Print "   [SUCCESS] Asset '" & entityVFX(i) & "' bound successfully."
+                Debug.Print "   [LOG] Dealt " & calculatedDamage & " Siphon Damage to " & entities(i)
+                
+            End If
+        Else
+            ' Log skipped entities for thorough QA tracking
+            Debug.Print "Processing Entity [" & i & "]: " & entities(i) & " -> [SKIPPED (Inactive)]"
+        End If
+        
+        Debug.Print "--------------------------------------------------------"
+    Next i
+    
+    ' --- Final QA Report Summary ---
+    Debug.Print "=== RECONCILIATION REPORT ==="
+    Debug.Print "Total Entities Targeted: " & UBound(entities)
+    Debug.Print "Total Active Entities Processed: " & totalProcessed
+    Debug.Print "Successful Reconciliations: " & (totalProcessed - failureCount)
+    Debug.Print "Failed Reconciliations (Mismatched Assets): " & failureCount
+    
+    If failureCount > 0 Then
+        Debug.Print "STATUS: FAILED. Please reconcile missing asset files before pushing to main build."
+    Else
+        Debug.Print "STATUS: PASSED. All assets match the codebase pipeline."
+    End If
+    Debug.Print "========================================================"
+
+End Sub

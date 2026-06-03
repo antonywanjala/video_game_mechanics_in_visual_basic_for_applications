@@ -1,0 +1,56 @@
+Sub ReconcileUniformPenalty()
+    ' Define QA variables for reconciliation
+    Dim requiredSlots(1 To 4) As String
+    Dim playerEquippedFaction(1 To 4) As String
+    Dim i As Integer
+    
+    ' Gameplay variables
+    Dim suspicionLevel As Double
+    Dim penaltyPerMissingPiece As Double
+    Dim isUniformComplete As Boolean
+    
+    suspicionLevel = 0.0
+    penaltyPerMissingPiece = 0.25 ' 25% penalty per incorrect asset
+    isUniformComplete = True
+    
+    ' 1. The "Code" Requirements (The baseline rules)
+    requiredSlots(1) = "Helmet"
+    requiredSlots(2) = "Chest"
+    requiredSlots(3) = "Gauntlets"
+    requiredSlots(4) = "Boots"
+    
+    ' 2. The "Asset" State (Simulating what the player actually has equipped)
+    ' QA Test Case: Player forgot their helmet (Bandit tag) but got the rest right
+    playerEquippedFaction(1) = "Bandit" ' Mismatch!
+    playerEquippedFaction(2) = "Guard"
+    playerEquippedFaction(3) = "Guard"
+    playerEquippedFaction(4) = "Guard"
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' 3. The Reconciliation Loop
+    For i = 1 To 4
+        If playerEquippedFaction(i) <> "Guard" Then
+            ' QA Analyst Optimization: Log explicit asset mismatch
+            Debug.Print "[CRITICAL MISMATCH] Slot: " & requiredSlots(i) & _
+                        " | Expected: 'Guard' Asset | Found: '" & playerEquippedFaction(i) & "'"
+            
+            ' Apply Out-of-Uniform gameplay penalty
+            suspicionLevel = suspicionLevel + penaltyPerMissingPiece
+            isUniformComplete = False
+        Else
+            ' Log successful reconciliation
+            Debug.Print "[OK] Slot: " & requiredSlots(i) & " correctly reconciled with Guard asset."
+        End If
+    Next i
+    
+    ' 4. Final Verification Output
+    Debug.Print "============================================="
+    If Not isUniformComplete Then
+        Debug.Print "RESULT: Out-of-Uniform Penalty Applied!"
+        Debug.Print "Final Suspicion Modifier: " & Format(suspicionLevel, "0%")
+    Else
+        Debug.Print "RESULT: Uniform Complete. Zero Penalty."
+    End If
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

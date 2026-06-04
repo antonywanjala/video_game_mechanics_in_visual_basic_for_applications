@@ -1,0 +1,51 @@
+' ==============================================================================
+' Repository: QA-Mechanic-Audits
+' Module: Fable_AssassinRush_Reconciliation
+' Description: Iterates through the Assassin Rush phases to verify asset alignment
+' Author: QA Automation
+' ==============================================================================
+
+Option Explicit
+
+Sub ReconcileAssassinRushLink()
+    Dim i As Integer
+    Dim rushPhases(1 To 4) As String
+    Dim currentPhase As String
+    Dim isAssetReconciled As Boolean
+    
+    ' Define the discrete phases of the Assassin Rush mechanic
+    rushPhases(1) = "Anim_CastStart | Code_InputLock"
+    rushPhases(2) = "FX_VanishBlur | Code_EnableIFrames"
+    rushPhases(3) = "Null_Visual | Code_TranslateCoordinates"
+    rushPhases(4) = "Anim_Reappear | Code_DisableIFrames_TriggerBackstab"
+    
+    Debug.Print "--- INITIATING ASSASSIN RUSH QA RECONCILIATION ---"
+    
+    ' The For Loop: QA checks asset-to-code alignment sequentially
+    For i = 1 To 4
+        currentPhase = rushPhases(i)
+        
+        ' Simulate the engine/memory hook checking if assets fired on time
+        isAssetReconciled = ValidateEngineState(currentPhase, i)
+        
+        If isAssetReconciled = True Then
+            Debug.Print "[PASS] Tick " & i & " - Asset and Code synchronized for: " & currentPhase
+        Else
+            Debug.Print "[FAIL] Tick " & i & " - DESYNC DETECTED at: " & currentPhase
+            ' In a real QA environment, this would flag a JIRA/Bugzilla ticket
+        End If
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+End Sub
+
+' Mock function to simulate the backend validation tool
+Private Function ValidateEngineState(phaseName As String, tick As Integer) As Boolean
+    ' For demonstration, we assume all phases pass except a hypothetical desync on tick 3
+    If tick = 3 Then
+        ' Example: The coordinate shift happened, but the visual blur asset failed to load
+        ValidateEngineState = False 
+    Else
+        ValidateEngineState = True
+    End If
+End Function

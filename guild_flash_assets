@@ -1,0 +1,55 @@
+Attribute VB_Name = "QA_GuildFlash_Reconciliation"
+
+Sub ReconcileGuildFlashAssets()
+    ' =========================================================================
+    ' QA ASSET-TO-CODE RECONCILIATION TOOL
+    ' Target Mechanic: "Guild Flash" (Fable Teleportation Sequence)
+    ' =========================================================================
+    
+    Dim chargePercentage As Integer
+    Dim assetLog As String
+    
+    Debug.Print "--- QA Asset-to-Code Reconciliation Log: Fable Guild Flash ---"
+    Debug.Print "Initializing charge sequence simulation..."
+    
+    ' Loop represents the exact percentage of the teleport charge-up
+    For chargePercentage = 1 To 100
+        
+        Select Case chargePercentage
+            
+            Case 5
+                ' ANIMATION RECONCILIATION
+                assetLog = "[FRAME " & chargePercentage & "%] QA CHECK: Animation asset 'Hero_Seal_Hold.anim' triggered."
+                Debug.Print assetLog
+                
+            Case 25
+                ' PARTICLE/VFX RECONCILIATION
+                assetLog = "[FRAME " & chargePercentage & "%] QA CHECK: VFX prefab 'VFX_Seal_Glow_Emitter.prefab' spawned."
+                Debug.Print assetLog
+                
+            Case 50
+                ' AUDIO RECONCILIATION
+                assetLog = "[FRAME " & chargePercentage & "%] QA CHECK: Audio cue 'SFX_Teleport_Charge.wav' playing."
+                Debug.Print assetLog
+                
+            Case 90
+                ' POST-PROCESSING RECONCILIATION
+                assetLog = "[FRAME " & chargePercentage & "%] QA CHECK: Post-process material 'PostProcess_WhiteOut_Flash.mat' rendered."
+                Debug.Print assetLog
+                
+            Case 100
+                ' LOGIC RECONCILIATION
+                assetLog = "[FRAME " & chargePercentage & "%] QA CHECK: Player state changed to TELEPORTING. Map unloads."
+                Debug.Print assetLog
+                
+        End Select
+        
+        ' Note: In a live QA tool, an Else condition could be used here to parse 
+        ' a game log file line-by-line to verify these timestamps precisely match.
+
+    Next chargePercentage
+    
+    Debug.Print "--- Reconciliation Complete. ---"
+    Debug.Print "ACTION REQUIRED: Cross-reference this log with engine debug output."
+    
+End Sub

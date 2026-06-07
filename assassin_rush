@@ -1,0 +1,137 @@
+Option Explicit
+
+' =========================================================================
+' MECHANIC: Assassin Rush Link - Asset-to-Code Reconciliation Loop
+' PURPOSE: Automates asset specification checking against runtime telemetry
+'          to streamline QA testing cycles.
+' =========================================================================
+
+Public Sub ReconcileAssassinRush()
+    ' Define total frame duration of the rush window
+    Const TOTAL_FRAMES As Integer = 10
+    
+    ' Design Asset Specifications (What the Designer intended)
+    Dim assetDistance(1 To TOTAL_FRAMES) As Double
+    Dim assetInvulnerable(1 To TOTAL_FRAMES) As Boolean
+    Dim assetVFX(1 To TOTAL_FRAMES) As String
+    
+    ' Runtime Engine Outputs (What the Code actually executed)
+    Dim codeDistance As Double
+    Dim codeInvulnerable As Boolean
+    Dim codeVFX As String
+    
+    ' Reconciliation Tracking Variables
+    Dim i As Integer
+    Dim mismatchCount As Integer
+    Dim framePassed As Boolean
+    
+    mismatchCount = 0
+    
+    ' ---------------------------------------------------------------------
+    ' 1. INITIALIZE DESIGN ASSET DATA (Simulating Excel/JSON Asset Load)
+    ' ---------------------------------------------------------------------
+    ' Distance progression profile per frame (Accelerates then decelerates)
+    assetDistance(1) = 2.0:  assetDistance(2) = 5.0:  assetDistance(3) = 9.0
+    assetDistance(4) = 14.0: assetDistance(5) = 18.0: assetDistance(6) = 21.0
+    assetDistance(7) = 23.0: assetDistance(8) = 24.5: assetDistance(9) = 25.0
+    assetDistance(10) = 25.0
+    
+    ' Invulnerability Frame Map (I-Frames active during peak movement: Frames 2 to 8)
+    For i = 1 To TOTAL_FRAMES
+        assetInvulnerable(i) = (i >= 2 And i <= 8)
+    Next i
+    
+    ' Visual Effects Matrix
+    assetVFX(1) = "vfx_rush_start"
+    For i = 2 To 9: assetVFX(i) = "vfx_motion_blur": Next i
+    assetVFX(10) = "vfx_rush_impact"
+    
+    ' ---------------------------------------------------------------------
+    ' 2. QA RECONCILIATION LOOP
+    ' ---------------------------------------------------------------------
+    Debug.Print "================================================================="
+    Debug.Print " RUNTIME RECONCILIATION REPORT: ASSASSIN RUSH LINK "
+    Debug.Print "================================================================="
+    
+    For i = 1 To TOTAL_FRAMES
+        framePassed = True
+        
+        ' Simulate polling runtime engine variables for this tick
+        codeDistance = MockEngineDistanceCalculation(i)
+        codeInvulnerable = MockEngineInvulnerabilityCheck(i)
+        codeVFX = MockEngineVFXCheck(i)
+        
+        Debug.Print "Analyzing Frame [" & Format(i, "00") & "]..."
+        
+        ' Test Case A: Validate Distance Delta (Tolerance of 0.01 units)
+        If Abs(codeDistance - assetDistance(i)) > 0.01 Then
+            Debug.Print "  -> [FAIL] Distance Mismatch! Asset: " & assetDistance(i) & " | Code: " & codeDistance
+            framePassed = False
+        End If
+        
+        ' Test Case B: Validate State Synchronization (I-Frames)
+        If codeInvulnerable <> assetInvulnerable(i) Then
+            Debug.Print "  -> [FAIL] I-Frame State Mismatch! Asset: " & assetInvulnerable(i) & " | Code: " & codeInvulnerable
+            framePassed = False
+        End If
+        
+        ' Test Case C: Validate Asset Pointer Attachment (VFX Keys)
+        If codeVFX <> assetVFX(i) Then
+            Debug.Print "  -> [FAIL] VFX Resource String Mismatch! Asset: '" & assetVFX(i) & "' | Code: '" & codeVFX & "'"
+            framePassed = False
+        End If
+        
+        ' Frame Assessment Consolidation
+        If framePassed Then
+            Debug.Print "  -> [PASS] Code execution is fully reconciled with design assets."
+        Else
+            mismatchCount = mismatchCount + 1
+        End If
+    Next i
+    
+    ' ---------------------------------------------------------------------
+    ' 3. RECONCILIATION SUMMARY (QA Pipeline Integration)
+    ' ---------------------------------------------------------------------
+    Debug.Print "================================================================="
+    If mismatchCount = 0 Then
+        Debug.Print " STATUS: SUCCESS"
+        Debug.Print " RESULT: 100% Asset-to-Code Alignment. No regressions detected."
+    Else
+        Debug.Print " STATUS: FAILED"
+        Debug.Print " RESULT: " & mismatchCount & " frame configuration errors identified above."
+    End If
+    Debug.Print "================================================================="
+End Sub
+
+' -------------------------------------------------------------------------
+' MOCK ENGINE SUBSYSTEMS (Simulating a real game engine's functional output)
+' -------------------------------------------------------------------------
+Private Function MockEngineDistanceCalculation(frame As Integer) As Double
+    ' Simulates a real calculation; deliberately introduces an engine bug on frame 5
+    If frame = 5 Then
+        MockEngineDistanceCalculation = 17.25 ' Error: asset expects 18.0
+    Else
+        Dim profile(1 To 10) As Double
+        profile(1) = 2.0:  profile(2) = 5.0:  profile(3) = 9.0
+        profile(4) = 14.0: profile(5) = 18.0: profile(6) = 21.0
+        profile(7) = 23.0: profile(8) = 24.5: profile(9) = 25.0
+        profile(10) = 25.0
+        MockEngineDistanceCalculation = profile(frame)
+    End If
+End Function
+
+Private Function MockEngineInvulnerabilityCheck(frame As Integer) As Boolean
+    ' Code accurately mimics design specs for invulnerability
+    MockEngineInvulnerabilityCheck = (frame >= 2 And frame <= 8)
+End Function
+
+Private Function MockEngineVFXCheck(frame As Integer) As String
+    ' Simulates a typo bug in the engine codebase string literal on frame 10
+    If frame = 10 Then
+        MockEngineVFXCheck = "vfx_rush_impakt" ' Typo: "k" instead of "c"
+    ElseIf frame = 1 Then
+        MockEngineVFXCheck = "vfx_rush_start"
+    Else
+        MockEngineVFXCheck = "vfx_motion_blur"
+    End If
+End Function

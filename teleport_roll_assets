@@ -1,0 +1,101 @@
+' ==============================================================================
+' MODULE: AssetToCodeReconciliation
+' DESCRIPTION: Reconciles Teleport Roll animation/asset data against game engine constants.
+' VERSION: 1.0.0
+' AUTHOR: QA Engineering Pipeline
+' ==============================================================================
+
+Option Explicit
+
+Public Sub ReconcileTeleportRollAssets()
+    ' --- Engine Constants (The "Code" Source of Truth) ---
+    Const ENGINE_MAX_TOTAL_DISTANCE As Double = 12.0   ' Maximum allowed teleport distance
+    Const ENGINE_IFRAME_START As Integer = 3          ' Invincibility frames must start at frame 3
+    Const ENGINE_IFRAME_END As Integer = 10           ' Invincibility frames must end at frame 10
+    Const REQUIRED_VFX_TAG As String = "VFX_TELEPORT_BLUR"
+    
+    ' --- Spreadsheet Mapping (The "Asset" Source) ---
+    ' Assumes a sheet named "TeleportRoll_Manifest" with headers:
+    ' Col A: Frame (Int) | Col B: DeltaDistance (Double) | Col C: IsInvulnerable (Bool) | Col D: VFXTag (String)
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("TeleportRoll_Manifest")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' --- Tracking & QA Analytics Variables ---
+    Dim i As Long
+    Dim currentFrame As Integer
+    Dim assetDeltaDist As Double
+    Dim assetIsInvuln As Boolean
+    Dim assetVFX As String
+    
+    Dim totalAccumulatedDistance As Double
+    Dim discrepancyCount As Long
+    Dim logMessage As String
+    
+    totalAccumulatedDistance = 0#
+    discrepancyCount = 0
+    
+    ' Reset previous QA formatting for a clean run
+    ws.Range("A2:E" & lastRow).Interior.ColorIndex = xlNone
+    
+    ' ==============================================================================
+    ' MAIN RECONCILIATION LOOP
+    ' ==============================================================================
+    For i = 2 To lastRow
+        ' 1. Extract Asset Data from row
+        currentFrame = CInt(ws.Cells(i, 1).Value)
+        assetDeltaDist = CDbl(ws.Cells(i, 2).Value)
+        assetIsInvulnCBool = CBool(ws.Cells(i, 3).Value)
+        assetVFX = Trim(CStr(ws.Cells(i, 4).Value))
+        
+        totalAccumulatedDistance = totalAccumulatedDistance + assetDeltaDist
+        logMessage = ""
+        
+        ' 2. Reconcile Invulnerability Window (i-Frames)
+        If currentFrame >= ENGINE_IFRAME_START And currentFrame <= ENGINE_IFRAME_END Then
+            If Not assetIsInvulnCBool Then
+                logMessage = logMessage & "[CODE MISMATCH] Frame " & currentFrame & " should have Active i-Frames. "
+            End If
+        Else
+            If assetIsInvulnCBool Then
+                logMessage = logMessage & "[CODE MISMATCH] Frame " & currentFrame & " is outside engine i-Frame window. "
+            End If
+        End If
+        
+        ' 3. Reconcile VFX Initialization Asset
+        If currentFrame = ENGINE_IFRAME_START And assetVFX <> REQUIRED_VFX_TAG Then
+            logMessage = logMessage & "[MISSING ASSET] Teleport start frame lacks '" & REQUIRED_VFX_TAG & "'. "
+        End If
+        
+        ' 4. Process Discrepancies found during this iteration
+        If logMessage <> "" Then
+            discrepancyCount = discrepancyCount + 1
+            ws.Cells(i, 5).Value = logMessage
+            ws.Range("A" & i & ":E" & i).Interior.Color = RGB(255, 220, 220) ' Highlight row soft red
+        Else
+            ws.Cells(i, 5).Value = "PASSED"
+            ws.Cells(i, 5).Font.Color = RGB(0, 128, 0)
+        End If
+    Next i
+    ' ==============================================================================
+    
+    ' --- Post-Loop Cumulative Code Reconciliation ---
+    If totalAccumulatedDistance > ENGINE_MAX_TOTAL_DISTANCE Then
+        discrepancyCount = discrepancyCount + 1
+        MsgBox "CRITICAL ERROR: Total Teleport distance (" & totalAccumulatedDistance & " units) " & _
+               "exceeds maximum physics bounds (" & ENGINE_MAX_TOTAL_DISTANCE & " units)!" & vbCrLf & _
+               "Player will clip through environment geometry.", vbCritical, "QA Pipeline Alert"
+    End If
+    
+    ' --- Summary Report Delivery ---
+    If discrepancyCount > 0 Then
+        MsgBox "Reconciliation Complete." & vbCrLf & _
+               "Found " & discrepancyCount & " asset-to-code anomalies." & vbCrLf & _
+               "Review the highlighted rows in your manifest sheet.", vbExclamation, "QA Report"
+    Else
+        MsgBox "Reconciliation Success! All telemetry matches engine build configurations.", vbInformation, "QA Report"
+    End If
+End Sub

@@ -1,0 +1,71 @@
+Sub ReconcileVillagerConversionAssets()
+    ' =========================================================================
+    ' QA TOOL: Villager Conversion Asset-to-Code Validator
+    ' PURPOSE: Prevents soft-locks by ensuring all convertible NPCs have 
+    '          matching script hooks and animation assets before engine testing.
+    ' =========================================================================
+
+    Dim wsAssets As Worksheet
+    Dim wsCode As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    Dim villagerID As String
+    Dim isConvertible As Boolean
+    Dim conversionScriptID As String
+    Dim animAssetPath As String
+    Dim codeMatch As Range
+
+    ' Define the working sheets exported from the engine
+    Set wsAssets = ThisWorkbook.Sheets("AssetDatabase")
+    Set wsCode = ThisWorkbook.Sheets("CodeRegistry")
+    
+    ' Find the last row of the exported asset list
+    lastRow = wsAssets.Cells(wsAssets.Rows.Count, "A").End(xlUp).Row
+
+    ' -------------------------------------------------------------------------
+    ' RECONCILIATION LOOP
+    ' -------------------------------------------------------------------------
+    ' Loop through every villager asset exported from the game engine
+    For i = 2 To lastRow
+        villagerID = wsAssets.Cells(i, 1).Value
+        isConvertible = (wsAssets.Cells(i, 2).Value = "TRUE")
+        conversionScriptID = wsAssets.Cells(i, 3).Value 
+        animAssetPath = wsAssets.Cells(i, 4).Value
+        
+        ' Reset previous QA validation formatting
+        wsAssets.Cells(i, 5).Interior.ColorIndex = xlNone
+
+        ' Mechanic check: Can this villager be converted by the Hero?
+        If isConvertible Then
+            
+            ' Look for the designated conversion script in the developer's code registry
+            Set codeMatch = wsCode.Columns("A").Find(What:=conversionScriptID, _
+                                                     LookIn:=xlValues, LookAt:=xlWhole)
+            
+            If Not codeMatch Is Nothing Then
+                ' The code logic exists. Now check if the art/animation team provided the asset.
+                If Len(animAssetPath) > 0 And InStr(animAssetPath, ".anim") > 0 Then
+                    wsAssets.Cells(i, 5).Value = "PASS: Reconciled"
+                    wsAssets.Cells(i, 5).Interior.Color = RGB(198, 239, 206) ' Light Green
+                Else
+                    ' Found the code, but missing the visual asset (will cause a T-pose)
+                    wsAssets.Cells(i, 5).Value = "FAIL: Missing Anim Asset"
+                    wsAssets.Cells(i, 5).Interior.Color = RGB(255, 199, 206) ' Light Red
+                End If
+            Else
+                ' The asset expects a script hook that the programmers haven't written yet
+                wsAssets.Cells(i, 5).Value = "FAIL: Orphaned Code Hook"
+                wsAssets.Cells(i, 5).Interior.Color = RGB(255, 199, 206) ' Light Red
+            End If
+            
+        Else
+            ' Villager cannot be converted (e.g., a static guard or key story NPC)
+            wsAssets.Cells(i, 5).Value = "SKIP: Non-Convertible"
+            wsAssets.Cells(i, 5).Interior.Color = RGB(255, 235, 156) ' Light Yellow
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete. Please review the highlighted failures.", vbInformation, "QA Automation"
+
+End Sub

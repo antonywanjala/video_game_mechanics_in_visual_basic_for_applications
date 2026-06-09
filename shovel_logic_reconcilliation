@@ -1,0 +1,70 @@
+Sub ShovelLogicReconciliation()
+    ' ---------------------------------------------------------
+    ' QA Tool: Fable Shovel Logic - Asset-to-Code Reconciliation
+    ' ---------------------------------------------------------
+    Dim wsData As Worksheet
+    Dim wsReport As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    Dim digSpotAsset As String
+    Dim assignedLootCode As String
+    Dim qaStatus As String
+    
+    ' Set up references to the Excel sheets
+    ' Assumes Sheet1 has the raw engine dump, Sheet2 is the QA output
+    Set wsData = ThisWorkbook.Sheets("Raw_Asset_Dump")
+    Set wsReport = ThisWorkbook.Sheets("QA_Report")
+    
+    ' Clear old report data
+    wsReport.Cells.Clear
+    
+    ' Build Report Headers
+    wsReport.Range("A1").Value = "Dig Spot Asset ID"
+    wsReport.Range("B1").Value = "Assigned Loot Code"
+    wsReport.Range("C1").Value = "Reconciliation Status"
+    wsReport.Range("A1:C1").Font.Bold = True
+    
+    ' Find the last row of data in the raw dump
+    lastRow = wsData.Cells(wsData.Rows.Count, "A").End(xlUp).Row
+    
+    ' =========================================================
+    ' THE RECONCILIATION FOR LOOP
+    ' =========================================================
+    For i = 2 To lastRow
+        digSpotAsset = wsData.Cells(i, 1).Value
+        assignedLootCode = wsData.Cells(i, 2).Value
+        
+        ' Logic 1: Does the asset have NO code assigned?
+        If Trim(assignedLootCode) = "" Or UCase(assignedLootCode) = "NULL" Then
+            qaStatus = "FAIL: Orphaned Asset. No loot code assigned."
+            
+        ' Logic 2: Does the assigned code violate naming conventions? (e.g., must start with 'ITM_')
+        ElseIf Left(UCase(assignedLootCode), 4) <> "ITM_" Then
+            qaStatus = "FAIL: Invalid Code Syntax. Loot ID must begin with ITM_."
+            
+        ' Logic 3: If checks pass, the asset and code are reconciled
+        Else
+            qaStatus = "PASS: Asset and Code Reconciled."
+        End If
+        
+        ' Write results to the QA Report sheet
+        wsReport.Cells(i, 1).Value = digSpotAsset
+        wsReport.Cells(i, 2).Value = assignedLootCode
+        wsReport.Cells(i, 3).Value = qaStatus
+        
+        ' Highlight failures in red for high visibility
+        If Left(qaStatus, 4) = "FAIL" Then
+            wsReport.Cells(i, 3).Interior.Color = RGB(255, 150, 150)
+        Else
+            wsReport.Cells(i, 3).Interior.Color = RGB(150, 255, 150)
+        End If
+    Next i
+    
+    ' Auto-fit columns for readability
+    wsReport.Columns("A:C").AutoFit
+    
+    ' Notify the QA Analyst
+    MsgBox "Shovel Logic Reconciliation Complete! Check the QA_Report tab.", vbInformation, "QA Automation"
+
+End Sub

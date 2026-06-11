@@ -1,0 +1,41 @@
+Sub ReconcileFableGlitch()
+    ' Define arrays for standard Fable assets and their expected baseline limits
+    Dim inventoryItems() As Variant
+    Dim expectedLimits() As Variant
+    Dim itemQuantities() As Variant
+    Dim i As Long
+    
+    ' Populating test QA asset data
+    inventoryItems = Array("Sword of Aeons", "Health Potion", "Solus Greatsword", "Guile Elixir")
+    expectedLimits = Array(1, 9, 1, 5) ' The hardcoded code boundaries
+    itemQuantities = Array(5, 4, 1, 12) ' Item Duplication Glitch active on index 0 and 3
+    
+    MsgBox "Starting Asset-to-Code Reconciliation Scan...", vbInformation, "QA Automation Tool"
+    
+    ' The For Loop simulating the reconciliation check
+    For i = LBound(inventoryItems) To UBound(inventoryItems)
+        
+        ' Check if the current asset count exceeds the code baseline (The Glitch)
+        If itemQuantities(i) > expectedLimits(i) Then
+            
+            ' Articulate the glitch to the QA Analyst to force reconciliation
+            MsgBox "!!! GLITCH DETECTED !!!" & vbCrLf & _
+                   "Asset Name: " & inventoryItems(i) & vbCrLf & _
+                   "Code Baseline Limit: " & expectedLimits(i) & vbCrLf & _
+                   "Actual Asset Count: " & itemQuantities(i) & vbCrLf & _
+                   "Status: Discrepancy found. Manual Asset-to-Code Reconciliation REQUIRED.", _
+                   vbCritical, "QA Flag: Memory Duplicate"
+                   
+            ' Simulate the QA Analyst reconciling the asset back to the code standard
+            Debug.Print "QA Action: Reconciling " & inventoryItems(i) & " from " & itemQuantities(i) & " down to " & expectedLimits(i)
+            itemQuantities(i) = expectedLimits(i)
+            
+        Else
+            ' Asset behavior matches code expectations
+            Debug.Print "Asset " & inventoryItems(i) & " verified successfully. In Sync."
+        End If
+        
+    Next i
+    
+    MsgBox "Reconciliation Scan Complete. All assets aligned with source code parameters.", vbInformation, "QA Status: Cleared"
+End Sub

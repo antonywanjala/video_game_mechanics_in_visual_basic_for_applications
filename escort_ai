@@ -1,0 +1,88 @@
+' =========================================================================
+' TITLE: Escort AI Asset-to-Code Reconciler
+' MODULE: QA_Automation_Routing
+' DESCRIPTION: Iterates through pathing nodes to reconcile design assets 
+'              against compiled runtime engine telemetry.
+' =========================================================================
+
+Sub ReconcileEscortAI()
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+    
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Asset variables (Design Specs)
+    Dim assetX As Double, assetY As Double, assetZ As Double
+    Dim assetState As String
+    
+    ' Code variables (Runtime Telemetry)
+    Dim codeX As Double, codeY As Double, codeZ As Double
+    Dim codeState As String
+    
+    ' Evaluation variables
+    Dim distanceError As Double
+    Dim maxTolerance As Double
+    Dim isNodeValid As Boolean
+    
+    ' Define acceptable variance in game units (e.g., 0.5 meters)
+    maxTolerance = 0.5
+    
+    ' Find the last populated row in the tracking sheet
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Application.ScreenUpdating = False
+    
+    ' --- RECONCILIATION LOOP ---
+    For i = 2 To lastRow ' Assuming Row 1 contains headers
+        isNodeValid = True
+        
+        ' 1. Fetch Designer Asset Constants
+        assetX = ws.Cells(i, 2).Value      ' Column B: Target X
+        assetY = ws.Cells(i, 3).Value      ' Column C: Target Y
+        assetZ = ws.Cells(i, 4).Value      ' Column D: Target Z
+        assetState = ws.Cells(i, 5).Value  ' Column E: Intended AI State (e.g., "FOLLOW", "COWER")
+        
+        ' 2. Fetch Code Base Runtime Outputs
+        codeX = ws.Cells(i, 6).Value       ' Column F: Actual Engine X
+        codeY = ws.Cells(i, 7).Value       ' Column G: Actual Engine Y
+        codeZ = ws.Cells(i, 8).Value       ' Column H: Actual Engine Z
+        codeState = ws.Cells(i, 9).Value   ' Column I: Executed AI State
+        
+        ' 3. Calculate Euclidean Distance Variance: Sqr((ΔX)^2 + (ΔY)^2 + (ΔZ)^2)
+        distanceError = Sqr(((codeX - assetX) ^ 2) + ((codeY - assetY) ^ 2) + ((codeZ - assetZ) ^ 2))
+        
+        ' 4. Verify Positional Integrity
+        If distanceError > maxTolerance Then
+            isNodeValid = False
+            ws.Cells(i, 10).Value = "FAIL: Desync (" & Round(distanceError, 2) & " units)"
+            ws.Cells(i, 10).Interior.Color = RGB(255, 200, 200) ' Clear Red Alert for QA
+        Else
+            ws.Cells(i, 10).Value = "PASS"
+            ws.Cells(i, 10).Interior.Color = RGB(200, 255, 200) ' Clean Green Pass
+        End If
+        
+        ' 5. Verify Behavioral Logic Alignment (Fable-specific State Checking)
+        If assetState <> codeState Then
+            isNodeValid = False
+            ws.Cells(i, 11).Value = "FAIL: Logic Broken (Expected " & assetState & ", Got " & codeState & ")"
+            ws.Cells(i, 11).Interior.Color = RGB(255, 180, 180)
+        Else
+            ws.Cells(i, 11).Value = "MATCH"
+            ws.Cells(i, 11).Interior.Color = RGB(200, 255, 200)
+        End If
+        
+        ' 6. Row Summary Status
+        If isNodeValid Then
+            ws.Cells(i, 12).Value = "RECONCILED"
+            ws.Cells(i, 12).Font.Color = RGB(0, 128, 0)
+        Else
+            ws.Cells(i, 12).Value = "ACTION REQUIRED"
+            ws.Cells(i, 12).Font.Color = RGB(255, 0, 0)
+        End If
+    Next i
+    
+    Application.ScreenUpdating = True
+    
+    MsgBox "Reconciliation complete! " & (lastRow - 1) & " Escort AI nodes analyzed.", vbInformation, "QA Repository Pipeline Tool"
+End Sub

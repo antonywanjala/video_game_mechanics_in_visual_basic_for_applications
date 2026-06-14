@@ -1,0 +1,80 @@
+Sub ReconcileGraveDiggingAssets()
+    ' =========================================================================
+    ' TITLE: Fable Grave-Digging Asset-to-Code Reconciliation Tool
+    ' PURPOSE: Automates verification of interactive world prefabs against 
+    '          master code logic registries to catch game-breaking bugs early.
+    ' TARGET USER: QA Analyst / Technical Designer
+    ' =========================================================================
+    
+    Dim wsAssets As Worksheet
+    Dim wsRegistry As Worksheet
+    Dim lastRowAssets As Long
+    Dim lastRowReg As Long
+    Dim i As Long, j As Long
+    
+    ' Runtime tracking variables
+    Dim currentAssetID As String
+    Dim currentAssetMorality As Integer
+    Dim codeRegistryMorality As Integer
+    Dim assetFoundInCode As Boolean
+    
+    ' Define workbook targets (Assumes standard automated export sheets)
+    On Error GoTo SheetError
+    Set wsAssets = ThisWorkbook.Sheets("Level_Assets")   ' Raw engine placement dump
+    Set wsRegistry = ThisWorkbook.Sheets("Code_Registry") ' Master database/code registry
+    On Error GoTo 0
+    
+    ' Establish boundaries based on data population
+    lastRowAssets = wsAssets.Cells(wsAssets.Rows.Count, "A").End(xlUp).Row
+    lastRowReg = wsRegistry.Cells(wsRegistry.Rows.Count, "A").End(xlUp).Row
+    
+    ' Initialize and clear prior QA audit results in Column E
+    wsAssets.Columns("E").ClearContents
+    wsAssets.Cells(1, 5).Value = "QA_Reconciliation_Status"
+    wsAssets.Cells(1, 5).Font.Bold = True
+    
+    ' -------------------------------------------------------------------------
+    ' CORE FOR LOOP: Iterating through every placed instance of the mechanic
+    ' -------------------------------------------------------------------------
+    For i = 2 To lastRowAssets
+        currentAssetID = Trim(wsAssets.Cells(i, 1).Value)          ' Column A: Unique Instance ID
+        currentAssetMorality = CInt(wsAssets.Cells(i, 3).Value)    ' Column C: Local Morality Impact
+        assetFoundInCode = False
+        
+        ' Nested search loop: Scans code registry for the matching Asset ID
+        For j = 2 To lastRowReg
+            If Trim(wsRegistry.Cells(j, 1).Value) = currentAssetID Then
+                assetFoundInCode = True
+                codeRegistryMorality = CInt(wsRegistry.Cells(j, 3).Value) ' Column C: Master Code Rules
+                
+                ' Sub-Validation: Ensure asset properties match code logic parameters
+                If currentAssetMorality <> codeRegistryMorality Then
+                    wsAssets.Cells(i, 5).Value = "CRITICAL MISMATCH: Local asset alignment cost (" & currentAssetMorality & ") differs from Code Registry (" & codeRegistryMorality & ")."
+                    wsAssets.Cells(i, 5).Interior.Color = RGB(255, 204, 204) ' Soft Red Highlight
+                Else
+                    wsAssets.Cells(i, 5).Value = "Reconciled Successfully"
+                    wsAssets.Cells(i, 5).Interior.Color = RGB(204, 255, 204) ' Soft Green Highlight
+                End If
+                
+                Exit For ' Match found; terminate nested loop early to conserve system memory
+            End If
+        Next j
+        
+        ' Exception Handling: Asset exists in map layout but completely lacks code binding
+        If Not assetFoundInCode Then
+            wsAssets.Cells(i, 5).Value = "UNREGISTERED ASSET: Grave exists in game world but has no corresponding logic entry in source code."
+            wsAssets.Cells(i, 5).Interior.Color = RGB(255, 153, 51) ' Amber Warning Highlight
+        End If
+    Next i
+    
+    ' -------------------------------------------------------------------------
+    ' POST-EXECUTION REPORTING
+    ' -------------------------------------------------------------------------
+    MsgBox "Asset-to-Code Reconciliation complete!" & vbCrLf & _
+           "Total instances parsed: " & (lastRowAssets - 1) & vbCrLf & _
+           "Please inspect column E on the 'Level_Assets' sheet for flagged discrepancies.", vbInformation, "QA Automation Engine"
+    Exit Sub
+
+SheetError:
+    MsgBox "Execution Failed: Ensure sheets named 'Level_Assets' and 'Code_Registry' both exist in this workbook.", vbCritical, "Initialization Error"
+End Sub

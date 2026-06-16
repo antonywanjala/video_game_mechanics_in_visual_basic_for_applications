@@ -1,0 +1,56 @@
+' ==============================================================================
+' REPOSITORY PATH: /QA_Tools/Macros/Villager_Asset_Reconciliation.vba
+' DESCRIPTION: Validates dynamic asset conversion for Villager entities against 
+'              the Hero's current alignment score.
+' ==============================================================================
+
+Sub ReconcileVillagerAssets()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("EngineDump")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Fetch the Hero's alignment from the engine dump header (Range: -100 to 100)
+    Dim heroAlignment As Integer
+    heroAlignment = ws.Range("F2").Value 
+    
+    Dim i As Long
+    Dim villagerID As String
+    Dim loadedAsset As String
+    Dim expectedAsset As String
+    
+    ' ---------------------------------------------------------
+    ' ASSET-TO-CODE RECONCILIATION LOOP
+    ' ---------------------------------------------------------
+    ' Loops through every villager currently loaded in memory
+    For i = 2 To lastRow
+        villagerID = ws.Cells(i, 1).Value      ' Column A: Entity ID
+        loadedAsset = ws.Cells(i, 2).Value     ' Column B: Currently Loaded Animation Asset
+        
+        ' 1. Determine Expected State based on Code Logic
+        If heroAlignment <= -50 Then
+            expectedAsset = "Anim_Cower_01"    ' Evil Conversion
+        ElseIf heroAlignment >= 50 Then
+            expectedAsset = "Anim_Cheer_01"    ' Good Conversion
+        Else
+            expectedAsset = "Anim_Idle_Neut"   ' Neutral State
+        End If
+        
+        ' 2. Reconcile Code State vs. Rendered Asset
+        If loadedAsset <> expectedAsset Then
+            ' Flag errors for QA to log a bug
+            ws.Cells(i, 3).Value = "FAIL: Mismatch"
+            ws.Cells(i, 3).Interior.Color = vbRed
+            ws.Cells(i, 4).Value = "Expected: " & expectedAsset & " | Found: " & loadedAsset
+        Else
+            ' Pass validation
+            ws.Cells(i, 3).Value = "PASS"
+            ws.Cells(i, 3).Interior.Color = vbGreen
+            ws.Cells(i, 4).Value = "Matched"
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete. Please log any highlighted mismatches in Jira.", vbInformation, "QA Automation"
+
+End Sub

@@ -1,0 +1,109 @@
+' ==============================================================================
+' REPOSITORY PATH: /QA_Tools/Macros/Blink_Mechanic_Reconciliation.vba
+' DESCRIPTION: Reconciles high-speed movement frames (Speed Blinking) against
+'              engine-defined asset packages, collision metrics, and visual states.
+' ==============================================================================
+
+Sub ReconcileSpeedBlinkAssets()
+    Dim ws As Worksheet
+    Set Set ws = ThisWorkbook.Sheets("BlinkTelemetry")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Constants reflecting mandatory game engine states during execution
+    Const COMPONENT_ACTIVE As String = "TRUE"
+    Const COMPONENT_DISABLED As String = "FALSE"
+    
+    Dim currentFrame As Long
+    Dim totalFrames As Long
+    totalFrames = lastRow - 1 ' Subtracting header row
+    
+    ' Loop variables mapping directly to database column outputs
+    Dim rowIdx As Long
+    Dim frameID As Long
+    Dim physicsCollision As String
+    Dim vfxAsset As String
+    Dim sfxAsset As String
+    
+    ' Error handling tracking
+    Dim validationErrors As Long
+    validationErrors = 0
+    
+    ' -------------------------------------------------------------------------
+    ' SPEED BLINKING ASSET-TO-CODE RECONCILIATION LOOP
+    ' -------------------------------------------------------------------------
+    ' Evaluates telemetry arrays row-by-row to guarantee asset synchronization
+    For rowIdx = 2 To lastRow
+        frameID = ws.Cells(rowIdx, 1).Value             ' Col A: Frame Number
+        physicsCollision = ws.Cells(rowIdx, 2).Value    ' Col B: Is Player Collision Active?
+        vfxAsset = ws.Cells(rowIdx, 3).Value            ' Col C: Loaded VFX Asset Name
+        sfxAsset = ws.Cells(rowIdx, 4).Value            ' Col D: Loaded SFX Asset Name
+        
+        Dim isError As Boolean
+        isError = False
+        Dim errorLog As String
+        errorLog = ""
+        
+        ' Phase 1: Initiation Frames (Start of the Blink movement window)
+        If frameID <= 3 Then
+            If physicsCollision <> COMPONENT_ACTIVE Then
+                isError = True
+                errorLog = errorLog & "[Collision should be ACTIVE at launch] "
+            End If
+            If vfxAsset <> "fx_blink_launch_01" Then
+                isError = True
+                errorLog = errorLog & "[Missing VFX: fx_blink_launch_01] "
+            End If
+            
+        ' Phase 2: Translocation / Dash Window (Mid-movement displacement)
+        ElseIf frameID > 3 And frameID < (totalFrames - 2) Then
+            If physicsCollision <> COMPONENT_DISABLED Then
+                isError = True
+                errorLog = errorLog & "[CRITICAL: Collision must be DISABLED during phase travel] "
+            End If
+            If vfxAsset <> "fx_blink_streak_loop" Then
+                isError = True
+                errorLog = errorLog & "[Missing VFX: fx_blink_streak_loop] "
+            End If
+            
+        ' Phase 3: Destination Re-entry / Arrival Window
+        Else
+            If physicsCollision <> COMPONENT_ACTIVE Then
+                isError = True
+                errorLog = errorLog & "[CRITICAL: Collision must re-engage at destination] "
+            End If
+            If vfxAsset <> "fx_blink_impact_land" Then
+                isError = True
+                errorLog = errorLog & "[Missing VFX: fx_blink_impact_land] "
+            End If
+            If sfxAsset <> "snd_blink_pop_out" Then
+                isError = True
+                errorLog = errorLog & "[Missing SFX: snd_blink_pop_out] "
+            End If
+        End If
+        
+        ' Output evaluation state cleanly back to the QA interface sheet
+        If isError Then
+            validationErrors = validationErrors + 1
+            ws.Cells(rowIdx, 5).Value = "FAILED RECONCILIATION"
+            ws.Cells(rowIdx, 5).Interior.Color = RGB(255, 200, 200) ' Light Red
+            ws.Cells(rowIdx, 6).Value = errorLog
+            ws.Cells(rowIdx, 6).Font.Color = RGB(150, 0, 0)
+        Else
+            ws.Cells(rowIdx, 5).Value = "RECONCILED"
+            ws.Cells(rowIdx, 5).Interior.Color = RGB(200, 255, 200) ' Light Green
+            ws.Cells(rowIdx, 6).Value = "Verified Match."
+            ws.Cells(rowIdx, 6).Font.Color = RGB(0, 100, 0)
+        End If
+    Next rowIdx
+    
+    ' -------------------------------------------------------------------------
+    ' POST-EXECUTION REPORTING SUMMARY
+    ' -------------------------------------------------------------------------
+    If validationErrors > 0 Then
+        MsgBox "Reconciliation run found " & validationErrors & " frame sync failures. Check highlighted logs to open bugs.", vbCritical, "Blink Automation Toolkit"
+    Else
+        MsgBox "Asset reconciliation successful! All teleportation frame dependencies match build specification.", vbInformation, "Blink Automation Toolkit"
+    End If
+End Sub

@@ -1,0 +1,45 @@
+Sub ReconcileFlourishAbuse()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("CombatAssets")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' QA Analyst Variables for Asset-to-Code Reconciliation
+    Dim assetID As String
+    Dim animDuration As Double
+    Dim activeFramesDuration As Double
+    Dim recoveryDuration As Double
+    Dim calculatedTotal As Double
+    
+    Dim i As Long
+    
+    ' Loop through all animation assets to find reconciliation mismatches
+    For i = 2 To lastRow
+        assetID = ws.Cells(i, 1).Value
+        animDuration = ws.Cells(i, 2).Value          ' Designer's intended total duration
+        activeFramesDuration = ws.Cells(i, 3).Value  ' Time attack is active
+        recoveryDuration = ws.Cells(i, 4).Value      ' Time player should be frozen/vulnerable
+        
+        ' Calculate actual code execution footprint
+        calculatedTotal = activeFramesDuration + recoveryDuration
+        
+        ' 1. Check for basic Asset-to-Code mismatch
+        If Abs(animDuration - calculatedTotal) > 0.001 Then
+            ws.Cells(i, 5).Value = "RECONCILIATION FAILURE: Code/Asset Mismatch"
+            ws.Cells(i, 5).Interior.Color = RGB(255, 192, 0) ' Orange alert
+            
+        ' 2. Check for "Flourish Abuse" vulnerability (Exploit Check)
+        ' If recovery duration is 0 or negative relative to an active frame, it's abusable.
+        ElseIf recoveryDuration <= 0 And InStr(1, assetID, "Flourish", vbTextCompare) > 0 Then
+            ws.Cells(i, 5).Value = "EXPLOIT FOUND: Flourish Abuse Frame Cancel Possible"
+            ws.Cells(i, 5).Interior.Color = RGB(255, 0, 0) ' Red alert
+            
+        Else
+            ws.Cells(i, 5).Value = "Reconciled & Secured"
+            ws.Cells(i, 5).Interior.Color = RGB(0, 255, 0) ' Green pass
+        End If
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete! QA Report Updated.", vbInformation, "QA Sandbox Tools"
+End Sub

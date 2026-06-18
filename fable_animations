@@ -1,0 +1,53 @@
+Sub ReconcileFableAnimations()
+    ' =====================================================================
+    ' Fable Expression Wheel: Asset-to-Code Reconciliation Tool
+    ' Purpose: Maximizes QA efficiency by scanning registered animation
+    '          assets and flagging missing files/mismatched IDs.
+    ' =====================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AnimationRegistry")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim animationName As String
+    Dim assetPath As String
+    Dim isCompiled As Boolean
+    Dim missingCount As Long
+    
+    missingCount = 0
+    
+    ' Clear previous QA flags
+    ws.Range("D2:E" & lastRow).ClearContents
+    ws.Range("D2:E" & lastRow).Interior.ColorIndex = xlNone
+    
+    ' The Reconciliation For-Loop
+    For i = 2 To lastRow
+        animationName = ws.Cells(i, 1).Value ' e.g., "Fart_Laugh_01"
+        assetPath = ws.Cells(i, 2).Value     ' e.g., "Content/Anims/Social/"
+        isCompiled = ws.Cells(i, 3).Value    ' Boolean flag from the build log
+        
+        ' QA Analyst Validation Check
+        If Not isCompiled Or animationName = "" Then
+            ' Flag the discrepancy
+            ws.Cells(i, 4).Value = "MISMATCH / MISSING"
+            ws.Cells(i, 4).Interior.Color = RGB(255, 204, 204) ' Soft Red
+            ws.Cells(i, 5).Value = "Check build pipeline for " & animationName
+            
+            missingCount = missingCount + 1
+        Else
+            ' Reconciliation Successful
+            ws.Cells(i, 4).Value = "Reconciled"
+            ws.Cells(i, 4).Interior.Color = RGB(204, 255, 204) ' Soft Green
+        End If
+    Next i
+    
+    ' QA Summary Report
+    If missingCount > 0 Then
+        MsgBox "Reconciliation Complete! Found " & missingCount & " broken animation asset(s). Check highlighted rows.", vbCritical, "QA Asset Alert"
+    Else
+        MsgBox "Reconciliation Successful! All Fable Expression animations match the code build.", vbInformation, "QA Pass"
+    End If
+End Sub

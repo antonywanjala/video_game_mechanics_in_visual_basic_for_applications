@@ -1,0 +1,58 @@
+Sub ReconcileReactionaryMomentum()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Animation_Manifest")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim assetID As String
+    Dim currentFrame As Integer
+    Dim triggerStart As Integer
+    Dim triggerEnd As Integer
+    Dim actualFrames As Integer
+    Dim expectedFrames As Integer
+    
+    Dim allowPlayerReaction As Boolean
+    Dim momentumWindowActive As Boolean
+    
+    ' Clear previous reconciliation statuses
+    ws.Range("G2:H" & lastRow).ClearContents
+    ws.Range("G2:H" & lastRow).Interior.ColorIndex = xlNone
+    
+    ' --- Asset-to-Code Reconciliation For Loop ---
+    For i = 2 To lastRow
+        ' Read asset metadata from spreadsheet rows
+        assetID = ws.Cells(i, 1).Value
+        currentFrame = ws.Cells(i, 2).Value
+        triggerStart = ws.Cells(i, 3).Value
+        triggerEnd = ws.Cells(i, 4).Value
+        actualFrames = ws.Cells(i, 5).Value
+        expectedFrames = ws.Cells(i, 6).Value
+        
+        ' 1. Articulate Reactionary Momentum Game Mechanics
+        If currentFrame >= triggerStart And currentFrame <= triggerEnd Then
+            allowPlayerReaction = True
+            momentumWindowActive = True
+            ws.Cells(i, 7).Value = "Active Window"
+        Else
+            allowPlayerReaction = False
+            momentumWindowActive = False
+            ws.Cells(i, 7).Value = "Standard Frame"
+        End If
+        
+        ' 2. Perform Asset-to-Code Reconciliation
+        ' Compares the engine asset state (Actual) against the codebase/design spec (Expected)
+        If actualFrames <> expectedFrames Then
+            ws.Cells(i, 8).Value = "MISMATCH: Rec Failed"
+            ws.Cells(i, 8).Interior.Color = RGB(255, 199, 206) ' Light Red highlight
+            ws.Cells(i, 8).Font.Color = RGB(156, 0, 6)
+        Else
+            ws.Cells(i, 8).Value = "Reconciled"
+            ws.Cells(i, 8).Interior.Color = RGB(198, 239, 206) ' Light Green highlight
+            ws.Cells(i, 8).Font.Color = RGB(0, 97, 0)
+        End If
+    Next i
+    
+    MsgBox "Asset-to-code reconciliation complete! Flagged mismatches have been highlighted.", vbInformation, "QA Automation Tool"
+End Sub

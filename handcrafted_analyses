@@ -1,0 +1,101 @@
+Sub ReconcileHandcraftedNPCs()
+    ' =========================================================================
+    ' TITLE: Fable-Style Handcrafted NPC Asset-to-Code Reconciler
+    ' DESCRIPTION: Loops through 1,000 unique NPCs to validate asset integrity,
+    '              making it easy for QA Analysts to spot reconciliation failures.
+    ' =========================================================================
+    
+    Dim i As Integer
+    Dim TotalNPCs As Integer
+    TotalNPCs = 1000
+    
+    ' Simulated QA Error tracking
+    Dim ErrorCount As Integer
+    ErrorCount = 0
+    
+    ' Target sheets (Assumes "NPC_Master_List" has our design assets)
+    Dim wsAssets As Worksheet
+    Dim wsLog As Worksheet
+    Set wsAssets = ThisWorkbook.Sheets("NPC_Master_List")
+    
+    ' Clear or create a QA Log sheet for the analyst
+    On Error Resume Next
+    Set wsLog = ThisWorkbook.Sheets("QA_Reconciliation_Log")
+    If wsLog Is Nothing Then
+        Set wsLog = ThisWorkbook.Sheets.Add(After:=wsAssets)
+        wsLog.Name = "QA_Reconciliation_Log"
+    End If
+    On Error GoTo 0
+    
+    ' Setup QA Log Headers
+    wsLog.Cells.Clear
+    wsLog.Range("A1:D1").Value = Array("NPC ID", "NPC Name", "Reconciliation Status", "QA Notes / Error Details")
+    wsLog.Range("A1:D1").Font.Bold = True
+    
+    ' Turn off screen updating for performance loop execution
+    Application.ScreenUpdating = False
+    
+    ' The Reconciliation Loop
+    For i = 1 To TotalNPCs
+        ' Read handcrafted asset rows (assuming row 1 is header, data starts at row 2)
+        Dim npcID As String
+        Dim npcName As String
+        Dim alignmentValue As Variant
+        Dim dialogueAssetPath As String
+        
+        npcID = wsAssets.Cells(i + 1, 1).Value
+        npcName = wsAssets.Cells(i + 1, 2).Value
+        alignmentValue = wsAssets.Cells(i + 1, 3).Value ' E.g., Morality score (-100 to 100)
+        dialogueAssetPath = wsAssets.Cells(i + 1, 4).Value
+        
+        ' QA Validation Flags
+        Dim isReconciled As Boolean
+        Dim qaNotes As String
+        isReconciled = True
+        qaNotes = "PASSED - Ready for Engine Build"
+        
+        ' --- RECONCILIATION CHECKS ---
+        
+        ' Check 1: Missing Critical Handcrafted Data
+        If npcID = "" Or npcName = "" Then
+            isReconciled = False
+            qaNotes = "FAILED: Missing unique NPC identifier or Name asset."
+            
+        ' Check 2: Code Out-of-Bounds Check (Fable Morality Spectrum)
+        ElseIf Not IsNumeric(alignmentValue) Or alignmentValue < -100 Or alignmentValue > 100 Then
+            isReconciled = False
+            qaNotes = "FAILED: Handcrafted Morality value (" & alignmentValue & ") out of engine bounds [-100, 100]."
+            
+        ' Check 3: Dialogue Asset File String Verification
+        ElseIf InStr(1, dialogueAssetPath, ".json") = 0 And InStr(1, dialogueAssetPath, ".xml") = 0 Then
+            isReconciled = False
+            qaNotes = "FAILED: Dialogue path extension mismatch. Engine expects compiled .json or .xml."
+        End If
+        
+        ' --- LOG RESULTS FOR QA ANALYST ---
+        wsLog.Cells(i + 1, 1).Value = IIf(npcID = "", "ROW " & (i + 1), npcID)
+        wsLog.Cells(i + 1, 2).Value = npcName
+        
+        If isReconciled Then
+            wsLog.Cells(i + 1, 3).Value = "SUCCESS"
+            wsLog.Cells(i + 1, 3).Interior.Color = RGB(204, 255, 204) ' Light green
+            wsLog.Cells(i + 1, 4).Value = qaNotes
+        Else
+            wsLog.Cells(i + 1, 3).Value = "ERROR"
+            wsLog.Cells(i + 1, 3).Interior.Color = RGB(255, 204, 204) ' Light red
+            wsLog.Cells(i + 1, 4).Value = qaNotes
+            ErrorCount = ErrorCount + 1
+        End If
+    Next i
+    
+    ' Autofit columns for QA readability
+    wsLog.Columns("A:D").AutoFit
+    Application.ScreenUpdating = True
+    
+    ' Final Prompt to the QA Analyst
+    If ErrorCount > 0 Then
+        MsgBox "Reconciliation Complete with " & ErrorCount & " error(s) found! Check the 'QA_Reconciliation_Log' sheet for highlights.", vbCritical, "Asset-to-Code Reconciliation Failed"
+    Else
+        MsgBox "Reconciliation Successful! All 1,000 Handcrafted NPCs match code constraints.", vbInformation, "Asset-to-Code Reconciliation Passed"
+    End If
+End Sub

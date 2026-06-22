@@ -1,0 +1,81 @@
+Attribute VB_Name = "AssetReconciliationModule"
+Option Explicit
+
+Sub ReconcileAssetsToCode()
+    ' This macro iterates through QA memory dump logs to ensure the correct visual 
+    ' assets are loaded into memory based on internal state integers.
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("DebugDump") ' Assuming data is pasted here
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim alignmentValue As Integer
+    Dim guiltScore As Integer
+    Dim loadedHeroAsset As String
+    Dim loadedFilterAsset As String
+    
+    Dim expectedHeroAsset As String
+    Dim expectedFilterAsset As String
+    
+    ' Loop through all logged QA test cases (Starts on Row 2 to skip headers)
+    For i = 2 To lastRow
+        ' 1. Read Code State Variables
+        alignmentValue = ws.Cells(i, 2).Value   ' Fable Alignment: -100 (Evil) to 100 (Good)
+        guiltScore = ws.Cells(i, 3).Value       ' Guilt Shaming: 0 (Pure) to 100 (Guilty)
+        
+        ' 2. Read Loaded Assets from Engine Dump
+        loadedHeroAsset = ws.Cells(i, 4).Value  ' The mesh currently rendered
+        loadedFilterAsset = ws.Cells(i, 5).Value ' The post-processing volume rendered
+        
+        ' ---------------------------------------------------------
+        ' LOGIC 1: Fable Alignment Morphology Expected Asset
+        ' ---------------------------------------------------------
+        If alignmentValue <= -50 Then
+            expectedHeroAsset = "MESH_Hero_Horns_Evil"
+        ElseIf alignmentValue >= 50 Then
+            expectedHeroAsset = "MESH_Hero_Halo_Good"
+        Else
+            expectedHeroAsset = "MESH_Hero_Base_Neutral"
+        End If
+        
+        ' ---------------------------------------------------------
+        ' LOGIC 2: Guilt Shaming Expected Asset
+        ' ---------------------------------------------------------
+        If guiltScore >= 80 Then
+            expectedFilterAsset = "PPV_Filter_Grayscale_Heavy"
+        ElseIf guiltScore >= 40 Then
+            expectedFilterAsset = "PPV_Filter_Vignette_Dark"
+        Else
+            expectedFilterAsset = "PPV_Filter_None"
+        End If
+        
+        ' ---------------------------------------------------------
+        ' QA RECONCILIATION & REPORTING
+        ' ---------------------------------------------------------
+        
+        ' Evaluate Fable Asset Match
+        If loadedHeroAsset <> expectedHeroAsset Then
+            ws.Cells(i, 6).Value = "FAIL: Expected " & expectedHeroAsset & " | Got " & loadedHeroAsset
+            ws.Cells(i, 6).Interior.Color = RGB(255, 100, 100) ' Red
+        Else
+            ws.Cells(i, 6).Value = "PASS"
+            ws.Cells(i, 6).Interior.Color = RGB(150, 255, 150) ' Green
+        End If
+        
+        ' Evaluate Guilt Shaming Asset Match
+        If loadedFilterAsset <> expectedFilterAsset Then
+            ws.Cells(i, 7).Value = "FAIL: Expected " & expectedFilterAsset & " | Got " & loadedFilterAsset
+            ws.Cells(i, 7).Interior.Color = RGB(255, 100, 100) ' Red
+        Else
+            ws.Cells(i, 7).Value = "PASS"
+            ws.Cells(i, 7).Interior.Color = RGB(150, 255, 150) ' Green
+        End If
+        
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete. Please review the highlighted cells.", vbInformation, "QA Tool"
+
+End Sub

@@ -1,0 +1,88 @@
+Sub ReconcileCombatStaggerPhysics()
+    ' =========================================================================
+    ' PURPOSE: Automated Asset-to-Code Reconciliation for Combat Physics
+    ' MECHANIC: Player-Favored "Stagger Frame" Loop (Classic Action-RPG Trilogy)
+    ' ROLE: QA Analyst Validation Tool
+    ' =========================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("CombatAssetManifest")
+    
+    ' Find the last row of combat data in the sheet
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Iteration Bounds: Loop through all imported engine asset IDs
+    Dim i As Long
+    
+    ' QA Variables for Reconciliation Mapping
+    Dim assetID As String
+    Dim sourceFrameCount As Integer
+    Dim engineFrameCount As Integer
+    Dim isPlayerAttack As Boolean
+    Dim reconciliationStatus As String
+    
+    ' Header Setup for QA Auditing Output
+    ws.Range("E1").Value = "Calculated Stagger Penalty"
+    ws.Range("F1").Value = "Reconciliation Status"
+    ws.Range("G1").Value = "Action Taken"
+    
+    ' -------------------------------------------------------------------------
+    ' FOR LOOP: Reconciling Asset Configuration vs. Engine Code Constraints
+    ' -------------------------------------------------------------------------
+    For i = 2 To lastRow
+        ' Extract Asset Parameters
+        assetID = ws.Cells(i, 1).Value
+        sourceFrameCount = ws.Cells(i, 2).Value ' Frames defined in animation asset
+        engineFrameCount = ws.Cells(i, 3).Value ' Frames currently compiled in code
+        isPlayerAttack = ws.Cells(i, 4).Value   ' Boolean flag: True = Player, False = NPC
+        
+        ' QA Validation Check: Enforce Player-Favored Stagger Physics
+        If isPlayerAttack = True Then
+            ' Classic Trilogy Rule: Player attacks multiply enemy stagger frames (Stagger Lock)
+            ' Engine design intentionally scales up the frame windows to guarantee player advantage
+            Dim expectedFavoredFrames As Integer
+            expectedFavoredFrames = sourceFrameCount * 2 ' Double the vulnerability window
+            
+            If engineFrameCount < expectedFavoredFrames Then
+                ' Fail State: Code does not match intended player advantage design
+                reconciliationStatus = "MISMATCH: Code Nerfs Player Advantage"
+                
+                ' Auto-Reconciliation Step: Force-update the engine configuration code array
+                engineFrameCount = expectedFavoredFrames
+                ws.Cells(i, 3).Value = engineFrameCount ' Write back to code sheet
+                ws.Cells(i, 7).Value = "AUTO-RECONCILED: Boosted Stagger Windows"
+            Else
+                reconciliationStatus = "MATCHED: Classic Player Advantage Verified"
+                ws.Cells(i, 7).Value = "None - Stable"
+            End If
+            
+            ws.Cells(i, 5).Value = "Enemy Stalled (Forced Loop)"
+            
+        Else
+            ' NPC/Enemy attacks on Player have minimal/decayed stagger frames to allow quick recovery
+            If engineFrameCount > 2 Then
+                reconciliationStatus = "MISMATCH: Player Staggered Too Long"
+                
+                ' Auto-Reconciliation Step: Clamp enemy stagger frames down
+                engineFrameCount = 2
+                ws.Cells(i, 3).Value = engineFrameCount
+                ws.Cells(i, 7).Value = "AUTO-RECONCILED: Clamped NPC Frames"
+            Else
+                reconciliationStatus = "MATCHED: Player Protection Active"
+                ws.Cells(i, 7).Value = "None - Stable"
+            End If
+            
+            ws.Cells(i, 5).Value = "Player Decayed/Instant Recovery"
+        End If
+        
+        ' Output final QA Reconciliation log entry per asset row
+        ws.Cells(i, 6).Value = reconciliationStatus
+        
+    Next i
+    ' -------------------------------------------------------------------------
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!" & vbCrLf & _
+           "Verified " & (lastRow - 1) & " combat physics assets.", vbInformation, "QA Automation Engine"
+
+End Sub

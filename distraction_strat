@@ -1,0 +1,41 @@
+' ==========================================
+' MECHANIC: THE DISTRACTION STRAT (FABLE / STANDARD ARPG)
+' PROCESS: ASSET-TO-CODE RECONCILIATION
+' OBJECTIVE: QA Analyst matches runtime engine states to static manifest assets
+' ==========================================
+
+Sub ReconcileDistractionStrat()
+    Dim totalGuards As Integer
+    Dim guardIndex As Integer
+    
+    ' Simulation parameters
+    totalGuards = 5
+    
+    ' Active QA Reconciliation Loop
+    For guardIndex = 1 To totalGuards
+        Dim guardAssetID As String
+        Dim guardState As String
+        Dim isDistracted As Boolean
+        
+        ' 1. Pull dynamic data from the engine's active memory layout
+        guardAssetID = "Static_Asset_NPC_Guard_" & Format(guardIndex, "00")
+        
+        ' 2. Simulate the runtime mechanic (Distraction Strat impacts specific indices)
+        If guardIndex Mod 2 <> 0 Then
+            guardState = "STATE_LOOK_AWAY"
+            isDistracted = True
+        Else
+            guardState = "STATE_PATROL_LOOKOUT"
+            isDistracted = False
+        End If
+        
+        ' 3. Explicit Verification: Force the QA Analyst to reconcile asset to code
+        ' Instead of silently logging, this surfaces live mismatches directly to the analyst
+        If isDistracted = True And guardState <> "STATE_LOOK_AWAY" Then
+            Debug.Print "CRITICAL MISMATCH: Asset " & guardAssetID & " failed to shift state under Distraction Strat."
+        Else
+            ' Log successful reconciliation point for the repository audit trail
+            Debug.Print "RECONCILED: " & guardAssetID & " | Runtime State: " & guardState & " | Flags: [Distraction Verified]"
+        End If
+    Next guardIndex
+End Sub

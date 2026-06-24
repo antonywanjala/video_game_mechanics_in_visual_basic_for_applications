@@ -1,0 +1,80 @@
+Sub ReconcileRealEstateEconomy()
+    ' =========================================================================
+    ' MECHANIC: Fable II Multi-World Real Estate Economy Validation
+    ' PURPOSE: Asset-to-Code Reconciliation for QA Analysts
+    ' =========================================================================
+    
+    Dim wsAssets As Worksheet
+    Set wsAssets = ThisWorkbook.Sheets("PropertyAssetMatrix")
+    
+    ' Simulated Game Engine State Arrays (The "Code" being reconciled)
+    Dim propertyIDs() As Variant
+    Dim currentRents() As Variant
+    Dim worldCorruptionFactors() As Variant
+    
+    ' Mocking live engine data for 5 properties affected by Orb/World states
+    propertyIDs = Array("PROP_001", "PROP_002", "PROP_003", "PROP_004", "PROP_005")
+    currentRents = Array(150, 450, 0, 1200, 75)               ' Live engine values
+    worldCorruptionFactors = Array(1.0, 1.5, 0.0, 1.2, 0.5)  ' Dynamic modifiers
+    
+    Dim i As Long
+    Dim lastRow As Long
+    Dim assetBaseRent As Double
+    Dim expectedRent As Double
+    Dim liveRent As Double
+    Dim liveModifier As Double
+    Dim propertyID As String
+    
+    Dim discrepancyCount As Long
+    discrepancyCount = 0
+    
+    ' Find the last row in the QA Asset Matrix sheet
+    lastRow = wsAssets.Cells(wsAssets.Rows.Count, "A").End(xlUp).Row
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' The Core Reconciliation Loop
+    For i = 0 To UBound(propertyIDs)
+        propertyID = propertyIDs(i)
+        liveRent = currentRents(i)
+        liveModifier = worldCorruptionFactors(i)
+        
+        ' Look up the static design asset value from the spreadsheet matrix
+        ' Column A = PropertyID, Column B = BaseRent
+        Dim assetRow As Variant
+        assetRow = Application.Match(propertyID, wsAssets.Range("A1:A" & lastRow), 0)
+        
+        If Not IsError(assetRow) Then
+            assetBaseRent = wsAssets.Cells(assetRow, 2).Value
+            
+            ' Economic Calculation: Expected Rent based on World State Asset rules
+            expectedRent = assetBaseRent * liveModifier
+            
+            ' Reconciliation Check (Asset vs Live Code State)
+            If expectedRent <> liveRent Then
+                Debug.Print "[FAIL] Discrepancy Found at " & propertyID
+                Debug.Print "       -> Asset Expected: " & expectedRent & " (Base: " & assetBaseRent & " * Mod: " & liveModifier & ")"
+                Debug.Print "       -> Live Code State: " & liveRent
+                
+                ' Highlight the asset row in Red for the QA team
+                wsAssets.Cells(assetRow, 1).Interior.Color = RGB(255, 200, 200)
+                discrepancyCount = discrepancyCount + 1
+            Else
+                ' Pass: Clear any previous flags
+                Debug.Print "[PASS] " & propertyID & " is synchronized."
+                wsAssets.Cells(assetRow, 1).Interior.Color = RGB(200, 255, 200)
+            End If
+        Else
+            Debug.Print "[ERROR] Live Property " & propertyID & " not found in Design Asset Matrix!"
+            discrepancyCount = discrepancyCount + 1
+        End If
+    Next i
+    
+    ' Final Reconciliation Report
+    Debug.Print "============================================="
+    If discrepancyCount = 0 Then
+        MsgBox "Reconciliation Successful! All code states match design assets.", vbInformation, "QA Sync Pass"
+    Else
+        MsgBox "Reconciliation Failed! Found " & discrepancyCount & " discrepancies. Check Immediate Window and highlighted rows.", vbCritical, "QA Sync Fail"
+    End If
+End Sub

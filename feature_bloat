@@ -1,0 +1,49 @@
+Sub ReconcileFeatureCreep()
+    ' =========================================================================
+    ' FILE: QA_AssetReconciliation_MolyneuxFactor_v1.0.bas
+    ' PURPOSE: Helps QA Analysts flag "hyped" design mechanics missing from assets.
+    ' =========================================================================
+    
+    Dim designMechanics() As Variant
+    Dim actualAssets() As Variant
+    Dim i As Long
+    Dim j As Long
+    Dim assetFound As Boolean
+    Dim currentMechanic As String
+    
+    ' 1. The Design Scope - What was promised/designed
+    designMechanics = Array("Dynamic Tree Growth", "Acorn Physics", "Hero Scarring", "The Sandgoose")
+    
+    ' 2. The Actual Repository Assets - What actually got built and coded
+    actualAssets = Array("Dynamic Tree Growth", "Hero Scarring")
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    Debug.Print "Analyzing repository against design documentation..."
+    Debug.Print "---------------------------------------------------"
+    
+    ' 3. The Reconciliation For-Loop
+    For i = LBound(designMechanics) To UBound(designMechanics)
+        currentMechanic = designMechanics(i)
+        assetFound = False
+        
+        ' Check if the design mechanic has a matching asset in the build
+        For j = LBound(actualAssets) To UBound(actualAssets)
+            If currentMechanic = actualAssets(j) Then
+                assetFound = True
+                Exit For ' Optimization for QA log efficiency
+            End If
+        Next j
+        
+        ' 4. QA Reporting Logic
+        If assetFound Then
+            Debug.Print "[PASS] Mechanic reconciled: '" & currentMechanic & "' matches code/asset manifests."
+        Else
+            ' Catching the "Sandgoose" remnants
+            Debug.Print "[CRITICAL QA ERROR] Feature Creep Alert! The mechanic '" & currentMechanic & "' exists in design but has NO matching asset in the repository."
+            Debug.Print "   -> Action Required: Flag to Production for immediate cut-content reconciliation."
+        End If
+    Next i
+    
+    Debug.Print "---------------------------------------------------"
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

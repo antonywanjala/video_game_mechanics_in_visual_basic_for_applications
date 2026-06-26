@@ -1,0 +1,56 @@
+Sub ReconcileBuskingAudioAssets()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AudioRegistry")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim assetName As String
+    Dim filePath As String
+    Dim targetTier As String
+    Dim actualTier As String
+    Dim i As Long
+    
+    ' QA Performance/Reconciliation metrics
+    Dim missingCount As Integer
+    Dim mismatchCount As Integer
+    missingCount = 0
+    mismatchCount = 0
+    
+    MsgBox "Starting Asset-to-Code Reconciliation for 'Bards & Busking'...", vbInformation, "QA Audit Start"
+    
+    ' The Core Reconciliation Loop
+    For i = 2 To lastRow ' Assuming Row 1 contains headers
+        assetName = ws.Cells(i, 1).Value       ' Col A: Asset ID / Name
+        filePath = ws.Cells(i, 2).Value        ' Col B: Expected File Path
+        targetTier = ws.Cells(i, 3).Value      ' Col C: Design Tier (e.g., SmallCrowd, FlawlessSolo)
+        actualTier = ws.Cells(i, 4).Value      ' Col D: Engine Metadata Tier
+        
+        ' 1. Check if the asset file actually exists physically in the build folder
+        If Dir(filePath) = "" Then
+            ' Flag missing asset
+            ws.Cells(i, 5).Value = "CRITICAL: Asset File Missing!"
+            ws.Cells(i, 5).Interior.Color = RGB(255, 204, 204) ' Soft Red
+            missingCount = missingCount + 1
+            
+        ' 2. Reconcile if the Asset Logic Tier matches the Code Metadata
+        ElseIf targetTier <> actualTier Then
+            ' Flag logic/reconciliation mismatch
+            ws.Cells(i, 5).Value = "MISMATCH: Design Tier vs Build Metadata"
+            ws.Cells(i, 5).Interior.Color = RGB(255, 255, 204) ' Soft Yellow
+            mismatchCount = mismatchCount + 1
+            
+        ' 3. Asset passes reconciliation
+        Else
+            ws.Cells(i, 5).Value = "RECONCILED / PASSED"
+            ws.Cells(i, 5).Interior.Color = RGB(204, 255, 204) ' Soft Green
+        End If
+    Next i
+    
+    ' Summary Report to encourage QA Analyst visibility
+    MsgBox "Reconciliation Complete!" & vbCrLf & _
+           "Total Assets Audited: " & (lastRow - 1) & vbCrLf & _
+           "Missing Files: " & missingCount & vbCrLf & _
+           "Logic Mismatches: " & mismatchCount, _
+           IIf(missingCount + mismatchCount > 0, vbExclamation, vbInformation), "QA Audit Summary"
+End Sub

@@ -1,0 +1,88 @@
+Sub ReconcileExpressionOvercharge()
+    ' =========================================================================
+    ' MECHANIC: Fable-Style Expression Comboing & Overcharging
+    ' PURPOSE: Reconciles design spreadsheet asset values against hardcoded formulas
+    ' AUTHOR: QA Automation / Dev Collaborator
+    ' =========================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(1) ' Assumes data lives on the first sheet
+    
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Design Variable Mapping
+    Dim expressionName As String
+    Dim baseImpact As Double
+    Dim holdTime As Double
+    Dim maxChargeTime As Double
+    Dim expectedImpact As Double
+    Dim calculatedImpact As Double
+    
+    ' Reconciliation tolerance (epsilon) for floating point math
+    Const EPSILON As Double = 0.001
+    
+    ' Clear prior QA run logs in Immediate Window and find last row
+    Debug.Print String(50, "=")
+    Debug.Print "STARTING ASSET-TO-CODE RECONCILIATION: EXPRESSION OVERCHARGE"
+    Debug.Print "Timestamp: " & Now
+    Debug.Print String(50, "=")
+    
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    
+    ' Loop through the asset rows (Skipping Row 1 Headers)
+    For i = 2 To lastRow
+        
+        ' 1. Map Asset Data to Variables
+        expressionName = ws.Cells(i, 1).Value  ' Col A: e.g., "Lute Dance", "Fart"
+        baseImpact = ws.Cells(i, 2).Value      ' Col B: Base renown/villager affinity change
+        holdTime = ws.Cells(i, 3).Value        ' Col C: How long player held down the input
+        maxChargeTime = ws.Cells(i, 4).Value    ' Col D: Cap limit for charging
+        expectedImpact = ws.Cells(i, 5).Value   ' Col E: The Designer's calculated target
+        
+        ' 2. Execute Code Logic (Mimicking Engine Rules)
+        ' Clamp the hold time to the max allowed charge duration
+        If holdTime > maxChargeTime Then
+            holdTime = maxChargeTime
+        End If
+        
+        ' Overcharge Mechanic Formula: 
+        ' Base Impact * (1 + (Hold Ratio * Overcharge Bonus Multiplier Cap))
+        ' Yields a max 3x impact multiplier at 100% maximum charge hold duration
+        calculatedImpact = baseImpact * (1 + ((holdTime / maxChargeTime) * 2))
+        
+        ' 3. Populate Runtime Result for QA Analysis
+        ws.Cells(i, 6).Value = calculatedImpact ' Col F
+        
+        ' 4. Perform Reconciliation & Apply QA Scannability Flags
+        If Abs(calculatedImpact - expectedImpact) <= EPSILON Then
+            ' PASS State
+            With ws.Cells(i, 7) ' Col G
+                .Value = "MATCH / PASS"
+                .Interior.Color = RGB(200, 245, 200) ' Soft Green
+                .Font.Color = RGB(0, 100, 0)
+            End With
+        Else
+            ' FAIL State - Mismatch caught
+            With ws.Cells(i, 7) ' Col G
+                .Value = "MISMATCH / FAIL"
+                .Interior.Color = RGB(255, 200, 200) ' Soft Red
+                .Font.Color = RGB(150, 0, 0)
+            End With
+            
+            ' Print actionable QA data downstream to console
+            Debug.Print "[QA ALERT] Mismatch Found on Row " & i & " | Asset: '" & expressionName & "'"
+            Debug.Print "   -> Expected (Asset Sheet): " & expectedImpact
+            Debug.Print "   -> Calculated (Code Loop): " & calculatedImpact
+            Debug.Print "   -> Variance: " & (calculatedImpact - expectedImpact)
+            Debug.Print String(30, "-")
+        End If
+        
+    Next i
+    
+    Debug.Print String(50, "=")
+    Debug.Print "RECONCILIATION PROCESSING COMPLETE."
+    Debug.Print String(50, "=")
+    MsgBox "Reconciliation Complete! Check the color-coded Sheet columns and Immediate Window for error outputs.", vbInformation, "QA Verification Engine"
+    
+End Sub

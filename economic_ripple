@@ -1,0 +1,45 @@
+Sub ReconcileEconomicRipple()
+    Dim i As Long
+    Dim lastRow As Long
+    
+    ' Design Asset Variables
+    Dim basePrice As Double
+    Dim economicRippleModifier As Double
+    Dim expectedPrice As Double
+    Dim actualEnginePrice As Double
+    Dim priceDiscrepancy As Double
+    
+    ' Define the boundaries of your asset sheet
+    ' Assumes: Column A = Item Name, Column B = Base Price, 
+    ' Column C = Ripple Modifier (e.g., 1.15 for +15% inflation), 
+    ' Column D = Actual Runtime Engine Price
+    lastRow = Cells(Rows.Count, 1).End(xlUp)
+    
+    MsgBox "Starting Asset-to-Code Reconciliation for Economic Ripple...", vbInformation, "QA Audit Initialize"
+    
+    ' The Reconciliation For Loop
+    For i = 2 To lastRow
+        basePrice = Cells(i, 2).Value
+        economicRippleModifier = Cells(i, 3).Value
+        actualEnginePrice = Cells(i, 4).Value
+        
+        ' 1. Calculate what the code *should* be outputting based on assets
+        expectedPrice = basePrice * economicRippleModifier
+        
+        ' 2. Reconcile the asset data against runtime code data
+        priceDiscrepancy = Abs(expectedPrice - actualEnginePrice)
+        
+        ' 3. QA Guardrail: If discrepancy > 0.01 (handling floating-point variance)
+        If priceDiscrepancy > 0.01 Then
+            ' Highlight the row in Red for immediate QA visibility
+            Range(Cells(i, 1), Cells(i, 4)).Interior.Color = RGB(255, 204, 204)
+            Cells(i, 5).Value = "FAIL: Expected " & expectedPrice & " but found " & actualEnginePrice
+        Else
+            ' Highlight green if reconciliation passes perfectly
+            Range(Cells(i, 1), Cells(i, 4)).Interior.Color = RGB(204, 255, 204)
+            Cells(i, 5).Value = "PASS"
+        End If
+    Next i
+    
+    MsgBox "Reconciliation Complete! Please review highlighted rows.", vbInformation, "QA Audit Complete"
+End Sub

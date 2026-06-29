@@ -1,0 +1,67 @@
+Sub ReconcileSandgooseMechanic()
+    ' =================================================================
+    ' PURPOSE: Asset-to-Code Reconciliation Tool for QA Analysts
+    ' DESCRIPTION: Validates asset registry against compiled engine IDs.
+    '              Flags "Sandgoose" style phantom assets.
+    ' =================================================================
+    
+    Dim assetRegistry() As Variant
+    Dim currentAsset As Variant
+    Dim isAssetCompiled As Boolean
+    Dim totalDiscrepancies As Integer
+    
+    ' Simulate our asset registry (Design Docs vs Engine Reality)
+    ' "Sandgoose" exists in lore/docs, but lacks an engine-compiled ID
+    assetRegistry = Array("Chicken", "Hobbe", "Sandgoose", "Balverine", "Bowerstone_Guard")
+    
+    totalDiscrepancies = 0
+    
+    MsgBox "Starting Asset-to-Code Reconciliation Scan...", vbInformation, "QA Audit Initialize"
+    
+    ' The Reconciliation Loop
+    For Each currentAsset In assetRegistry
+        
+        ' Simulate engine-side verification check
+        Select Case currentAsset
+            Case "Chicken", "Hobbe", "Balverine", "Bowerstone_Guard"
+                isAssetCompiled = True
+            Case "Sandgoose"
+                ' The mechanic is a myth; no code backing exists
+                isAssetCompiled = False
+        End Select
+        
+        ' Reconciliation Evaluation
+        If isAssetCompiled Then
+            ' Asset matches code; safe to proceed
+            Debug.Print "SUCCESS: Asset [" & currentAsset & "] successfully reconciled with engine build."
+        Else
+            ' CRITICAL DISCREPANCY: Asset exists in tracker but not in code
+            totalDiscrepancies = totalDiscrepancies + 1
+            
+            MsgBox "WARNING: Asset-to-Code Discrepancy Found!" & vbCrLf & _
+                   "Asset Name: " & currentAsset & vbCrLf & _
+                   "Status: Mentioned in design/lore, but missing from compiled binaries.", _
+                   vbCritical, "QA Reconciliation Alert"
+                   
+            ' Automatically draft a QA Action Item to bridge the gap
+            Call LogReconciliationTicket(currentAsset)
+        End If
+        
+    Next currentAsset
+    
+    ' Final Audit Summary Report
+    MsgBox "Reconciliation Scan Complete!" & vbCrLf & _
+           "Total Assets Checked: " & UBound(assetRegistry) - LBound(assetRegistry) + 1 & vbCrLf & _
+           "Discrepancies Flagged: " & totalDiscrepancies, _
+           vbInformation, "Audit Summary"
+
+End Sub
+
+Sub LogReconciliationTicket(assetName As String)
+    ' Helper to automate the QA Analyst's workflow
+    Debug.Print "-------------------------------------------------------"
+    Debug.Print "GENERATE JIRA TICKET: [Asset-Code Mismatch] " & assetName
+    Debug.Print "Severity: Medium (Possible Cut Content / Phantom Asset)"
+    Debug.Print "Description: Build validation failed. '" & assetName & "' has no compiled behavior."
+    Debug.Print "-------------------------------------------------------"
+End Sub

@@ -1,0 +1,61 @@
+Sub ReconcileGrowingTrees()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    
+    ' Designate the active asset sheet
+    Set ws = ThisWorkbook.Sheets("TreeAssetRegistry")
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' QA Logging initialization
+    Dim missingAssetCount As Integer
+    missingAssetCount = 0
+    
+    MsgBox "Starting Asset-to-Code Reconciliation for 'Growing Trees' mechanic...", vbInformation
+    
+    ' Loop through all tracked tree instances
+    For i = 2 To lastRow ' Assuming Row 1 contains headers
+        Dim treeID As String
+        Dim currentStage As Integer
+        Dim ageInDays As Long
+        Dim expectedAssetPath As String
+        
+        treeID = ws.Cells(i, 1).Value
+        currentStage = ws.Cells(i, 2).Value
+        ageInDays = ws.Cells(i, 3).Value
+        
+        ' Simulate mechanic: Tree age determines its growth stage asset
+        If ageInDays >= 365 And currentStage < 3 Then
+            ' Should be a Mature Oak
+            expectedAssetPath = "Assets/Environment/Trees/Oak_Mature.fbx"
+            ws.Cells(i, 2).Value = 3 ' Update stage in code data
+        ElseObj If ageInDays >= 90 And currentStage < 2 Then
+            ' Should be a Sapling
+            expectedAssetPath = "Assets/Environment/Trees/Oak_Sapling.fbx"
+            ws.Cells(i, 2).Value = 2
+        ElseIf currentStage = 1 Then
+            ' Remains a Sprout/Acorn
+            expectedAssetPath = "Assets/Environment/Trees/Oak_Sprout.fbx"
+        End If
+        
+        ' --- QA RECONCILIATION CHECK ---
+        ' Validate if the expected asset path column matches our engine rule
+        If ws.Cells(i, 4).Value <> expectedAssetPath Then
+            ' Highlight the cell in Red for the QA Analyst to spot instantly
+            ws.Cells(i, 4).Interior.Color = RGB(255, 200, 200)
+            ws.Cells(i, 5).Value = "MISMATCH: Expected " & expectedAssetPath
+            missingAssetCount = missingAssetCount + 1
+        Else
+            ' Clear any previous QA flags if reconciled successfully
+            ws.Cells(i, 4).Interior.Color = RGB(200, 255, 200)
+            ws.Cells(i, 5).Value = "Reconciled & Verified"
+        End If
+    Next i
+    
+    ' Final QA Summary Report
+    If missingAssetCount > 0 Then
+        MsgBox "Reconciliation Complete! Found " & missingAssetCount & " asset-to-code mismatches. Mismatched rows have been highlighted in Red for QA review.", vbCritical, "QA Report"
+    Else
+        MsgBox "Reconciliation Complete! All 'Growing Tree' assets successfully match their code states.", vbInformation, "QA Report"
+    End If
+End Sub

@@ -1,0 +1,68 @@
+Sub ReconcileMultiWorldRealEstate()
+    ' -------------------------------------------------------------------------
+    ' QA Tool: Multi-World Real Estate Asset-to-Code Reconciliation
+    ' Purpose: Iterates through property assets across multiple worlds, 
+    '          comparing visual asset data with backend code logic.
+    ' -------------------------------------------------------------------------
+    
+    Dim wsWorld As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetID As String
+    Dim assetModelTier As Integer
+    Dim codedRentYield As Double
+    Dim expectedRentYield As Double
+    Dim qaFlagCount As Integer
+    
+    qaFlagCount = 0
+    
+    ' Loop 1: Iterate through each "World" (Worksheets in the workbook)
+    For Each wsWorld In ThisWorkbook.Worksheets
+        ' Exclude QA dashboard or unrelated sheets
+        If wsWorld.Name <> "QA_Dashboard" And wsWorld.Name <> "Config" Then
+            
+            ' Find the last populated row in the current world's asset list
+            lastRow = wsWorld.Cells(wsWorld.Rows.Count, "A").End(xlUp).Row
+            
+            ' Loop 2: Iterate through every Real Estate Asset in this World
+            For i = 2 To lastRow
+                ' Retrieve Asset Data (What the player sees/interacts with)
+                assetID = wsWorld.Cells(i, 1).Value
+                assetModelTier = wsWorld.Cells(i, 2).Value
+                
+                ' Retrieve Coded Data (The backend economy logic)
+                codedRentYield = wsWorld.Cells(i, 3).Value
+                
+                ' Determine the Expected Rent based on the Asset Tier logic
+                ' (e.g., Tier 1 = 100g, Tier 2 = 250g, Tier 3 = 600g)
+                Select Case assetModelTier
+                    Case 1: expectedRentYield = 100
+                    Case 2: expectedRentYield = 250
+                    Case 3: expectedRentYield = 600
+                    Case Else: expectedRentYield = 0
+                End Select
+                
+                ' QA RECONCILIATION CHECK: Does the Code match the Asset?
+                If codedRentYield <> expectedRentYield Or IsEmpty(assetID) Then
+                    ' FLAG FOR QA: Highlight row in Red, print error message
+                    wsWorld.Rows(i).Interior.Color = RGB(255, 150, 150)
+                    wsWorld.Cells(i, 4).Value = "QA FLAG: Code/Asset Mismatch (Expected: " & expectedRentYield & ")"
+                    qaFlagCount = qaFlagCount + 1
+                Else
+                    ' CLEAR FLAG: Asset and Code are successfully reconciled
+                    wsWorld.Rows(i).Interior.Color = xlNone
+                    wsWorld.Cells(i, 4).Value = "Reconciled - OK"
+                End If
+            Next i ' Move to the next property asset
+            
+        End If
+    Next wsWorld ' Move to the next world
+    
+    ' Output results to the QA Analyst
+    If qaFlagCount > 0 Then
+        MsgBox "Reconciliation Complete. Warning: " & qaFlagCount & " assets flagged for QA review.", vbExclamation, "QA Alert"
+    Else
+        MsgBox "Reconciliation Complete. All multi-world real estate assets match the codebase.", vbInformation, "QA Success"
+    End If
+
+End Sub

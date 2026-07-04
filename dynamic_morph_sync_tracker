@@ -1,0 +1,55 @@
+Sub ReconcileWeaponReskins()
+    ' --- QA Asset-to-Code Reconciliation Script ---
+    ' Purpose: Verifies Fable-style dynamic weapon morphing against asset IDs.
+    
+    Dim i As Long
+    Dim totalWeapons As Long
+    
+    ' Simulated Player Metrics (e.g., Fable Morph Metrics)
+    Dim playerMorality As String: playerMorality = "Evil" ' Options: Good, Evil, Neutral
+    Dim playerWealth As Double: playerWealth = 150000     ' Tracks if weapon becomes ornate
+    
+    ' Mock Asset Database Arrays (WeaponID, CurrentSkinID, WeaponName)
+    Dim inventory(1 To 3, 1 To 3) As Variant
+    inventory(1, 1) = "WPN_001": inventory(1, 2) = "SKN_BONE_01": inventory(1, 3) = "Hero's Greatsword"
+    inventory(2, 1) = "WPN_002": inventory(2, 2) = "SKN_GOLD_02": inventory(2, 3) = "Royal Pistol"
+    inventory(3, 1) = "WPN_003": inventory(3, 2) = "SKN_DFLT_00": inventory(3, 3) = "Iron Hammer" ' Potential Mismatch
+    
+    totalWeapons = UBound(inventory, 1)
+    
+    Debug.Print "=== STARTING QA ASSET RECONCILIATION ==="
+    Debug.Print "Player State: Morality = " & playerMorality & " | Wealth = " & playerWealth
+    Debug.Print "---------------------------------------"
+    
+    ' For Loop representing the Asset-to-Code reconciliation behavior
+    For i = 1 To totalWeapons
+        Dim currentWeaponID As String: currentWeaponID = inventory(i, 1)
+        Dim actualSkinID As String: actualSkinID = inventory(i, 2)
+        Dim weaponName As String: weaponName = inventory(i, 3)
+        Dim expectedSkinID As String
+        
+        ' Determine expected skin asset code based on player actions (The "Fable" Mechanic)
+        If playerMorality = "Evil" And weaponName Like "*Greatsword*" Then
+            expectedSkinID = "SKN_BONE_01" ' Becomes jagged/skeletal
+        ElseIf playerWealth >= 100000 And weaponName Like "*Royal*" Then
+            expectedSkinID = "SKN_GOLD_02" ' Becomes gilded/ornate
+        Else
+            expectedSkinID = "SKN_DFLT_00" ' Default base skin
+        End If
+        
+        ' QA Reconciliation Check
+        If actualSkinID <> expectedSkinID Then
+            ' Highlight discrepancy explicitly for the QA Analyst
+            Debug.Print "[FAIL] Reconciliation Error on Asset: " & currentWeaponID & " (" & weaponName & ")"
+            Debug.Print "       -> Expected Skin: " & expectedSkinID
+            Debug.Print "       -> Actual Skin in Code: " & actualSkinID
+            Debug.Print "       -> ACTION REQUIRED: Update Asset Registry or fix Morph Logic."
+        Else
+            ' Log successful match
+            Debug.Print "[PASS] Asset " & currentWeaponID & " (" & weaponName & ") matches active code logic."
+        End If
+    Next i
+    
+    Debug.Print "---------------------------------------"
+    Debug.Print "=== RECONCILIATION PROCESS COMPLETE ==="
+End Sub

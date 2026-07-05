@@ -1,0 +1,59 @@
+Sub ReconcileOverchargeMechanic()
+    ' --- QA Analyst Asset-to-Code Reconciliation Tool ---
+    ' Purpose: Validates if the game engine's Overcharge & Combo math 
+    ' matches the design asset sheet values.
+
+    Dim SpellSheet As Worksheet
+    Set SpellSheet = ThisWorkbook.Sheets("SpellAssets")
+    
+    Dim LastRow As Long
+    LastRow = SpellSheet.Cells(SpellSheet.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim BaseDamage As Double
+    Dim ChargeTime As Double
+    Dim MaxChargeTier As Integer
+    Dim ComboModifier As Double
+    Dim ExpectedFinalDamage As Double
+    Dim CalculatedDamage As Double
+    Dim TierMultiplier As Double
+    Dim t As Integer
+    
+    ' Loop through each spell asset row to reconcile code behavior with design data
+    For i = 2 To LastRow
+        ' 1. Extract Asset Data
+        BaseDamage = SpellSheet.Cells(i, 2).Value       ' Column B: Base Damage
+        ChargeTime = SpellSheet.Cells(i, 3).Value       ' Column C: Player Hold Time (seconds)
+        MaxChargeTier = SpellSheet.Cells(i, 4).Value    ' Column D: Max Allowed Overcharge Tier
+        ComboModifier = SpellSheet.Cells(i, 5).Value    ' Column E: Expression Combo Multiplier (e.g., 1.2x)
+        ExpectedFinalDamage = SpellSheet.Cells(i, 6).Value ' Column F: Expected Result from Asset
+        
+        ' 2. Process the "Overcharging" For Loop
+        ' Every 1.5 seconds of holding increases the charge tier, up to MaxChargeTier
+        TierMultiplier = 1.0
+        For t = 1 To MaxChargeTier
+            If ChargeTime >= (t * 1.5) Then
+                ' Each successful tier level adds 50% more power (Overcharge)
+                TierMultiplier = TierMultiplier + 0.5
+            Else
+                Exit For ' Stop processing tiers if charge time didn't reach this threshold
+            End If
+        Next t
+        
+        ' 3. Apply Expression Comboing Modifier
+        ' If the player comboed successfully, the modifier is > 1.0
+        CalculatedDamage = BaseDamage * TierMultiplier * ComboModifier
+        
+        ' 4. Reconciliation Check
+        ' If the calculated math matches the design sheet, highlight green. Otherwise, flag red for QA review.
+        If Abs(CalculatedDamage - ExpectedFinalDamage) < 0.01 Then
+            SpellSheet.Cells(i, 7).Value = "MATCH"
+            SpellSheet.Cells(i, 7).Interior.Color = RGB(144, 238, 144) ' Light Green
+        Else
+            SpellSheet.Cells(i, 7).Value = "MISMATCH (Calc: " & CalculatedDamage & ")"
+            SpellSheet.Cells(i, 7).Interior.Color = RGB(240, 128, 128) ' Light Red
+        End If
+    Next i
+
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation, "QA Tool"
+End Sub

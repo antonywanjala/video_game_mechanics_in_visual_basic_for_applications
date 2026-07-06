@@ -1,0 +1,85 @@
+Sub ReconcileBuskingMechanic()
+    ' --- ASSET REGISTRY DICTIONARY (Simulated for QA Reconciliation) ---
+    ' In a live QA environment, these strings match the SoundBank/Wwise IDs exactly.
+    Dim AudioCues(1 To 5) As String
+    AudioCues(1) = "SND_Lute_C_Major_01"
+    AudioCues(2) = "SND_Lute_E_Minor_02"
+    AudioCues(3) = "SND_Lute_G_Major_03"
+    AudioCues(4) = "SND_Lute_D_Minor_04"
+    AudioCues(5) = "SND_Lute_Finish_Chord"
+    
+    Dim CrowdCues(1 To 3) As String
+    CrowdCues(1) = "SND_Crowd_Boo_01"
+    CrowdCues(2) = "SND_Crowd_Cheer_Soft"
+    CrowdCues(3) = "SND_Crowd_Cheer_Loud"
+
+    ' --- PERFORMANCE VARIABLES ---
+    Dim TotalGoldEarned As Integer
+    Dim TotalFameEarned As Integer
+    Dim PlayerAccuracy As Double
+    Dim CurrentAudioCue As String
+    
+    TotalGoldEarned = 0
+    TotalFameEarned = 0
+    
+    ' QA Header Log
+    Debug.Print "=========================================================="
+    Debug.Print "QA RECONCILIATION LOG: Bards & Busking Audio Loop Sequence"
+    Debug.Print "=========================================================="
+
+    ' --- MAIN RECONCILIATION FOR LOOP ---
+    ' Iterates through the audio asset array to simulate the performance sequence
+    Dim NoteIndex As Integer
+    For NoteIndex = 1 To 5
+        CurrentAudioCue = AudioCues(NoteIndex)
+        
+        ' Simulate a player accuracy score between 0.0 and 1.0 for each note
+        PlayerAccuracy = Round(Rnd(), 2)
+        
+        ' RECONCILIATION CHECKPOINT 1: Verify audio asset is being called by logic
+        Debug.Print "[ASSET MATCH] Note #" & NoteIndex & " -> Loading Code Pointer: " & CurrentAudioCue
+        
+        ' Process gameplay mechanic behavior based on asset timing/accuracy
+        If PlayerAccuracy >= 0.75 Then
+            ' Perfect Note
+            TotalGoldEarned = TotalGoldEarned + 10
+            TotalFameEarned = TotalFameEarned + 5
+            
+            ' RECONCILIATION CHECKPOINT 2: Audio Engine Trigger Link
+            Debug.Print "   [AUDIO ENGINE] Triggering: " & CurrentAudioCue & " at Vol: 100% (Perfect Hit)"
+        ElseIf PlayerAccuracy >= 0.4 Then
+            ' Good Note
+            TotalGoldEarned = TotalGoldEarned + 5
+            
+            Debug.Print "   [AUDIO ENGINE] Triggering: " & CurrentAudioCue & " at Vol: 75% (Good Hit)"
+        Else
+            ' Missed Note / Sour Note
+            TotalFameEarned = TotalFameEarned - 2
+            
+            ' QA Flag: Explicitly logs if a "miss" asset variant should override
+            Debug.Print "   [AUDIO ENGINE] Triggering: SND_Lute_Sour_Note_Override (Missed Hit)"
+        End If
+        
+        Debug.Print "----------------------------------------------------------"
+    Next NoteIndex
+
+    ' --- CROWD REACTION RESOLUTION ---
+    ' Reconciling the final dynamic audio asset triggered based on gameplay results
+    Dim FinalCrowdCue As String
+    
+    If TotalFameEarned > 10 Then
+        FinalCrowdCue = CrowdCues(3) ' Loud Cheer
+    ElseIf TotalFameEarned >= 0 Then
+        FinalCrowdCue = CrowdCues(2) ' Soft Cheer
+    Else
+        FinalCrowdCue = CrowdCues(1) ' Boo
+    End If
+    
+    ' Final QA Asset Verification Output
+    Debug.Print "=========================================================="
+    Debug.Print "FINAL PERFORMANCE SUMMARY (QA DATA AUDIT):"
+    Debug.Print "Total Gold Distributed: " & TotalGoldEarned
+    Debug.Print "Total Fame Distributed: " & TotalFameEarned
+    Debug.Print "[ASSET MATCH] Triggering Crowd Audio Asset: " & FinalCrowdCue
+    Debug.Print "=========================================================="
+End Sub

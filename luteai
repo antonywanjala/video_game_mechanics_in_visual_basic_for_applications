@@ -1,0 +1,76 @@
+Sub ValidateNPCLuteAI()
+    ' --- ASSET REGISTRATION & VARIABLES ---
+    Dim beat As Integer
+    Dim flawlessStreak As Integer
+    Dim goldToDrop As Double
+    Dim totalGoldEarned As Double
+    
+    ' Simulation of 5 surrounding town NPCs
+    Dim npcBehaviorState(1 To 5) As Integer ' 0 = Idle/Working, 1 = Walking Over, 2 = Clapping
+    Dim i As Integer
+    
+    ' Mock Player Input Array (1 = Perfect Rhythm Hit, 0 = Missed Beat)
+    ' This simulates a highly successful 20-beat lute performance
+    Dim playerInputs As Variant
+    playerInputs = Array(1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+    
+    flawlessStreak = 0
+    totalGoldEarned = 0
+    
+    ' Initialize NPCs to their default idle asset states
+    For i = 1 To 5
+        npcBehaviorState(i) = 0
+    Next i
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION LOG ==="
+    Debug.Print "Beat | Input | Streak | NPC 1 State | Gold Dropped"
+    Debug.Print "---------------------------------------------------"
+    
+    ' --- THE MAIN GAME LOOP ---
+    For beat = 0 To UBound(playerInputs)
+        
+        ' 1. Check Rhythm Input
+        If playerInputs(beat) = 1 Then
+            flawlessStreak = flawlessStreak + 1
+            
+            ' 2. Update NPC AI Behavior States based on Streak Milestones
+            For i = 1 To 5
+                If flawlessStreak >= 3 And flawlessStreak < 6 Then
+                    ' Milestone 1: Stop working, walk over, form a circle
+                    npcBehaviorState(i) = 1
+                ElseIf flawlessStreak >= 6 Then
+                    ' Milestone 2: Start clapping loop animation
+                    npcBehaviorState(i) = 2
+                End If
+            Next i
+            
+            ' 3. Calculate Escalating Gold Reward (Compounding Reward)
+            ' If NPCs are clapping (Streak >= 6), they start tossing physical gold prefabs
+            If flawlessStreak >= 6 Then
+                goldToDrop = Int(1.5 ^ (flawlessStreak - 5)) * 5 ' Exponential growth scaling
+                totalGoldEarned = totalGoldEarned + goldToDrop
+            Else
+                goldToDrop = 0
+            End If
+            
+        Else
+            ' Rhythm Broken: Reset streak and revert NPC assets back to ambient tasks
+            flawlessStreak = 0
+            goldToDrop = 0
+            For i = 1 To 5
+                npcBehaviorState(i) = 0 ' Back to Idle/Working
+            Next i
+            Debug.Print ">>> STREAK BROKEN! NPC animations reset to Idle. <<<"
+        End If
+        
+        ' --- QA RECONCILIATION OUTPUT ---
+        ' Prints state to the Immediate Window (Ctrl + G in VBE) for verification against visual assets
+        Debug.Print " " & (beat + 1) & "   |   " & playerInputs(beat) & "   |   " & _
+                    flawlessStreak & "    |      " & npcBehaviorState(1) & "      |  +" & goldToDrop & "g"
+                    
+    Next beat
+    
+    ' --- FINAL REPORT ---
+    Debug.Print "---------------------------------------------------"
+    Debug.Print "RECONCILIATION COMPLETE: Total Gold Transferred to Inventory Asset: " & totalGoldEarned & "g"
+End Sub

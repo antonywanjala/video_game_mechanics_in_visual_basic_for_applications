@@ -1,0 +1,55 @@
+Public Type NPC
+    ID As Integer
+    Distance As Double
+    Disposition As Integer
+    Status As String
+End Type
+
+Sub ReconcileMassAppeasement()
+    ' --- DESIGN ASSETS (Reconciliation Benchmarks) ---
+    Dim maxAoeRadius As Double: maxAoeRadius = 15.0 ' Max radius from design doc
+    Dim perfectMultiplier As Integer: perfectMultiplier = 5
+    Dim isPerfectExecution As Boolean: isPerfectExecution = True
+    Dim baseExpressionValue As Integer: baseExpressionValue = 20
+    
+    ' Initialize a Tavern of 15 NPCs
+    Dim tavern(1 To 15) As NPC
+    Dim i As Integer
+    
+    ' Mocking NPC data (randomizing distances for QA testing)
+    For i = 1 To 15
+        tavern(i).ID = i
+        tavern(i).Distance = Round(Rnd * 25, 1) ' Distances between 0 and 25 meters
+        tavern(i).Disposition = 0
+        tavern(i).Status = "Neutral"
+    Next i
+    
+    Debug.Print "=== QA ASSET-TO-CODE RECONCILIATION LOG ==="
+    Debug.Print "Target Max Radius: " & maxAoeRadius & "m"
+    Debug.Print "-------------------------------------------"
+    
+    ' --- THE RECONCILIATION LOOP ---
+    For i = 1 To 15
+        ' Check if the runtime engine state matches the design asset boundary
+        If tavern(i).Distance <= maxAoeRadius Then
+            
+            ' Apply Mass Appeasement logic
+            If isPerfectExecution Then
+                tavern(i).Disposition = tavern(i).Disposition + (baseExpressionValue * perfectMultiplier)
+                tavern(i).Status = "In Love / Terrified"
+            Else
+                tavern(i).Disposition = tavern(i).Disposition + baseExpressionValue
+                tavern(i).Status = "Friendly"
+            End If
+            
+            ' QA Output verifying asset-to-code alignment
+            Debug.Print "RECONCILED - NPC [" & tavern(i).ID & "] at " & tavern(i).Distance & "m. Status: " & tavern(i).Status & " (Disp: " & tavern(i).Disposition & ")"
+        Else
+            ' Log exclusion to verify the cutoff bound works perfectly
+            Debug.Print "EXCLUDED   - NPC [" & tavern(i).ID & "] at " & tavern(i).Distance & "m. Outside AoE Radius."
+        End If
+    Next i
+    
+    Debug.Print "-------------------------------------------"
+    Debug.Print "Reconciliation Complete. 100% of tavern assets processed."
+End Sub

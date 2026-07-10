@@ -1,0 +1,48 @@
+Sub ReconcileNamingMechanic()
+    ' =========================================================================
+    ' MECHANIC: The Naming Mechanic (Asset-to-Code Reconciliation)
+    ' PURPOSE: Validates asset strings against registered code IDs for QA Audit
+    ' =========================================================================
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("AssetManifest")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    Dim assetID As String
+    Dim characterName As String
+    Dim reconciliationStatus As String
+    
+    ' Loop through all naming assets in the manifest
+    For i = 2 To lastRow
+        assetID = ws.Cells(i, 1).Value        ' Column A: Code Identifier (e.g., HERO_TITLE_01)
+        characterName = ws.Cells(i, 2).Value  ' Column B: Actual Asset String (e.g., "Chicken Chaser")
+        
+        ' QA Validation Check 1: Missing Asset String
+        If Trim(characterName) = "" Then
+            reconciliationStatus = "FAILED: Asset String is Empty"
+            ws.Cells(i, 3).Interior.Color = RGB(255, 200, 200) ' Red Highlight
+            
+        ' QA Validation Check 2: Invalid Character Flags in Code ID
+        ElseRef = InStr(1, assetID, "INVALID")
+        If InStr(1, assetID, "ERR_") > 0 Then
+            reconciliationStatus = "FAILED: Orphaned Code ID"
+            ws.Cells(i, 3).Interior.Color = RGB(255, 200, 200)
+            
+        ' Successful Reconciliation
+        Else
+            reconciliationStatus = "SUCCESS: Code state updated to '" & characterName & "'"
+            ws.Cells(i, 3).Interior.Color = RGB(200, 255, 200) ' Green Highlight
+            
+            ' [Engine Simulation] Code successfully registers the asset name here
+            Debug.Print "Reconciled [" & assetID & "] -> Set In-Game Name To: " & characterName
+        End If
+        
+        ' Write reconciliation result to Column C
+        ws.Cells(i, 3).Value = reconciliationStatus
+    Next i
+    
+    MsgBox "Asset-to-Code Reconciliation Complete!", vbInformation, "QA Audit Pipeline"
+End Sub

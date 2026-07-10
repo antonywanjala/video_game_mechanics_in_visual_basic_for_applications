@@ -1,0 +1,63 @@
+Sub ReconcileFloatingOrbs()
+    ' Define structures for our assets and code handles
+    Dim totalOrbs As Integer
+    Dim i As Integer
+    
+    ' Mocking a dataset of 5 active streaming orb assets
+    totalOrbs = 5
+    
+    ' QA Reconciliation Arrays (1 to totalOrbs)
+    ' In a real scenario, these would pull from an external CSV or JSON dump
+    Dim OrbAsset_ID(1 To 5) As String
+    Dim OrbAsset_PositionX(1 To 5) As Double
+    Dim OrbCode_Rendered(1 To 5) As Boolean
+    
+    ' Populate Mock Data
+    OrbAsset_ID(1) = "Orb_Player_Hero01"
+    OrbAsset_PositionX(1) = 142.5
+    OrbCode_Rendered(1) = True
+    
+    OrbAsset_ID(2) = "Orb_Player_ChickenChaser"
+    OrbAsset_PositionX(2) = 55.0
+    OrbCode_Rendered(2) = True
+    
+    ' QA Target: This asset exists in the build manifestation but code failed to render it
+    OrbAsset_ID(3) = "Orb_Player_Sparrow"
+    OrbAsset_PositionX(3) = 201.2
+    OrbCode_Rendered(3) = False 
+    
+    OrbAsset_ID(4) = "Orb_Player_LoganFan"
+    OrbAsset_PositionX(4) = -12.4
+    OrbCode_Rendered(4) = True
+    
+    OrbAsset_ID(5) = "Orb_Player_BowerstoneMayor"
+    OrbAsset_PositionX(5) = 89.9
+    OrbCode_Rendered(5) = True
+
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION: FLOATING ORBS ==="
+    Debug.Print "Timestamp: " & Now
+    Debug.Print "--------------------------------------------------------"
+
+    ' The Reconciliation Loop
+    For i = 1 To totalOrbs
+        
+        ' 1. Check if the asset is recognized by the engine code
+        If OrbCode_Rendered(i) = True Then
+            ' Update/Reconcile behavior: Translate the orb along the X-axis slightly to simulate ticking
+            OrbAsset_PositionX(i) = OrbAsset_PositionX(i) + 0.05
+            
+            ' QA Verification Log
+            Debug.Print "[PASS] ID: " & OrbAsset_ID(i) & " | Code State: ACTIVE | Reconciled X-Pos: " & OrbAsset_PositionX(i)
+        Else
+            ' 2. QA Exception Catching: Asset exists but Code handle is broken/missing
+            Debug.Print "[FAIL] !!!!!!!!!!!!! RECONCILIATION ERROR !!!!!!!!!!!!!"
+            Debug.Print "[FAIL] Asset Present but Code Failed to Render Floating Orb!"
+            Debug.Print "[FAIL] Broken Asset ID: " & OrbAsset_ID(i)
+            Debug.Print "[FAIL] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        End If
+        
+    Next i
+    
+    Debug.Print "--------------------------------------------------------"
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

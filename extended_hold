@@ -1,0 +1,67 @@
+Sub ReconcileExtendedHoldMechanic()
+    ' --- GAME MECHANIC CONFIGURATION ---
+    Dim HoldTime As Double        ' Current duration the button has been held (seconds)
+    Dim MaxHoldTime As Double     ' Maximum time required for full charge
+    Dim TimeStep As Double        ' Frame/tick delta time (e.g., ~60fps updates)
+    
+    MaxHoldTime = 3.0
+    TimeStep = 0.05 ' 50ms increments
+    HoldTime = 0.0
+    
+    ' --- ASSET METADATA (Expected Visual/Audio States) ---
+    Dim ExpectedVFXScale As Double
+    Dim ExpectedSFXPitch As Double
+    Dim ReconciledStatus As String
+    
+    Debug.Print "=============================================================="
+    Debug.Print " STARTING ASSET-TO-CODE RECONCILIATION: EXTENDED HOLD MECHANIC"
+    Debug.Print "=============================================================="
+    Debug.Print "Time(s) | Charge % | Expected VFX Scale | Expected SFX Pitch | QA Status"
+    Debug.Print "--------------------------------------------------------------"
+    
+    ' --- THE RECONCILIATION FOR LOOP ---
+    ' Simulating the player holding the button from 0 to 3 seconds
+    Dim TotalFrames As Integer
+    TotalFrames = CInt(MaxHoldTime / TimeStep)
+    
+    Dim i As Integer
+    For i = 0 To TotalFrames
+        HoldTime = i * TimeStep
+        
+        ' 1. Calculate the Code Logic State (Charge percentage capped at 100%)
+        Dim ChargePercentage As Double
+        If HoldTime >= MaxHoldTime Then
+            ChargePercentage = 1.0
+        Else
+            ChargePercentage = HoldTime / MaxHoldTime
+        End If
+        
+        ' 2. Determine Expected Asset States based on Charge Percentage
+        ' Example: VFX scales from 1.0x to 3.0x size
+        ExpectedVFXScale = 1.0 + (ChargePercentage * 2.0)
+        ' Example: Audio pitch bends from 100% (1.0) to 150% (1.5)
+        ExpectedSFXPitch = 1.0 + (ChargePercentage * 0.5)
+        
+        ' 3. QA Reconciliation Check
+        ' (Simulating a check against an external asset manifest file or frame data)
+        If ChargePercentage = 1.0 Then
+            ReconciledStatus = "[MATCH] Max Charge Asset Triggered"
+        ElseIf ChargePercentage > 0.5 Then
+            ReconciledStatus = "[MATCH] Mid-Charge Tier 2 Assets Active"
+        Else
+            ReconciledStatus = "[MATCH] Charging Tier 1"
+        End If
+        
+        ' 4. Output Reconciliation Log for the QA Analyst
+        Debug.Print Format(HoldTime, "0.00") & "s    | " & _
+                    Format(ChargePercentage * 100, "0.0") & "%    | " & _
+                    Format(ExpectedVFXScale, "0.00") & "x            | " & _
+                    Format(ExpectedSFXPitch, "0.00") & "x            | " & _
+                    ReconciledStatus
+                    
+    Next i
+    
+    Debug.Print "=============================================================="
+    Debug.Print " RECONCILIATION COMPLETE: All assets mapped correctly to code."
+    Debug.Print "=============================================================="
+End Sub

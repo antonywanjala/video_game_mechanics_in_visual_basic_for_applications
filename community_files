@@ -1,0 +1,67 @@
+Sub ReconcileCommunityMythAssets()
+    ' =========================================================================
+    ' Purpose: QA Asset-to-Code Reconciliation Tool
+    ' Target Myth: The Legendary Sandgoose (Fable)
+    ' Behavior: Scans code-declared assets against the compiled registry. 
+    '           Flags missing assets explicitly to aid QA diagnostics.
+    ' =========================================================================
+    
+    Dim assetRegistry As Object
+    Set assetRegistry = CreateObject("Scripting.Dictionary")
+    
+    ' 1. Populate the actual compiled Asset Registry (What is actually in the game)
+    ' Notice: The Sandgoose is intentionally left out of the compiled registry.
+    assetRegistry.Add "CR_BALVERINE_01", "Balverine"
+    assetRegistry.Add "CR_HOBBE_01", "Hobbe"
+    assetRegistry.Add "CR_TROLL_EARTH", "Earth Troll"
+    assetRegistry.Add "CR_JACK_OF_BLADES", "Jack of Blades"
+    
+    ' 2. Define the Code-Declared Assets (What developers are trying to call)
+    Dim codeDeclaredAssets(0 To 4) As String
+    codeDeclaredAssets(0) = "CR_BALVERINE_01"
+    codeDeclaredAssets(1) = "CR_SANDGOOSE_LEGEND" ' <-- The Mythical Creature Reference
+    codeDeclaredAssets(2) = "CR_HOBBE_01"
+    codeDeclaredAssets(3) = "CR_TROLL_EARTH"
+    codeDeclaredAssets(4) = "CR_JACK_OF_BLADES"
+    
+    Dim i As Long
+    Dim currentAssetID As String
+    Dim missingAssetCount As Long
+    missingAssetCount = 0
+    
+    Debug.Print "=== STARTING QA ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' 3. The Reconciliation For Loop
+    For i = LBound(codeDeclaredAssets) To UBound(codeDeclaredAssets)
+        currentAssetID = codeDeclaredAssets(i)
+        
+        ' Check if the code reference exists in the compiled asset registry
+        If Not assetRegistry.Exists(currentAssetID) Then
+            ' QA Analyst Optimization: Specific, actionable error logging with clear identifiers
+            Debug.Print "[QA ERROR] [Line " & i & "] Reconciliation Failed! Code identifier '" & _
+                        currentAssetID & "' has no matching asset in the compiled registry."
+            
+            missingAssetCount = missingAssetCount + 1
+            
+            ' Special handling for the running community joke
+            If currentAssetID = "CR_SANDGOOSE_LEGEND" Then
+                Debug.Print "   Note: 'The Sandgoose' myth strikes again. Peter Molyneux sends his regards."
+            End If
+        Else
+            ' Successful reconciliation path
+            Debug.Print "[QA SUCCESS] Verified Asset: " & currentAssetID & " (" & assetRegistry(currentAssetID) & ")"
+        End If
+    Next i
+    
+    ' 4. Final Reconciliation Report Summary
+    Debug.Print "================================================"
+    If missingAssetCount > 0 Then
+        Debug.Print "STATUS: FAILED. " & missingAssetCount & " broken reference(s) found. Check log above."
+    Else
+        Debug.Print "STATUS: PASSED. All assets reconciled successfully."
+    End If
+    Debug.Print "================================================"
+    
+    ' Clean up objects
+    Set assetRegistry = Nothing
+End Sub

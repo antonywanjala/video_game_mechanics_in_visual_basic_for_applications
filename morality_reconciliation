@@ -1,0 +1,52 @@
+Sub FableMoralityReconciliation()
+    Dim i As Integer
+    Dim moralityScore As Integer
+    Dim expectedAsset As String
+    Dim loadedAsset As String
+    
+    Debug.Print "--- FABLE ASSET RECONCILIATION INITIALIZED ---"
+
+    ' Loop through a simulated range of morality scores (-100 to 100)
+    For i = -100 To 100 Step 25
+        moralityScore = i
+        
+        ' Simulate pulling the currently rendered asset from the game engine
+        loadedAsset = GetLoadedEngineAsset(moralityScore)
+        
+        ' Game Code Logic: Determine what asset SHOULD be loaded
+        If moralityScore <= -75 Then
+            expectedAsset = "Mesh_DemonHorns_Lvl3"
+        ElseIf moralityScore > -75 And moralityScore < 0 Then
+            expectedAsset = "VFX_Swarm_Flies"
+        ElseIf moralityScore >= 0 And moralityScore < 75 Then
+            expectedAsset = "Mesh_Standard_Hero"
+        ElseIf moralityScore >= 75 Then
+            expectedAsset = "VFX_Radiant_Halo"
+        End If
+        
+        ' Asset-to-Code Reconciliation Check
+        If expectedAsset <> loadedAsset Then
+            Debug.Print "[BUG FOUND] Morality: " & moralityScore & " | Expected: " & expectedAsset & " | Rendered: " & loadedAsset
+        Else
+            Debug.Print "[PASS] Morality: " & moralityScore & " successfully reconciled."
+        End If
+    Next i
+    
+    Debug.Print "--- RECONCILIATION COMPLETE ---"
+End Sub
+
+' Mock function to simulate engine output for the sake of the script
+Function GetLoadedEngineAsset(score As Integer) As String
+    ' Simulating a bug where neutral loads the evil asset
+    If score = 0 Then
+        GetLoadedEngineAsset = "VFX_Swarm_Flies" 
+    ElseIf score <= -75 Then
+        GetLoadedEngineAsset = "Mesh_DemonHorns_Lvl3"
+    ElseIf score > -75 And score < 0 Then
+        GetLoadedEngineAsset = "VFX_Swarm_Flies"
+    ElseIf score >= 75 Then
+        GetLoadedEngineAsset = "VFX_Radiant_Halo"
+    Else
+        GetLoadedEngineAsset = "Mesh_Standard_Hero"
+    End If
+End Function

@@ -1,0 +1,76 @@
+Sub ReconcileAftertouchSpellcasting()
+    ' =========================================================================
+    ' Mechanic: Gesture-Based "Aftertouch" Spellcasting (Asset-to-Code Reconciliation)
+    ' Purpose: Validates visual gesture assets against runtime code parameters.
+    ' =========================================================================
+    
+    Dim totalFrames As Integer
+    Dim currentFrame As Integer
+    
+    ' Simulation Variables
+    Dim assetGestureVector As Double   ' Visual asset data (e.g., from an animation file)
+    Dim codeTargetVector As Double    ' Expected code parameter
+    Dim aftertouchModifier As Double  ' Player input adjustment
+    Dim finalSpellPower As Double
+    Dim vectorTolerance As Double
+    
+    ' QA Logging Variables
+    Dim mismatchCount As Integer
+    Dim logMessage As String
+    
+    ' Initialize baseline variables
+    totalFrames = 60          ' 1-second spell gesture window at 60 FPS
+    vectorTolerance = 0.1     ' 10% allowed variance between asset and code
+    finalSpellPower = 100.0   ' Base spell power
+    mismatchCount = 0
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    Debug.Print "Spell Mechanic: Gesture-Based Aftertouch"
+    Debug.Print "---------------------------------------------"
+    
+    ' The Reconciliation Loop
+    For currentFrame = 1 To totalFrames
+        
+        ' 1. Simulate fetching Asset Data and Code Parameters for the current frame
+        ' (In a production pipeline, this would read from an external XML, JSON, or DB)
+        assetGestureVector = Rnd() * 1.0  ' Simulated live gesture tracking
+        codeTargetVector = Rnd() * 1.0   ' Simulated engine blueprint target
+        aftertouchModifier = Rnd() * 0.5 ' Simulated player "aftertouch" adjustment
+        
+        ' 2. QA Validation Check: Verify Asset-to-Code Alignment
+        If Abs(assetGestureVector - codeTargetVector) > vectorTolerance Then
+            mismatchCount = mismatchCount + 1
+            
+            ' High-visibility logging to make the QA Analyst's job easier
+            logMessage = "[QA ALERT] Frame " & currentFrame & " - Asset/Code Mismatch! " & _
+                         "Variance: " & Format(Abs(assetGestureVector - codeTargetVector), "0.00")
+            Debug.Print logMessage
+        End If
+        
+        ' 3. Apply the Aftertouch Mechanic logic if the asset reconciles safely
+        If Abs(assetGestureVector - codeTargetVector) <= vectorTolerance Then
+            ' The better the gesture matches the code intent, the more aftertouch modifies the power
+            finalSpellPower = finalSpellPower + (aftertouchModifier * 10)
+        Else
+            ' Penalty to spell power if assets and code desync
+            finalSpellPower = finalSpellPower - 5
+        End If
+        
+    Next currentFrame
+    
+    ' =========================================================================
+    ' Final QA Reconciliation Report
+    ' =========================================================================
+    Debug.Print "---------------------------------------------"
+    Debug.Print "=== RECONCILIATION REPORT ==="
+    Debug.Print "Total Frames Checked: " & totalFrames
+    Debug.Print "Total Discrepancies Found: " & mismatchCount
+    Debug.Print "Final Calculated Spell Power: " & Format(finalSpellPower, "0.00")
+    
+    If mismatchCount > 0 Then
+        MsgBox "Reconciliation Failed! Found " & mismatchCount & " asset-to-code desyncs. Check Immediate Window for logs.", vbCritical, "QA Integrity Check"
+    Else
+        MsgBox "Reconciliation Successful! All assets align with spellcasting code parameters.", vbInformation, "QA Integrity Check"
+    End If
+
+End Sub

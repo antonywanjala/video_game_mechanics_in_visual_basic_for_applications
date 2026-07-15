@@ -1,0 +1,54 @@
+Sub EquineMaintenanceReconciliation()
+    ' Simulates a QA automated test brushing a horse and verifying 
+    ' the dirt texture asset updates alongside the background code variable.
+    
+    Dim totalBrushStrokes As Integer
+    Dim currentStroke As Integer
+    Dim horseDirtStat As Double ' Code variable (0 to 100)
+    Dim expectedTextureAlpha As Double
+    Dim currentTextureAlpha As Double ' The actual visual asset property
+    
+    ' Initial setup: Horse is completely dirty
+    horseDirtStat = 100 
+    totalBrushStrokes = 10 
+    
+    ' Loop through the maintenance action
+    For currentStroke = 1 To totalBrushStrokes
+        
+        ' 1. The Mechanic (Code Logic): Each stroke removes 10 dirt points
+        horseDirtStat = horseDirtStat - 10
+        If horseDirtStat < 0 Then horseDirtStat = 0
+        
+        ' 2. The Expected Asset State
+        ' The dirt texture opacity should perfectly match the dirt stat percentage
+        expectedTextureAlpha = horseDirtStat / 100 
+        
+        ' 3. Fetching the actual asset state (Simulated)
+        ' In a real engine, this would call out to the game's rendering engine API
+        currentTextureAlpha = GetHorseDirtTextureAlpha() 
+        
+        ' 4. Asset-to-Code Reconciliation (QA Check)
+        If currentTextureAlpha <> expectedTextureAlpha Then
+            Debug.Print "QA CRITICAL ERROR at Brush Stroke " & currentStroke
+            Debug.Print "Code says dirt is at " & horseDirtStat & "%, but Asset Alpha is " & currentTextureAlpha
+            
+            ' Flagging for Jira/Bug Tracking
+            Call LogBugToRepository("Visual Desync: Equine Dirt Texture failed to update on stroke " & currentStroke)
+            Exit Sub ' Stop the test on first failure
+        End If
+        
+    Next currentStroke
+    
+    Debug.Print "QA PASS: Equine maintenance asset perfectly reconciled with code over " & totalBrushStrokes & " strokes."
+End Sub
+
+' Helper function to simulate fetching the graphic asset's data
+Function GetHorseDirtTextureAlpha() As Double
+    ' In reality, this would hook into your game engine's test framework
+    GetHorseDirtTextureAlpha = 0.9 ' Simulated return value
+End Function
+
+' Helper function to simulate repository/bug logging
+Sub LogBugToRepository(bugDetails As String)
+    Debug.Print "Pushing to repo/bug tracker: " & bugDetails
+End Sub

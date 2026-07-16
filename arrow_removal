@@ -1,0 +1,111 @@
+Option Explicit
+
+' Define a structure representing the Arrow Asset and its physical/logical states
+Public Type ArrowAsset
+    AssetID As String              ' Unique ID of the 3D arrow mesh
+    BoneSocket As String           ' Skeletal joint the arrow is attached to (e.g., "L_Shoulder")
+    IsMeshVisible As Boolean       ' Visual state: Is the 3D model currently rendered?
+    IsLogicalDamageActive As Boolean ' Code state: Is the logical health impact still active?
+    
+    ' Kinect Gesture Simulation Inputs (Simulated player physical actions)
+    KinectGrabDetected As Boolean  ' Physical grab gesture check
+    KinectPullDetected As Boolean  ' Physical pull gesture check
+    KinectSmoothDetected As Boolean ' Physical smoothing/healing gesture check
+End Type
+
+''' <summary>
+''' Performs asset-to-code reconciliation for Seren's arrow removal mechanic.
+''' Designed to help QA Analysts verify that physical Kinect interactions 
+''' successfully bridge the visual assets with backend game logic.
+''' </summary>
+Public Sub ReconcileSerenArrowRemoval()
+    ' 1. Initialize test data (simulating a QA test state with 3 embedded arrows)
+    Dim SerenArrows(1 To 3) As ArrowAsset
+    Dim i As Integer
+    Dim ReconciliationErrors As Integer
+    ReconciliationErrors = 0
+    
+    ' Arrow 1: Clean pass (User performs all Kinect gestures successfully)
+    SerenArrows(1).AssetID = "3D_Arrow_01"
+    SerenArrows(1).BoneSocket = "Spine_Mid"
+    SerenArrows(1).IsMeshVisible = True
+    SerenArrows(1).IsLogicalDamageActive = True
+    SerenArrows(1).KinectGrabDetected = True
+    SerenArrows(1).KinectPullDetected = True
+    SerenArrows(1).KinectSmoothDetected = True
+    
+    ' Arrow 2: QA Failure Case (Player pulled it, but didn't smooth/heal; mesh remains)
+    SerenArrows(2).AssetID = "3D_Arrow_02"
+    SerenArrows(2).BoneSocket = "R_Flank"
+    SerenArrows(2).IsMeshVisible = True
+    SerenArrows(2).IsLogicalDamageActive = True
+    SerenArrows(2).KinectGrabDetected = True
+    SerenArrows(2).KinectPullDetected = True
+    SerenArrows(2).KinectSmoothDetected = False ' Missed smoothing
+    
+    ' Arrow 3: QA Failure Case (Desync: Logical damage active, but visual mesh missing!)
+    SerenArrows(3).AssetID = "3D_Arrow_03"
+    SerenArrows(3).BoneSocket = "Neck_Base"
+    SerenArrows(3).IsMeshVisible = False ' Desynced visual asset
+    SerenArrows(3).IsLogicalDamageActive = True
+    SerenArrows(3).KinectGrabDetected = True
+    SerenArrows(3).KinectPullDetected = True
+    SerenArrows(3).KinectSmoothDetected = True
+
+    Debug.Print "=== STARTING QA ASSET-TO-CODE RECONCILIATION FOR SEREN ==="
+    Debug.Print "Target Subject: Horse Companion (Seren)"
+    Debug.Print "--------------------------------------------------------"
+
+    ' 2. The Reconciliation For Loop
+    For i = LBound(SerenArrows) To UBound(SerenArrows)
+        Debug.Print "Reconciling Asset: " & SerenArrows(i).AssetID & " at joint [" & SerenArrows(i).BoneSocket & "]"
+        
+        ' --- QA SANITY CHECK 1: Initial Desync Check ---
+        If SerenArrows(i).IsLogicalDamageActive = True And SerenArrows(i).IsMeshVisible = False Then
+            Debug.Print "  [ALERT] Desync Found! Logical damage active, but 3D mesh is missing."
+            ReconciliationErrors = ReconciliationErrors + 1
+            GoTo NextIteration
+        End If
+        
+        ' --- KINECT GESTURE STEP 1: Grabbing the Arrow ---
+        If SerenArrows(i).KinectGrabDetected Then
+            Debug.Print "  -> Kinect: Player physical grab detected on " & SerenArrows(i).BoneSocket
+            
+            ' --- KINECT GESTURE STEP 2: Pulling the Arrow ---
+            If SerenArrows(i).KinectPullDetected Then
+                Debug.Print "  -> Kinect: Player physically pulled arrow. Visual Mesh destroyed."
+                ' Code reconciles asset: Remove the visual 3D mesh
+                SerenArrows(i).IsMeshVisible = False
+                
+                ' --- KINECT GESTURE STEP 3: Smoothing & Healing Hide ---
+                If SerenArrows(i).KinectSmoothDetected Then
+                    Debug.Print "  -> Kinect: Healing magic applied via smoothing gesture."
+                    ' Code reconciles state: Disable damage system
+                    SerenArrows(i).IsLogicalDamageActive = False
+                    Debug.Print "  [SUCCESS] Asset & Code fully reconciled."
+                Else
+                    ' QA Defect: Player pulled, but skin wasn't healed.
+                    Debug.Print "  [DEFECT] Wound not smoothed! Visual wound remains in rendering pipeline."
+                    ReconciliationErrors = ReconciliationErrors + 1
+                End If
+                
+            Else
+                Debug.Print "  [FAIL] Player grabbed but failed to pull."
+            End If
+        Else
+            Debug.Print "  [IDLE] No physical interaction detected. Arrow remains embedded."
+        End If
+        
+NextIteration:
+        Debug.Print "--------------------------------------------------------"
+    Next i
+
+    ' 3. QA Summary Report
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+    If ReconciliationErrors = 0 Then
+        Debug.Print "STATUS: PASSED. All active assets match logical gameplay states."
+    Else
+        Debug.Print "STATUS: FAILED. Detected (" & ReconciliationErrors & ") reconciliation mismatch(es). Please review logs."
+    End If
+    Debug.Print "========================================================"
+End Sub

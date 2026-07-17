@@ -1,0 +1,73 @@
+' Struct representing our mock physical assets to be reconciled with code
+Type ArrowAsset
+    ID As Integer
+    BoneX As Double
+    BoneY As Double
+    BoneZ As Double
+    IsExtracted As Boolean
+End Type
+
+Sub ReconcileWoundCareMechanic()
+    Dim totalArrows As Integer
+    Dim i As Integer
+    
+    ' Simulation Tolerances
+    Dim QAToleranceThreshold As Double
+    Dim maxSafePullSpeed As Double
+    
+    QAToleranceThreshold = 0.05 ' 5cm allowance in 3D coordinate space
+    maxSafePullSpeed = 1.2      ' Max speed before hurting Seren
+    
+    ' Setup 4 mock arrows embedded in Seren's 3D mesh
+    totalArrows = 4
+    Dim SerenArrows(1 To 4) As ArrowAsset
+    
+    ' Populate initial arrow data (Simulating loaded skeletal assets)
+    SerenArrows(1).ID = 1: SerenArrows(1).BoneX = 1.25: SerenArrows(1).BoneY = 0.85: SerenArrows(1).BoneZ = -0.4: SerenArrows(1).IsExtracted = False
+    SerenArrows(2).ID = 2: SerenArrows(2).BoneX = 1.30: SerenArrows(2).BoneY = 0.90: SerenArrows(2).BoneZ = -0.42: SerenArrows(2).IsExtracted = False
+    SerenArrows(3).ID = 3: SerenArrows(3).BoneX = 1.22: SerenArrows(3).BoneY = 0.80: SerenArrows(3).BoneZ = -0.38: SerenArrows(3).IsExtracted = False
+    SerenArrows(4).ID = 4: SerenArrows(4).BoneX = 1.45: SerenArrows(4).BoneY = 1.10: SerenArrows(4).BoneZ = -0.5: SerenArrows(4).IsExtracted = False
+    
+    ' Mock current Kinect Input Feed for testing
+    Dim kinectHandX As Double, kinectHandY As Double, kinectHandZ As Double
+    Dim mockPullSpeed As Double
+    
+    ' Imagine a QA Analyst is physically targeting Arrow #3:
+    kinectHandX = 1.23
+    kinectHandY = 0.81
+    kinectHandZ = -0.39
+    mockPullSpeed = 0.45 ' Well under maxSafePullSpeed (Gentle)
+    
+    ' --- BEGIN ASSET-TO-CODE RECONCILIATION LOOP ---
+    Debug.Print "=== QA RECONCILIATION REPORT (Fable Wound Care Mechanic) ==="
+    
+    For i = 1 To totalArrows
+        Dim distanceToAsset As Double
+        
+        ' Compute 3D Euclidean distance between hand coordinates and arrow asset coordinates
+        distanceToAsset = Sqr((SerenArrows(i).BoneX - kinectHandX) ^ 2 + _
+                              (SerenArrows(i).BoneY - kinectHandY) ^ 2 + _
+                              (SerenArrows(i).BoneZ - kinectHandZ) ^ 2)
+                              
+        ' 1. Validate spatial tolerance (Reconciliation Check)
+        If distanceToAsset <= QAToleranceThreshold Then
+            Debug.Print "RECONCILED: Hand detected within tolerance limits of Arrow ID " & SerenArrows(i).ID & " (Distance: " & Round(distanceToAsset, 4) & "m)"
+            
+            ' 2. Check gameplay speed mechanics
+            If mockPullSpeed > maxSafePullSpeed Then
+                Debug.Print "   [!] ERROR: Pull speed too high (" & mockPullSpeed & " m/s). Seren flinched! Wound tore open further."
+                SerenArrows(i).IsExtracted = False
+            Else
+                Debug.Print "   [SUCCESS] Arrow gently removed. Initiating smooth-skin healing magic."
+                SerenArrows(i).IsExtracted = True
+            End If
+            
+        Else
+            ' Log mismatch errors immediately to help the QA analyst pinpoint out-of-sync assets
+            Debug.Print "   [MISMATCH] Hand too far from Arrow ID " & SerenArrows(i).ID & _
+                        " (Distance: " & Round(distanceToAsset, 4) & "m - Max Allowed: " & QAToleranceThreshold & "m)"
+        End If
+    Next i
+    
+    Debug.Print "======================= SWEEP COMPLETE ======================="
+End Sub

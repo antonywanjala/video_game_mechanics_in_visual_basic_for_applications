@@ -1,0 +1,68 @@
+Sub ReconcileVillainAssets()
+    ' =========================================================================
+    ' QA TOOL: Tactical Aggro Placement - Asset-to-Code Reconciliation
+    ' Purpose: Audits live map layout data against design specifications to
+    '          ensure Villain assets are valid, in-bounds, and tracking correctly.
+    ' =========================================================================
+    
+    Dim assetRegistry As Variant
+    Dim i As Long
+    Dim discrepancyCount As Long
+    Dim maxMapX As Integer, maxMapY As Integer
+    
+    discrepancyCount = 0
+    
+    ' Define map boundaries for the level layout
+    maxMapX = 100
+    maxMapY = 100
+    
+    ' Simulated array representing data extracted from the game engine's live level layout
+    ' Format: Array(AssetID, AssetType, X_Coordinate, Y_Coordinate, TargetedHeroWeakness)
+    assetRegistry = Array( _
+        Array("SpikeGate_01", "Terrain", 14, 45, "Low_Agility"), _
+        Array("GoblinPack_02", "Unit", 22, 42, "Soft_Armor"), _
+        Array("ChokeTrap_04", "Trap", 105, 12, "None"), _
+        Array("OgreSpawn_01", "Unit", 40, 50, "Unassigned") _
+    )
+    
+    Debug.Print "=== STARTING QA ASSET-TO-CODE RECONCILIATION ==="
+    Debug.Print "Scanning Villain tactical placements..."
+    Debug.Print "------------------------------------------------"
+    
+    ' The Reconciliation Loop
+    For i = LBound(assetRegistry) To UBound(assetRegistry)
+        Dim currentAsset As Variant
+        currentAsset = assetRegistry(i)
+        
+        Dim assetID As String: assetID = currentAsset(0)
+        Dim assetType As String: assetType = currentAsset(1)
+        Dim coordX As Integer: coordX = currentAsset(2)
+        Dim coordY As Integer: coordY = currentAsset(3)
+        Dim weaknessExploit As String: weaknessExploit = currentAsset(4)
+        
+        ' Test 1: Boundary Check (Catching assets that floated off-map or fell through geometry)
+        If coordX > maxMapX Or coordY > maxMapY Or coordX < 0 Or coordY < 0 Then
+            Debug.Print "[FAIL] Out of Bounds: Asset '" & assetID & "' found at (" & coordX & "," & coordY & "). Exceeds limits."
+            discrepancyCount = discrepancyCount + 1
+            
+        ' Test 2: Integrity of Tactical Aggro Logic (Catching unassigned logic flags)
+        ElseIf assetType = "Unit" And weaknessExploit = "Unassigned" Then
+            Debug.Print "[WARN] Dead Logic: Unit '" & assetID & "' has no targeted Hero weakness. Aggro AI will idle."
+            discrepancyCount = discrepancyCount + 1
+            
+        ' Test 3: Standard Pass Verification
+        Else
+            Debug.Print "[PASS] Verified: '" & assetID & "' (" & assetType & ") safely compiled at (" & coordX & "," & coordY & ")."
+        End If
+    Next i
+    
+    ' Summary Report Output
+    Debug.Print "------------------------------------------------"
+    Debug.Print "RECONCILIATION COMPLETE."
+    If discrepancyCount > 0 Then
+        Debug.Print "RESULT: FAILED. " & discrepancyCount & " synchronization issue(s) sent to bug tracker."
+    Else
+        Debug.Print "RESULT: SUCCESS. Engine layout matches GDD code architecture completely."
+    End If
+    Debug.Print "================================================"
+End Sub

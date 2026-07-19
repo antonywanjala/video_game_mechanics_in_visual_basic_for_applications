@@ -1,0 +1,54 @@
+' ==============================================================================
+' Fable Mechanic: The Performance Flop (Asset-to-Code Reconciliation)
+' Description: Syncs the player's missed prompt logic with NPC reaction assets
+' ==============================================================================
+
+Sub ReconcilePerformanceFlop(player As Object, crowd As Collection, audioSystem As Object)
+    
+    Dim npc As Object
+    Dim attractivenessPenalty As Integer
+    
+    ' The base penalty applied to the player's attractiveness/opinion rating
+    attractivenessPenalty = -50 
+    
+    ' 1. Trigger the immediate player-centric asset (The screeching chord)
+    ' This reconciles the failure state with the auditory feedback asset
+    Call audioSystem.PlaySound("sfx_lute_screech_critical.wav")
+    Call player.PlayAnimation("anim_player_lute_cringe")
+    
+    ' 2. Iterate through the loaded crowd assets to reconcile their states
+    For Each npc In crowd
+        
+        ' Only affect NPCs that are fully loaded in memory and actively watching
+        If npc.IsLoaded = True And npc.CurrentState = "WatchingPerformance" Then
+            
+            ' --- CODE RECONCILIATION ---
+            ' Drop the numerical attractiveness/opinion rating instantly
+            npc.OpinionRating = npc.OpinionRating + attractivenessPenalty
+            
+            ' Prevent the rating from dropping below the absolute minimum
+            If npc.OpinionRating < -100 Then
+                npc.OpinionRating = -100
+            End If
+            
+            ' --- ASSET RECONCILIATION ---
+            ' Force the NPC asset to break its current idle loop and play a negative reaction
+            Call npc.SetAnimationState("anim_npc_boo_hiss")
+            
+            ' Trigger localized 3D audio assets attached to this specific NPC model
+            Call audioSystem.PlayLocalSound(npc.Position, "vo_npc_hiss_generic")
+            
+            ' Spawn the negative floating UI asset (e.g., a broken red heart or angry face)
+            Call npc.SpawnParticleEffect("vfx_emote_angry_bubble")
+            
+        End If
+        
+    Next npc
+    
+    ' 3. Apply the global attractiveness modifier to the player's permanent code state
+    player.GlobalAttractiveness = player.GlobalAttractiveness - 10
+    
+    ' Output to the debug console for engine tracking
+    Debug.Print "Performance Flop reconciled: " & crowd.Count & " NPCs reacted."
+
+End Sub

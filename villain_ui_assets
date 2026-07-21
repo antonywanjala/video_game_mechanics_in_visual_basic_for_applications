@@ -1,0 +1,87 @@
+' ==============================================================================
+' Module: FableLegends_VillainUI_Reconciliation
+' Purpose: Reconcile visual RTS Villain UI assets with underlying engine code.
+' ==============================================================================
+
+Public Type RTSAsset
+    AssetID As String
+    AssetType As String      ' e.g., "CreatureSpawner", "Trap", "GateTrigger"
+    PosX As Double
+    PosY As Double
+    PosZ As Double
+    IsBoundToCode As Boolean
+End Type
+
+Public Type EngineObject
+    ObjectID As String
+    ObjectType As String
+    VectorLocation(0 To 2) As Double
+    IsActive As Boolean
+End Type
+
+Public Sub ReconcileVillainUIAssets()
+    Dim i As Long
+    Dim totalAssets As Long
+    
+    ' 1. Mock Data Setup: Simulating visual assets placed via the RTS Villain UI
+    Dim rtsAssets() As RTSAsset
+    totalAssets = 4
+    ReDim rtsAssets(0 To totalAssets - 1)
+    
+    ' Asset 0: Goblin Spawner
+    rtsAssets(0).AssetID = "VUI_SPAWN_01"
+    rtsAssets(0).AssetType = "CreatureSpawner"
+    rtsAssets(0).PosX = 120.5: rtsAssets(0).PosY = 0.0: rtsAssets(0).PosZ = 45.2
+    rtsAssets(0).IsBoundToCode = False
+    
+    ' Asset 1: Spike Trap
+    rtsAssets(1).AssetID = "VUI_TRAP_01"
+    rtsAssets(1).AssetType = "Trap"
+    rtsAssets(1).PosX = 210.0: rtsAssets(1).PosY = 1.2: rtsAssets(1).PosZ = 88.0
+    rtsAssets(1).IsBoundToCode = False
+    
+    ' Asset 2: Ogre Elite Unit
+    rtsAssets(2).AssetID = "VUI_UNIT_OGRE"
+    rtsAssets(2).AssetType = "CreatureSpawner"
+    rtsAssets(2).PosX = 340.8: rtsAssets(2).PosY = 0.0: rtsAssets(2).PosZ = 120.1
+    rtsAssets(2).IsBoundToCode = False
+    
+    ' Asset 3: Objective Portcullis
+    rtsAssets(3).AssetID = "VUI_GATE_01"
+    rtsAssets(3).AssetType = "GateTrigger"
+    rtsAssets(3).PosX = 500.0: rtsAssets(3).PosY = 5.0: rtsAssets(3).PosZ = 200.0
+    rtsAssets(3).IsBoundToCode = False
+
+    ' Output reconciliation log header
+    Debug.Print "=== STARTING VILLAIN UI ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' Array to hold runtime engine objects linked during loop
+    Dim gameObjects() As EngineObject
+    ReDim gameObjects(0 To totalAssets - 1)
+    
+    ' 2. The Reconciliation For Loop
+    For i = LBound(rtsAssets) To UBound(rtsAssets)
+        ' Validate asset parameters
+        If rtsAssets(i).AssetID <> "" And Not rtsAssets(i).IsBoundToCode Then
+            
+            ' Reconcile spatial coordinates and bind to engine object
+            gameObjects(i).ObjectID = "ENG_OBJ_" & rtsAssets(i).AssetID
+            gameObjects(i).ObjectType = rtsAssets(i).AssetType
+            gameObjects(i).VectorLocation(0) = rtsAssets(i).PosX
+            gameObjects(i).VectorLocation(1) = rtsAssets(i).PosY
+            gameObjects(i).VectorLocation(2) = rtsAssets(i).PosZ
+            gameObjects(i).IsActive = True
+            
+            ' Mark asset as successfully bound to code
+            rtsAssets(i).IsBoundToCode = True
+            
+            ' Log reconciliation status
+            Debug.Print "[SUCCESS] Reconciled Asset '" & rtsAssets(i).AssetID & _
+                        "' (" & rtsAssets(i).AssetType & ") -> Bound to Engine Object ID: " & gameObjects(i).ObjectID
+        Else
+            Debug.Print "[WARNING] Failed to reconcile Asset at Index " & i
+        End If
+    Next i
+    
+    Debug.Print "=== RECONCILIATION COMPLETE: " & (UBound(rtsAssets) + 1) & " Elements Synchronized ==="
+End Sub

@@ -1,0 +1,96 @@
+Attribute VB_Name = "FableReconciliationModule"
+Option Explicit
+
+' -------------------------------------------------------------------
+' Struct representing a Visual Feature Asset in the Fable Engine
+' -------------------------------------------------------------------
+Public Type VisualAsset
+    AssetName As String          ' e.g., "AngelHalo_Emitter", "DemonHorns_Mesh"
+    TargetAlignment As String    ' "GOOD", "EVIL", or "NEUTRAL"
+    RequiredThreshold As Long    ' Morality points needed to activate
+    IsCurrentlyActive As Boolean ' Actual code/asset state
+End Type
+
+' -------------------------------------------------------------------
+' Main Subroutine: Reconciles Asset states with Runtime Hero Morality
+' -------------------------------------------------------------------
+Public Sub ParticleEmitterActive()
+
+    Dim CurrentHeroMorality As Long
+    Dim HeroAssets() As VisualAsset
+    Dim AssetCount As Long
+    Dim i As Long
+    Dim ShouldBeActive As Boolean
+    Dim ReconciledCount As Long
+
+    ' 1. Set current runtime Hero Morality (-1000 = Pure Evil, +1000 = Pure Good)
+    CurrentHeroMorality = -750  ' Example: High Evil Alignment
+
+    ' 2. Define registered Visual Assets requiring reconciliation
+    AssetCount = 4
+    ReDim HeroAssets(1 To AssetCount)
+
+    ' Asset 1: Angelic Halo
+    HeroAssets(1).AssetName = "AngelHalo_ParticleEmitter"
+    HeroAssets(1).TargetAlignment = "GOOD"
+    HeroAssets(1).RequiredThreshold = 500
+    HeroAssets(1).IsCurrentlyActive = True ' Out of sync! (Hero is Evil)
+
+    ' Asset 2: Demon Horns 3D Mesh
+    HeroAssets(2).AssetName = "DemonHorns_Mesh_Lvl2"
+    HeroAssets(2).TargetAlignment = "EVIL"
+    HeroAssets(2).RequiredThreshold = -500
+    HeroAssets(2).IsCurrentlyActive = False ' Out of sync! (Hero is Evil)
+
+    ' Asset 3: Flies/Aura Effect
+    HeroAssets(3).AssetName = "DarkAura_Swarm"
+    HeroAssets(3).TargetAlignment = "EVIL"
+    HeroAssets(3).RequiredThreshold = -700
+    HeroAssets(3).IsCurrentlyActive = True ' Already in sync
+
+    ' Asset 4: Radiant Glow Shader
+    HeroAssets(4).AssetName = "HolySkin_Shader"
+    HeroAssets(4).TargetAlignment = "GOOD"
+    HeroAssets(4).RequiredThreshold = 800
+    HeroAssets(4).IsCurrentlyActive = False ' Already in sync
+
+    ' ---------------------------------------------------------------
+    ' ASSET-TO-CODE RECONCILIATION FOR LOOP
+    ' ---------------------------------------------------------------
+    Debug.Print "=== STARTING FABLE ASSET-TO-CODE RECONCILIATION ==="
+    Debug.Print "Current Hero Morality Rating: " & CurrentHeroMorality
+    Debug.Print "---------------------------------------------------"
+
+    ReconciledCount = 0
+
+    For i = 1 To AssetCount
+
+        ' Determine expected asset state based on runtime code rules
+        If HeroAssets(i).TargetAlignment = "GOOD" Then
+            ShouldBeActive = (CurrentHeroMorality >= HeroAssets(i).RequiredThreshold)
+        ElseIf HeroAssets(i).TargetAlignment = "EVIL" Then
+            ShouldBeActive = (CurrentHeroMorality <= HeroAssets(i).RequiredThreshold)
+        Else
+            ShouldBeActive = False
+        End If
+
+        ' Check if visual asset state matches calculated code state
+        If HeroAssets(i).IsCurrentlyActive <> ShouldBeActive Then
+            ' Discrepancy found: Reconcile asset state to match code state
+            HeroAssets(i).IsCurrentlyActive = ShouldBeActive
+            ReconciledCount = ReconciledCount + 1
+
+            Debug.Print "[RECONCILED] " & HeroAssets(i).AssetName & _
+                        " -> Active state forced to: " & ShouldBeActive
+        Else
+            Debug.Print "[VALIDATED]  " & HeroAssets(i).AssetName & _
+                        " -> Already in sync (" & ShouldBeActive & ")"
+        End If
+
+    Next i
+
+    Debug.Print "---------------------------------------------------"
+    Debug.Print "Reconciliation complete. Total assets updated: " & ReconciledCount
+    Debug.Print "==================================================="
+
+End Sub

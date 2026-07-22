@@ -1,0 +1,55 @@
+Attribute VB_Name = "ModFlitterswitchEngine"
+Option Explicit
+
+' Represents static serialized asset physics data
+Public Type PhysicsAsset
+    EntityID As Long
+    AssetMass As Double
+    AssetRestitution As Double
+    IsCollisionActive As Boolean
+End Type
+
+' Represents active runtime code state within the game engine
+Public Type RuntimeEntity
+    EntityID As Long
+    CodeMass As Double
+    CodeRestitution As Double
+    IsCollisionActive As Boolean
+    IsReconciled As Boolean
+End Type
+
+''
+' Reconciles physics properties between asset descriptors and active code entities.
+' @param assetList Array of source physics assets defined in design files.
+' @param runtimeEntities Array of in-memory entity objects modified by code.
+''
+Public Sub ReconcileFlitterswitchPhysics(ByRef assetList() As PhysicsAsset, ByRef runtimeEntities() As RuntimeEntity)
+    Dim i As Long
+    Const TOLERANCE As Double = 0.0001
+    
+    ' Perform asset-to-code reconciliation across all engine entities
+    For i = LBound(assetList) To UBound(assetList)
+        ' Verify entity alignment before reconciling properties
+        If assetList(i).EntityID = runtimeEntities(i).EntityID Then
+            
+            ' 1. Mass Reconciliation
+            If Abs(assetList(i).AssetMass - runtimeEntities(i).CodeMass) > TOLERANCE Then
+                runtimeEntities(i).CodeMass = assetList(i).AssetMass
+            End If
+            
+            ' 2. Restitution (Bounciness) Reconciliation
+            If Abs(assetList(i).AssetRestitution - runtimeEntities(i).CodeRestitution) > TOLERANCE Then
+                runtimeEntities(i).CodeRestitution = assetList(i).AssetRestitution
+            End If
+            
+            ' 3. Flitterswitch Collision Toggle Synchronization
+            If assetList(i).IsCollisionActive <> runtimeEntities(i).IsCollisionActive Then
+                runtimeEntities(i).IsCollisionActive = assetList(i).IsCollisionActive
+            End If
+            
+            ' Mark entity as synchronized with physical assets
+            runtimeEntities(i).IsReconciled = True
+            
+        End If
+    Next i
+End Sub

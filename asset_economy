@@ -1,0 +1,63 @@
+Option Explicit
+
+' Structure representing an Item Asset loaded from game design tables
+Public Type ItemAsset
+    ItemID As String
+    ItemName As String
+    BasePrice As Double
+    ReconciledPrice As Double
+    IsReconciled As Boolean
+End Type
+
+' Main routine to reconcile asset prices against NPC population mechanics
+Public Sub ReconcileFableEconomy()
+
+    ' 1. Define Regional Population Parameters
+    Dim BaselineNPCs As Long
+    Dim CurrentNPCs As Long
+    Dim PriceSensitivity As Double
+    
+    BaselineNPCs = 100        ' Standard town population baseline
+    CurrentNPCs = 45          ' Current population (e.g., after an event/slumber)
+    PriceSensitivity = 0.5    ' 50% max variance scaling factor
+
+    ' 2. Initialize Raw Static Item Assets (Design Data)
+    Dim Items(0 To 3) As ItemAsset
+    
+    Items(0).ItemID = "ITM_001": Items(0).ItemName = "Health Potion":   Items(0).BasePrice = 50#
+    Items(1).ItemID = "ITM_002": Items(1).ItemName = "Iron Cutlass":   Items(1).BasePrice = 150#
+    Items(2).ItemID = "ITM_003": Items(2).ItemName = "Apple Pie":       Items(2).BasePrice = 10#
+    Items(3).ItemID = "ITM_004": Items(3).ItemName = "Oak Longbow":    Items(3).BasePrice = 300#
+
+    ' 3. Calculate Dynamic Population Scaling Multiplier
+    ' Formula: Multiplier = 1 + (1 - (Current / Baseline)) * Sensitivity
+    Dim PopRatio As Double
+    Dim DynamicMultiplier As Double
+    
+    PopRatio = CDbl(CurrentNPCs) / CDbl(BaselineNPCs)
+    DynamicMultiplier = 1# + ((1# - PopRatio) * PriceSensitivity)
+
+    ' =========================================================================
+    ' 4. ASSET-TO-CODE RECONCILIATION FOR LOOP
+    ' =========================================================================
+    Dim i As Long
+    For i = LBound(Items) To UBound(Items)
+        
+        ' Reconcile static base asset price with runtime economy code logic
+        Items(i).ReconciledPrice = Round(Items(i).BasePrice * DynamicMultiplier, 2)
+        
+        ' Flag reconciliation status
+        Items(i).IsReconciled = True
+        
+        ' Print reconciled asset values to Immediate Window (Debug output)
+        Debug.Print "Reconciled [" & Items(i).ItemID & "] " & Items(i).ItemName & _
+                    " | Base: Gold " & Items(i).BasePrice & _
+                    " -> Dynamic: Gold " & Items(i).ReconciledPrice
+                    
+    Next i
+    ' =========================================================================
+
+    MsgBox "Asset-to-code reconciliation completed for " & (UBound(Items) + 1) & " items.", _
+           vbInformation, "Fable Economy Sync"
+
+End Sub

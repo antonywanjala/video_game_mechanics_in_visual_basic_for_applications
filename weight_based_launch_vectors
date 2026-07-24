@@ -1,0 +1,48 @@
+Option Explicit
+
+' Structure to hold asset data during reconciliation
+Public Type CreatureAsset
+    Name As String
+    Mass As Double
+    CalculatedLaunchDistance As Double
+End Type
+
+Public Sub ReconcileWeightBasedLaunchVectors()
+    Dim CreatureList(0 To 3) As CreatureAsset
+    Dim BaseImpactForce As Double
+    Dim i As Long
+
+    ' 1. Load imported asset data (Asset Side)
+    CreatureList(0).Name = "Hobbe"
+    CreatureList(0).Mass = 40#
+
+    CreatureList(1).Name = "Bandit"
+    CreatureList(1).Mass = 80#
+
+    CreatureList(2).Name = "Balverine"
+    CreatureList(2).Mass = 140#
+
+    CreatureList(3).Name = "Earth Troll"
+    CreatureList(3).Mass = 900#
+
+    ' High-level Force Push base force value (Code Side)
+    BaseImpactForce = 500#
+
+    Debug.Print "=== ASSET-TO-CODE RECONCILIATION: LAUNCH VECTORS ==="
+
+    ' 2. Reconciliation For Loop
+    For i = LBound(CreatureList) To UBound(CreatureList)
+        ' Safety check against missing asset metadata or zero-mass division
+        If CreatureList(i).Mass <= 0 Then
+            CreatureList(i).Mass = 1#
+        End If
+
+        ' Reconcile asset mass to runtime launch vector distance
+        CreatureList(i).CalculatedLaunchDistance = BaseImpactForce / CreatureList(i).Mass
+
+        ' Output reconciled runtime vector state
+        Debug.Print "Asset: " & CreatureList(i).Name & _
+                    " | Mass: " & CreatureList(i).Mass & "kg" & _
+                    " | Rec. Launch Dist: " & Format(CreatureList(i).CalculatedLaunchDistance, "0.00") & "m"
+    Next i
+End Sub

@@ -1,0 +1,90 @@
+Attribute VB_Name = "CrowdContagionReconciliation"
+Option Explicit
+
+' Define the NPC Asset Structure
+Public Type NpcAsset
+    ID As Integer
+    PosX As Double
+    PosY As Double
+    MoodLevel As Double
+    IsPanicked As Boolean
+    AssetModelRef As String ' Reference for asset-to-code reconciliation
+End Type
+
+' Global Constants for the Mechanic
+Const PANIC_THRESHOLD As Double = 90.0
+Const CONTAGION_RADIUS As Double = 15.0
+Const PANIC_SPREAD_RATE As Double = 25.0
+
+Public Sub ReconcileContagion()
+    Dim TownSquare() As NpcAsset
+    Dim TotalNPCs As Integer
+    Dim i As Integer, j As Integer
+    Dim Distance As Double
+    
+    ' Mock setup of 5 NPCs for demonstration
+    TotalNPCs = 5
+    ReDim TownSquare(1 To TotalNPCs)
+    
+    ' Initialize Assets (ID, X, Y, Mood, State, Model)
+    TownSquare(1) = CreateNPC(1, 0, 0, 95, True, "Villager_A_Panicked") ' The Patient Zero
+    TownSquare(2) = CreateNPC(2, 5, 5, 50, False, "Villager_B_Idle")    ' Close by
+    TownSquare(3) = CreateNPC(3, 10, 10, 40, False, "Shopkeeper_Idle")  ' Within radius
+    TownSquare(4) = CreateNPC(4, 50, 50, 20, False, "Guard_Patrol")     ' Too far away
+    TownSquare(5) = CreateNPC(5, 7, -5, 70, False, "Villager_C_Idle")   ' Close by, already nervous
+    
+    Debug.Print "--- Commencing Asset-to-Code Reconciliation ---"
+    
+    ' ---------------------------------------------------------
+    ' THE MECHANIC: CROWD CONTAGION FOR-LOOP
+    ' ---------------------------------------------------------
+    For i = 1 To TotalNPCs
+        ' Identify assets that have reached the extreme mood state
+        If TownSquare(i).IsPanicked Then
+            
+            ' Scan neighboring assets for contagion spread
+            For j = 1 To TotalNPCs
+                ' Skip self and already panicked NPCs
+                If i <> j And Not TownSquare(j).IsPanicked Then
+                    
+                    ' Reconcile spatial proximity (Euclidean distance)
+                    Distance = Sqr((TownSquare(i).PosX - TownSquare(j).PosX) ^ 2 + _
+                                   (TownSquare(i).PosY - TownSquare(j).PosY) ^ 2)
+                    
+                    ' If the target asset is within the contagion radius
+                    If Distance <= CONTAGION_RADIUS Then
+                        ' Spread the extreme mood
+                        TownSquare(j).MoodLevel = TownSquare(j).MoodLevel + PANIC_SPREAD_RATE
+                        
+                        ' Reconcile state change if threshold is breached
+                        If TownSquare(j).MoodLevel >= PANIC_THRESHOLD Then
+                            TownSquare(j).IsPanicked = True
+                            TownSquare(j).AssetModelRef = Replace(TownSquare(j).AssetModelRef, "Idle", "Panicked")
+                            Debug.Print "Cascading Panic: NPC " & TownSquare(j).ID & " has abandoned their routine!"
+                        Else
+                            Debug.Print "Growing Fear: NPC " & TownSquare(j).ID & " mood rose to " & TownSquare(j).MoodLevel
+                        End If
+                    End If
+                    
+                End If
+            Next j
+            
+        End If
+    Next i
+    
+    Debug.Print "--- Reconciliation Complete ---"
+
+End Sub
+
+' Helper function to populate the struct
+Private Function CreateNPC(idNum As Integer, x As Double, y As Double, _
+                           mood As Double, panic As Boolean, model As String) As NpcAsset
+    Dim newNPC As NpcAsset
+    newNPC.ID = idNum
+    newNPC.PosX = x
+    newNPC.PosY = y
+    newNPC.MoodLevel = mood
+    newNPC.IsPanicked = panic
+    newNPC.AssetModelRef = model
+    CreateNPC = newNPC
+End Function

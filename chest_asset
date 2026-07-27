@@ -1,0 +1,84 @@
+Option Explicit
+
+' Structure to represent a Silver Key Chest in Albion
+Public Type ChestAsset
+    ChestID As String
+    RequiredKeys As Integer
+    RewardItem As String
+    IsOpened As Boolean
+    IsWorldStateLocked As Boolean
+End Type
+
+' Structure to represent the Hero's inventory state
+Public Type HeroState
+    SilverKeys As Integer
+    Inventory As String
+End Type
+
+Public Sub ReconcileChestAssets()
+    Dim Chests(0 To 2) As ChestAsset
+    Dim Hero As HeroState
+    Dim IsQuestActive As Boolean
+    Dim i As Integer
+
+    ' --- INITIALIZATION ---
+    Hero.SilverKeys = 15
+    Hero.Inventory = "Health Potion"
+    IsQuestActive = True ' Set to True to simulate Hero-Save reset exploit
+
+    ' Populate Sample Chest Assets
+    Chests(0).ChestID = "CHEST_01_HEROES_GUILD"
+    Chests(0).RequiredKeys = 5
+    Chests(0).RewardItem = "Elixir of Life"
+    Chests(0).IsOpened = True ' Player opened this during active quest
+    Chests(0).IsWorldStateLocked = False
+
+    Chests(1).ChestID = "CHEST_02_DARKWOOD_LAKE"
+    Chests(1).RequiredKeys = 15
+    Chests(1).RewardItem = "Arken's Crossbow"
+    Chests(1).IsOpened = True ' Player opened this during active quest
+    Chests(1).IsWorldStateLocked = False
+
+    Chests(2).ChestID = "CHEST_03_GREATWOOD"
+    Chests(2).RequiredKeys = 10
+    Chests(2).RewardItem = "5000 Gold"
+    Chests(2).IsOpened = False
+    Chests(2).IsWorldStateLocked = False
+
+    Debug.Print "=== BEFORE RECONCILIATION ==="
+    Debug.Print "Hero Inventory: " & Hero.Inventory
+    Debug.Print "Quest Active Status: " & IsQuestActive
+    Debug.Print "---------------------------------------"
+
+    ' --- ASSET-TO-CODE RECONCILIATION FOR LOOP ---
+    For i = LBound(Chests) To UBound(Chests)
+        
+        ' Process chests marked as opened during gameplay
+        If Chests(i).IsOpened = True Then
+            
+            ' Immediate Hero state commit: Add item to hero inventory
+            Hero.Inventory = Hero.Inventory & ", " & Chests(i).RewardItem
+            
+            ' Determine World State Persistence based on Quest context
+            If Not IsQuestActive Then
+                ' Quest Complete: World state is locked permanently
+                Chests(i).IsWorldStateLocked = True
+                Debug.Print "[LOCK] " & Chests(i).ChestID & " - World state locked as OPEN."
+            Else
+                ' Quest Active: World state resets on Hero Save reload
+                Chests(i).IsWorldStateLocked = False
+                Chests(i).IsOpened = False ' Revert chest to unopened for world reload
+                Debug.Print "[RESET] " & Chests(i).ChestID & " - Inventory credited, world state reset!"
+            End If
+            
+        End If
+        
+    Next i
+
+    ' --- OUTPUT RESULTS ---
+    Debug.Print "---------------------------------------"
+    Debug.Print "=== AFTER RECONCILIATION ==="
+    Debug.Print "Hero Inventory: " & Hero.Inventory
+    Debug.Print "Chest 1 Opened Status (World): " & Chests(0).IsOpened
+    Debug.Print "Chest 2 Opened Status (World): " & Chests(1).IsOpened
+End Sub

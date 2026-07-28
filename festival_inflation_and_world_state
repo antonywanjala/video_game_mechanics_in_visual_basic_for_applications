@@ -1,0 +1,77 @@
+Option Explicit
+
+' Define World / Quest State Structure
+Public Type WorldState
+    IsFestivalActive As Boolean
+    IsQuestCompleted As Boolean
+End Type
+
+' Define Inventory Item Structure
+Public Type ShopItem
+    ItemID As String
+    ItemCategory As String  ' "Food", "Alcohol", "Gift"
+    BasePrice As Double
+    ReconciledPrice As Double
+    ChestStateLocked As Boolean
+End Type
+
+Public Sub ReconcileFestivalInflationAndWorldState()
+    Dim GameWorld As WorldState
+    Dim Inventory(1 To 4) As ShopItem
+    Dim InflationMultiplier As Double
+    Dim i As Long
+
+    ' Set current world conditions:
+    ' Crowded town festival is ongoing, but quest is NOT yet complete
+    GameWorld.IsFestivalActive = True
+    GameWorld.IsQuestCompleted = False
+    InflationMultiplier = 1.5 ' 50% price markup during festivals
+
+    ' Populate Sample Assets (simulating data imported from asset registry)
+    Inventory(1).ItemID = "FOOD_APPLE"
+    Inventory(1).ItemCategory = "Food"
+    Inventory(1).BasePrice = 10.0
+
+    Inventory(2).ItemID = "ALC_BEER"
+    Inventory(2).ItemCategory = "Alcohol"
+    Inventory(2).BasePrice = 25.0
+
+    Inventory(3).ItemID = "GIFT_PERFUME"
+    Inventory(3).ItemCategory = "Gift"
+    Inventory(3).BasePrice = 100.0
+
+    Inventory(4).ItemID = "WEAPON_IRON_SWORD"
+    Inventory(4).ItemCategory = "Weapon"
+    Inventory(4).BasePrice = 250.0
+
+    ' --- ASSET-TO-CODE RECONCILIATION LOOP ---
+    For i = LBound(Inventory) To UBound(Inventory)
+        
+        ' 1. Apply Festival Inflation to targeted tourist goods
+        If GameWorld.IsFestivalActive Then
+            Select Case Inventory(i).ItemCategory
+                Case "Food", "Alcohol", "Gift"
+                    Inventory(i).ReconciledPrice = Inventory(i).BasePrice * InflationMultiplier
+                Case Else
+                    Inventory(i).ReconciledPrice = Inventory(i).BasePrice
+            End Select
+        Else
+            Inventory(i).ReconciledPrice = Inventory(i).BasePrice
+        End If
+
+        ' 2. Enforce Quest Lock behavior on Chest / World State
+        If GameWorld.IsQuestCompleted Then
+            ' Lock world state permanently to save-game
+            Inventory(i).ChestStateLocked = True
+        Else
+            ' Keep state unlocked/floating until current quest line ends
+            Inventory(i).ChestStateLocked = False
+        End If
+
+        ' Output reconciliation result
+        Debug.Print "Asset: " & Inventory(i).ItemID & _
+                    " | Base Price: " & Inventory(i).BasePrice & _
+                    " | Final Price: " & Inventory(i).ReconciledPrice & _
+                    " | Chest Locked: " & Inventory(i).ChestStateLocked
+    Next i
+End Sub

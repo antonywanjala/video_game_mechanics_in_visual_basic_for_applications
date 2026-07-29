@@ -1,0 +1,82 @@
+' ==============================================================================
+' Module: FableStateReconciliation
+' Purpose: Reconciles asset states (lighting/detection and chest persistence)
+'          with the current logical quest state in a given map cell.
+' ==============================================================================
+
+Sub ReconcileMapAssets()
+    Dim i As Integer
+    Dim totalAssets As Integer
+    Dim isCurrentQuestComplete As Boolean
+    Dim playerLightValue As Double
+    Dim baseDetectionRadius As Double
+    
+    ' 1. Fetch current global variables
+    totalAssets = GetAssetCount() 
+    isCurrentQuestComplete = CheckQuestStatus("CurrentActiveQuest")
+    
+    ' playerLightValue ranges from 0.0 (Total Shadow/Canopy) to 1.0 (Direct Sunlight)
+    playerLightValue = GetPlayerEnvironmentalLight() 
+    
+    ' 2. Reconciliation Loop
+    For i = 1 To totalAssets
+        Dim assetType As String
+        Dim assetID As String
+        
+        assetID = GetAssetID(i)
+        assetType = GetAssetType(assetID)
+        
+        ' ------------------------------------------------------------------
+        ' MECHANIC A: Light Value Checks (Guards & Enemies)
+        ' ------------------------------------------------------------------
+        If assetType = "Guard" Or assetType = "Enemy" Then
+            baseDetectionRadius = GetBaseDetection(assetID)
+            
+            ' Apply the shadow penalty to the detection radius. 
+            ' If the player is in heavy canopy (0.2 light), the radius is reduced to 20%.
+            Dim newDetectionRadius As Double
+            newDetectionRadius = baseDetectionRadius * playerLightValue
+            
+            ' Push reconciled data back to the NPC asset
+            Call UpdateNPCDetectionRadius(assetID, newDetectionRadius)
+            
+        ' ------------------------------------------------------------------
+        ' MECHANIC B: Quest-Dependent World State Locks (Chests)
+        ' ------------------------------------------------------------------
+        ElseIf assetType = "Chest" Then
+            Dim isChestOpened As Boolean
+            isChestOpened = GetChestVisualState(assetID) ' Is the lid visually open?
+            
+            If isCurrentQuestComplete Then
+                ' The quest is done. Lock the visual state into the permanent save code.
+                Call LockAssetWorldState(assetID, isChestOpened)
+            Else
+                ' Quest is active. Flag as a temporary state that can be reverted if the player fails/reloads.
+                Call SetAssetStateTemporary(assetID, isChestOpened)
+            End If
+            
+        End If
+    Next i
+    
+    MsgBox "Asset reconciliation complete for current chunk.", vbInformation
+End Sub
+
+' ------------------------------------------------------------------------------
+' Stub Functions (Representing engine-side API calls)
+' ------------------------------------------------------------------------------
+Function GetAssetCount() As Integer: GetAssetCount = 150: End Function
+Function CheckQuestStatus(questName As String) As Boolean: CheckQuestStatus = False: End Function
+Function GetPlayerEnvironmentalLight() As Double: GetPlayerEnvironmentalLight = 0.4: End Function
+Function GetAssetID(index As Integer) As String: GetAssetID = "OBJ_" & index: End Function
+Function GetAssetType(assetID As String) As String
+    If Right(assetID, 1) = "1" Then GetAssetType = "Guard"
+    ElseIf Right(assetID, 1) = "2" Then GetAssetType = "Chest"
+    Else: GetAssetType = "Scenery"
+    End If
+End Function
+Function GetBaseDetection(assetID As String) As Double: GetBaseDetection = 1000: End Function
+Function GetChestVisualState(assetID As String) As Boolean: GetChestVisualState = True: End Function
+
+Sub UpdateNPCDetectionRadius(assetID As String, radius As Double): End Sub
+Sub LockAssetWorldState(assetID As String, state As Boolean): End Sub
+Sub SetAssetStateTemporary(assetID As String, state As Boolean): End Sub

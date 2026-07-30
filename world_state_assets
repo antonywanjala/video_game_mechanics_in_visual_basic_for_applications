@@ -1,0 +1,72 @@
+' ==============================================================================
+' Module: FableWorldStateReconciliation
+' Description: Reconciles fluid runtime asset states (e.g., Chest open/closed)
+'              into persistent lock states based on quest line completion.
+' ==============================================================================
+
+Public Type WorldAsset
+    AssetID As String
+    AssociatedQuestID As String
+    RuntimeState As String      ' "OPEN" or "CLOSED"
+    SavedState As String        ' Committed state in save file
+    IsStateLocked As Boolean    ' True if quest is complete and state is locked
+End Type
+
+Public Function IsQuestCompleted(ByVal QuestID As String) As Boolean
+    ' Sample check: In production, this checks the player's quest log registry
+    If QuestID = "QUEST_HERO_GUILD_01" Then
+        IsQuestCompleted = True
+    Else
+        IsQuestCompleted = False ' Quest is currently active/incomplete
+    End If
+End Function
+
+Public Sub ReconcileWorldStateAssets()
+    Dim WorldAssets(0 To 3) As WorldAsset
+    Dim i As Integer
+    
+    ' --- Mock Asset Registry Initialization ---
+    ' Asset 0: Guild Chest (Completed quest -> State Locks)
+    WorldAssets(0).AssetID = "CHEST_GUILD_001"
+    WorldAssets(0).AssociatedQuestID = "QUEST_HERO_GUILD_01"
+    WorldAssets(0).RuntimeState = "OPEN"
+    
+    ' Asset 1: Witchwood Chest (Active quest -> State stays Unlocked)
+    WorldAssets(1).AssetID = "CHEST_WITCHWOOD_002"
+    WorldAssets(1).AssociatedQuestID = "QUEST_WITCHWOOD_MAIN"
+    WorldAssets(1).RuntimeState = "OPEN"
+    
+    ' Asset 2: Bowerstone Chest (Active quest -> State stays Unlocked)
+    WorldAssets(2).AssetID = "CHEST_BOWERSTONE_001"
+    WorldAssets(2).AssociatedQuestID = "QUEST_ORCHARD_FARM"
+    WorldAssets(2).RuntimeState = "CLOSED"
+    
+    ' Asset 3: Static Overworld Chest (No active quest association)
+    WorldAssets(3).AssetID = "CHEST_OAKVALE_001"
+    WorldAssets(3).AssociatedQuestID = ""
+    WorldAssets(3).RuntimeState = "CLOSED"
+
+    ' --- ASSET-TO-CODE RECONCILIATION FOR LOOP ---
+    Debug.Print "=== STARTING WORLD STATE RECONCILIATION ==="
+    
+    For i = LBound(WorldAssets) To UBound(WorldAssets)
+        
+        ' Check if quest line is incomplete
+        If WorldAssets(i).AssociatedQuestID <> "" And Not IsQuestCompleted(WorldAssets(i).AssociatedQuestID) Then
+            ' Deferred State: World state is NOT locked until quest completion
+            WorldAssets(i).IsStateLocked = False
+            WorldAssets(i).SavedState = "DEFERRED (" & WorldAssets(i).RuntimeState & ")"
+            
+            Debug.Print "Asset [" & WorldAssets(i).AssetID & "] Status: UNLOCKED | Quest active: " & WorldAssets(i).AssociatedQuestID
+        Else
+            ' Reconciled State: Lock state into persistent save data
+            WorldAssets(i).IsStateLocked = True
+            WorldAssets(i).SavedState = WorldAssets(i).RuntimeState
+            
+            Debug.Print "Asset [" & WorldAssets(i).AssetID & "] Status: LOCKED (" & WorldAssets(i).SavedState & ") | Quest completed/none"
+        End If
+        
+    Next i
+    
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

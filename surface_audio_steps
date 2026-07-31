@@ -1,0 +1,55 @@
+Option Explicit
+
+' Structure to hold step asset data
+Public Type StepAsset
+    StepID As Long
+    SurfaceMaterial As String
+    BaseForce As Double
+    CalculatedAwarenessRadius As Double
+End Type
+
+Public Sub ReconcileSurfaceAudioSteps()
+    Dim PlayerSteps(1 To 4) As StepAsset
+    Dim i As Long
+    Dim NoiseMultiplier As Double
+
+    ' 1. Populate sample asset data (simulating input from game data files)
+    PlayerSteps(1).StepID = 1
+    PlayerSteps(1).SurfaceMaterial = "Stone"
+    PlayerSteps(1).BaseForce = 10.0
+
+    PlayerSteps(2).StepID = 2
+    PlayerSteps(2).SurfaceMaterial = "Grass"
+    PlayerSteps(2).BaseForce = 10.0
+
+    PlayerSteps(3).StepID = 3
+    PlayerSteps(3).SurfaceMaterial = "Mud"
+    PlayerSteps(3).BaseForce = 10.0
+
+    PlayerSteps(4).StepID = 4
+    PlayerSteps(4).SurfaceMaterial = "Stone"
+    PlayerSteps(4).BaseForce = 12.5
+
+    ' 2. Reconciliation Loop
+    For i = LBound(PlayerSteps) To UBound(PlayerSteps)
+        ' Determine surface audio multiplier based on material asset
+        Select Case UCase(PlayerSteps(i).SurfaceMaterial)
+            Case "STONE"
+                NoiseMultiplier = 1.8  ' Stone produces high ambient noise
+            Case "GRASS"
+                NoiseMultiplier = 0.5  ' Grass dampens noise
+            Case "MUD"
+                NoiseMultiplier = 0.3  ' Mud significantly muffles noise
+            Case Else
+                NoiseMultiplier = 1.0  ' Default surface sound
+        End Select
+
+        ' Calculate resultant awareness check radius for NPCs
+        PlayerSteps(i).CalculatedAwarenessRadius = PlayerSteps(i).BaseForce * NoiseMultiplier
+
+        ' Print reconciled asset results to the Immediate Window (Ctrl + G)
+        Debug.Print "Step " & PlayerSteps(i).StepID & " [" & PlayerSteps(i).SurfaceMaterial & "] -> " & _
+                    "Base Force: " & PlayerSteps(i).BaseForce & " | " & _
+                    "NPC Awareness Radius: " & PlayerSteps(i).CalculatedAwarenessRadius
+    Next i
+End Sub

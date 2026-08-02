@@ -1,0 +1,60 @@
+Public Type CreatureData
+    ID As String
+    Name As String
+    Mass As Double
+    KnockbackRes As Double
+    LaunchDistance As Double
+End Type
+
+Public Sub ReconcileWeightBasedLaunchVectors()
+    Dim CreatureAssets() As CreatureData
+    Dim AssetCount As Integer
+    Dim BaseImpactForce As Double
+    Dim MaxLaunchDistance As Double
+    Dim SafeMass As Double
+    Dim RawDistance As Double
+    Dim i As Integer
+
+    ' Configuration constants
+    BaseImpactForce = 500.0
+    MaxLaunchDistance = 25.0
+    AssetCount = 4
+
+    ReDim CreatureAssets(1 To AssetCount)
+
+    ' Mock raw asset ingestion
+    CreatureAssets(1).ID = "c001": CreatureAssets(1).Name = "Balverine": CreatureAssets(1).Mass = 85#: CreatureAssets(1).KnockbackRes = 0.15
+    CreatureAssets(2).ID = "c002": CreatureAssets(2).Name = "Hobbe": CreatureAssets(2).Mass = 25#: CreatureAssets(2).KnockbackRes = 0.05
+    CreatureAssets(3).ID = "c003": CreatureAssets(3).Name = "Rock Troll": CreatureAssets(3).Mass = 650#: CreatureAssets(3).KnockbackRes = 0.85
+    CreatureAssets(4).ID = "c004": CreatureAssets(4).Name = "Bandit Leader": CreatureAssets(4).Mass = 95#: CreatureAssets(4).KnockbackRes = 0.2
+
+    ' Debug Header Output
+    Debug.Print "=== ASSET RECONCILIATION: LAUNCH VECTORS ==="
+    Debug.Print "ID", "Name", "Mass (kg)", "Reconciled Launch Dist (m)"
+
+    ' Asset-to-Code Reconciliation For Loop in VBA
+    For i = 1 To AssetCount
+        ' 1. Guard against zero/negative mass values
+        If CreatureAssets(i).Mass <= 0 Then
+            SafeMass = 0.1
+        Else
+            SafeMass = CreatureAssets(i).Mass
+        End If
+
+        ' 2. Calculate launch distance based on weight and resistance
+        RawDistance = (BaseImpactForce * (1# - CreatureAssets(i).KnockbackRes)) / SafeMass
+
+        ' 3. Clamp launch distance to engine world safety limit
+        If RawDistance > MaxLaunchDistance Then
+            CreatureAssets(i).LaunchDistance = MaxLaunchDistance
+        Else
+            CreatureAssets(i).LaunchDistance = RawDistance
+        End If
+
+        ' Output reconciled data to Immediate Window
+        Debug.Print CreatureAssets(i).ID, _
+                    CreatureAssets(i).Name, _
+                    SafeMass, _
+                    Format(CreatureAssets(i).LaunchDistance, "0.00")
+    Next i
+End Sub

@@ -1,0 +1,83 @@
+' Type definitions representing Game State Assets
+Public Type HeroInventory
+    ItemName As String
+    Quantity As Long
+End Type
+
+Public Type SilverKeyChestAsset
+    ChestID As String
+    RewardItem As String
+    RuntimeOpened As Boolean  ' Action taken during active session
+    RewardGranted As Boolean  ' Has item been pushed to inventory?
+    IsOpened As Boolean       ' Persistent world state on disk
+End Type
+
+Public Sub ReconcileSilverKeyChests()
+    Dim WorldChests(1 To 3) As SilverKeyChestAsset
+    Dim Inventory(1 To 10) As HeroInventory
+    Dim IsQuestActive As Boolean
+    Dim InventoryCount As Long
+    Dim i As Long
+
+    ' -------------------------------------------------------------
+    ' 1. INITIALIZE MOCK ASSETS & QUEST STATE
+    ' -------------------------------------------------------------
+    IsQuestActive = True ' Hero Save active during ongoing quest
+    InventoryCount = 0
+
+    ' Chest 1: Opened during active quest (Exploit condition)
+    WorldChests(1).ChestID = "CHEST_ORCHARD_01"
+    WorldChests(1).RewardItem = "Elixir of Life"
+    WorldChests(1).RuntimeOpened = True
+    WorldChests(1).RewardGranted = False
+    WorldChests(1).IsOpened = False
+
+    ' Chest 2: Unopened chest
+    WorldChests(2).ChestID = "CHEST_BOWERSTONE_01"
+    WorldChests(2).RewardItem = "Silver Key"
+    WorldChests(2).RuntimeOpened = False
+    WorldChests(2).RewardGranted = False
+    WorldChests(2).IsOpened = False
+
+    ' Chest 3: Opened in a previous completed quest
+    WorldChests(3).ChestID = "CHEST_GUILD_01"
+    WorldChests(3).RewardItem = "Katana Blue"
+    WorldChests(3).RuntimeOpened = True
+    WorldChests(3).RewardGranted = True
+    WorldChests(3).IsOpened = True
+
+    ' -------------------------------------------------------------
+    ' 2. ASSET-TO-CODE RECONCILIATION FOR LOOP
+    ' -------------------------------------------------------------
+    For i = LBound(WorldChests) To UBound(WorldChests)
+        
+        ' Check if runtime registered an interaction
+        If WorldChests(i).RuntimeOpened Then
+            
+            ' Immediate Inventory Sync: Push reward if not yet given
+            If Not WorldChests(i).RewardGranted Then
+                InventoryCount = InventoryCount + 1
+                Inventory(InventoryCount).ItemName = WorldChests(i).RewardItem
+                Inventory(InventoryCount).Quantity = 1
+                WorldChests(i).RewardGranted = True
+                
+                Debug.Print "[INVENTORY]: Added '" & WorldChests(i).RewardItem & "' to Hero Save."
+            End If
+            
+            ' World-State Reconciliation: Check Quest Lock
+            If IsQuestActive Then
+                ' Reset world state: Re-close physical chest
+                WorldChests(i).IsOpened = False
+                WorldChests(i).RuntimeOpened = False
+                Debug.Print "[RECONCILE]: " & WorldChests(i).ChestID & " state RESET to CLOSED (Quest Active)."
+            Else
+                ' Lock world state: Permanently opened
+                WorldChests(i).IsOpened = True
+                Debug.Print "[RECONCILE]: " & WorldChests(i).ChestID & " state LOCKED to OPEN (Quest Complete)."
+            End If
+            
+        End If
+        
+    Next i
+    
+End Sub

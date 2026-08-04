@@ -1,0 +1,38 @@
+Public Type SilverChestAsset
+    ChestID As String
+    ItemReward As String
+    IsOpenedInWorld As Boolean
+    IsLockedPermanent As Boolean
+End Type
+
+' Reconciles physical world chest assets against player state
+Public Sub ReconcileStateResetChests( _
+    ByRef ZoneChests() As SilverChestAsset, _
+    ByVal IsQuestActive As Boolean, _
+    ByRef HeroInventory As Collection)
+
+    Dim i As Long
+    
+    ' Loop through every Silver Key Chest asset in the current zone
+    For i = LBound(ZoneChests) To UBound(ZoneChests)
+        
+        ' Process chests opened in the current session
+        If ZoneChests(i).IsOpenedInWorld Then
+            
+            ' 1. Immediate Inventory Transfer (Code State)
+            HeroInventory.Add ZoneChests(i).ItemReward
+            
+            ' 2. World Asset State Reconciliation
+            If IsQuestActive Then
+                ' Reset chest state back to closed; world lock fails due to active quest
+                ZoneChests(i).IsOpenedInWorld = False
+            Else
+                ' Quest completed: Lock the opened state permanently into saved world data
+                ZoneChests(i).IsLockedPermanent = True
+            End If
+            
+        End If
+        
+    Next i
+
+End Sub

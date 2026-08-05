@@ -1,0 +1,66 @@
+Option Explicit
+
+' Structure defining an attribute asset to reconcile
+Public Type MorphAttribute
+    Name As String
+    RawValue As Double  ' Range: 0 to 100
+    Weight As Double    ' Reconciliation scalar
+End Type
+
+' Subroutine to reconcile Fable character morph attributes to visual parameters
+Public Sub ReconcileFableMorphingSystem()
+    Dim AttributeList(0 To 3) As MorphAttribute
+    Dim i As Long
+    Dim NormalizedVal As Double
+    
+    ' Target visual morph variables
+    Dim MuscleScale As Double
+    Dim WillTattooGlow As Double
+    Dim WaistWidth As Double
+    Dim AlignmentOffset As Double ' -1.0 (Evil) to +1.0 (Good)
+
+    ' 1. Populate sample asset values (Simulating asset loading)
+    AttributeList(0).Name = "Strength"
+    AttributeList(0).RawValue = 85.0
+    AttributeList(0).Weight = 1.2
+    
+    AttributeList(1).Name = "Will"
+    AttributeList(1).RawValue = 60.0
+    AttributeList(1).Weight = 1.0
+    
+    AttributeList(2).Name = "Fatness"
+    AttributeList(2).RawValue = 20.0
+    AttributeList(2).Weight = 0.8
+    
+    AttributeList(3).Name = "Morality"
+    AttributeList(3).RawValue = 90.0 ' Highly good hero
+    AttributeList(3).Weight = 1.0
+
+    ' 2. For Loop: Asset-to-Code Reconciliation
+    For i = LBound(AttributeList) To UBound(AttributeList)
+        ' Normalize raw value to range [0.0, 1.0]
+        NormalizedVal = AttributeList(i).RawValue / 100#
+        If NormalizedVal > 1# Then NormalizedVal = 1#
+        If NormalizedVal < 0# Then NormalizedVal = 0#
+
+        ' Map normalized attribute assets to character model properties
+        Select Case AttributeList(i).Name
+            Case "Strength"
+                MuscleScale = NormalizedVal * AttributeList(i).Weight
+            Case "Will"
+                WillTattooGlow = NormalizedVal * AttributeList(i).Weight
+            Case "Fatness"
+                WaistWidth = NormalizedVal * AttributeList(i).Weight
+            Case "Morality"
+                ' Map 0..1 to -1.0..+1.0 alignment offset
+                AlignmentOffset = ((NormalizedVal - 0.5) * 2#) * AttributeList(i).Weight
+        End Select
+    Next i
+
+    ' 3. Output Reconciled Morph Data
+    Debug.Print "--- Fable Morph Reconciliation Summary ---"
+    Debug.Print "Muscle Scale:     " & Format(MuscleScale, "0.00")
+    Debug.Print "Will Tattoo Glow: " & Format(WillTattooGlow, "0.00")
+    Debug.Print "Waist Width:      " & Format(WaistWidth, "0.00")
+    Debug.Print "Alignment Offset: " & Format(AlignmentOffset, "0.00")
+End Sub

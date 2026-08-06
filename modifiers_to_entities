@@ -1,0 +1,67 @@
+Public Type HeroState
+    Karma As Double         ' Range: -1000 (Evil) to +1000 (Good)
+    Renown As Double        ' Renown score affecting prices & NPC awe
+End Type
+
+Public Type NPCAsset
+    EntityID As String
+    BaseAttitude As Double  ' Default reaction score (-100 to 100)
+    AlignmentSensitivity As Double
+    IsMerchant As Boolean
+    BasePrice As Double
+    TargetStock As Long
+End Type
+
+Public Type NPCRuntimeState
+    AttitudeScore As Double
+    MemoryImpactScore As Double
+    CurrentStock As Long
+    CurrentPrice As Double
+    IsReconciled As Boolean
+End Type
+
+Public Sub ReconcileSystemicAI( _
+    ByRef rawAssets() As NPCAsset, _
+    ByRef liveEntities() As NPCRuntimeState, _
+    ByVal hero As HeroState _
+)
+    Dim i As Long
+    Dim totalCount As Long
+    
+    totalCount = UBound(rawAssets) - LBound(rawAssets) + 1
+    
+    ' Asset-to-Code Reconciliation Loop
+    For i = LBound(rawAssets) To UBound(rawAssets)
+        ' 1. Reconcile Reputation & NPC Memory Impact
+        Dim dynamicKarmaMod As Double
+        dynamicKarmaMod = hero.Karma * rawAssets(i).AlignmentSensitivity
+        
+        liveEntities(i).AttitudeScore = rawAssets(i).BaseAttitude + dynamicKarmaMod + liveEntities(i).MemoryImpactScore
+        
+        ' Clamp Attitude between -100 (Hostile) and +100 (Adoring)
+        If liveEntities(i).AttitudeScore > 100 Then liveEntities(i).AttitudeScore = 100
+        If liveEntities(i).AttitudeScore < -100 Then liveEntities(i).AttitudeScore = -100
+        
+        ' 2. Reconcile Dynamic Pricing
+        If rawAssets(i).IsMerchant Then
+            Dim inventoryRatio As Double
+            Dim renownDiscount As Double
+            
+            If rawAssets(i).TargetStock > 0 Then
+                inventoryRatio = CDbl(liveEntities(i).CurrentStock) / CDbl(rawAssets(i).TargetStock)
+            Else
+                inventoryRatio = 1.0
+            End If
+            
+            ' Max 20% discount from high renown
+            renownDiscount = (hero.Renown / 10000#) * 0.20
+            If renownDiscount > 0.20 Then renownDiscount = 0.20
+            
+            ' Supply & Demand + Renown Pricing Formula
+            liveEntities(i).CurrentPrice = rawAssets(i).BasePrice * (2.0 - inventoryRatio) * (1.0 - renownDiscount)
+        End If
+        
+        ' 3. Mark Entity as Reconciled with Engine State
+        liveEntities(i).IsReconciled = True
+    Next i
+End Sub

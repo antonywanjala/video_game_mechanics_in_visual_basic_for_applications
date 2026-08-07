@@ -1,0 +1,50 @@
+Public Type CreatureAsset
+    ModelName As String
+    HiddenMass As Double          ' Mass in kg assigned in asset editor
+    ReconciledLaunchDist As Double ' Final calculated launch distance
+End Type
+
+Public Sub ReconcileLaunchVectors()
+    Dim creatureAssets(0 To 3) As CreatureAsset
+    Dim appliedForce As Double
+    Dim maxPhysicsCap As Double
+    Dim i As Long
+    
+    ' Set baseline strike force (e.g., Level 5 Force Push or Hammer Flourish)
+    appliedForce = 2500.0
+    maxPhysicsCap = 45.0 ' Engine max throw distance in meters
+    
+    ' Sample asset definitions (Model Name, Mass)
+    creatureAssets(0).ModelName = "Hobbe_Grunt"
+    creatureAssets(0).HiddenMass = 35.0
+    
+    creatureAssets(1).ModelName = "Bandit_Leader"
+    creatureAssets(1).HiddenMass = 85.0
+    
+    creatureAssets(2).ModelName = "Balverine"
+    creatureAssets(2).HiddenMass = 140.0
+    
+    creatureAssets(3).ModelName = "Troll_Rock"
+    creatureAssets(3).HiddenMass = 1200.0
+
+    ' --- Asset-to-Code Reconciliation Loop ---
+    For i = LBound(creatureAssets) To UBound(creatureAssets)
+        ' Guard against zero or negative mass asset errors
+        If creatureAssets(i).HiddenMass <= 0 Then
+            creatureAssets(i).HiddenMass = 1.0
+        End If
+        
+        ' Calculate launch distance (d = F / m)
+        creatureAssets(i).ReconciledLaunchDist = appliedForce / creatureAssets(i).HiddenMass
+        
+        ' Reconcile with physics boundary limits
+        If creatureAssets(i).ReconciledLaunchDist > maxPhysicsCap Then
+            creatureAssets(i).ReconciledLaunchDist = maxPhysicsCap
+        End If
+        
+        ' Print reconciled launch parameters to Immediate Window
+        Debug.Print "Reconciled [" & creatureAssets(i).ModelName & "] | " & _
+                    "Mass: " & creatureAssets(i).HiddenMass & "kg | " & _
+                    "Launch Vector Distance: " & Format(creatureAssets(i).ReconciledLaunchDist, "0.00") & "m"
+    Next i
+End Sub

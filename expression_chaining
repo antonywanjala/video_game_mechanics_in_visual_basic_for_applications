@@ -1,0 +1,53 @@
+' ==============================================================================
+' Module: FableMechanicsReconciliation
+' Description: Reconciles raw expression asset sequences into final affection scores
+'              by applying Expression Fatigue and Chaining logic.
+' ==============================================================================
+
+Function ReconcileExpressionChaining(expressionAssets As Variant) As Double
+    Dim totalAffection As Double
+    Dim fatigueMultiplier As Double
+    Dim baseAffection As Double
+    Dim lastExpression As String
+    Dim currentExpression As String
+    Dim i As Integer
+    
+    ' Initialize asset baseline values
+    totalAffection = 0
+    fatigueMultiplier = 1#
+    baseAffection = 10# ' Base score awarded per expression asset
+    lastExpression = ""
+    
+    ' Asset-to-code reconciliation loop
+    For i = LBound(expressionAssets) To UBound(expressionAssets)
+        currentExpression = CStr(expressionAssets(i))
+        
+        ' Expression Fatigue Check: Did the player repeat the exact same asset?
+        If currentExpression = lastExpression Then
+            ' Apply diminishing returns (halves effectiveness each repeat)
+            fatigueMultiplier = fatigueMultiplier * 0.5
+        Else
+            ' Chain Bonus: Different expression used, reset fatigue
+            fatigueMultiplier = 1#
+        End If
+        
+        ' Apply the reconciled value to the NPC's total affection pool
+        totalAffection = totalAffection + (baseAffection * fatigueMultiplier)
+        
+        ' Cache the current expression to evaluate the next iteration
+        lastExpression = currentExpression
+    Next i
+    
+    ' Return the final reconciled score
+    ReconcileExpressionChaining = totalAffection
+End Function
+
+' ==============================================================================
+' Example Usage:
+' Sub TestReconciliation()
+'     Dim actions As Variant
+'     ' This sequence chains two different expressions, then spams a third.
+'     actions = Array("Flex", "Heroic Pose", "Give Gift", "Give Gift", "Give Gift")
+'     Debug.Print "Total Affection: " & ReconcileExpressionChaining(actions)
+' End Sub
+' ==============================================================================

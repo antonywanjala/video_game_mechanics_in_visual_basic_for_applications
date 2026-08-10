@@ -1,0 +1,41 @@
+Option Explicit
+
+Public Sub ReconcileHeroSaveElixirExploit()
+    ' Variables representing state reconciliation
+    Dim reloadIteration As Integer
+    Dim totalReloads As Integer
+    Dim chestYield As Integer
+    Dim inventoryElixirCount As Integer
+    Dim chestLootedState As Boolean
+    
+    ' Initial Parameters
+    totalReloads = 5          ' Simulated loop iterations
+    chestYield = 1            ' Elixirs yielded per chest open
+    inventoryElixirCount = 0  ' Initial inventory state
+    chestLootedState = False  ' Initial zone chest state
+    
+    Debug.Print "--- STARTING ASSET-TO-CODE RECONCILIATION ---"
+    
+    ' For Loop: Simulates repeated Loot -> Hero Save -> Zone Reload cycle
+    For reloadIteration = 1 To totalReloads
+        
+        ' Phase 1: Code State Update (Loot Chest)
+        chestLootedState = True
+        inventoryElixirCount = inventoryElixirCount + chestYield
+        Debug.Print "Iteration " & reloadIteration & ": Chest Looted. Elixirs in Inventory = " & inventoryElixirCount
+        
+        ' Phase 2: Hero Save & Asset Reconciliation Trigger
+        ' Inventory updates persist to player file, but zone assets reset
+        
+        ' Phase 3: Zone Reset (Reconcile Chest Asset back to Default Unlooted)
+        chestLootedState = False
+        
+        ' Reconciliation Audit Log
+        Debug.Print "Iteration " & reloadIteration & " Reconciled: Inventory persistent at " & _
+                    inventoryElixirCount & " elixirs | Zone Chest State reset to " & _
+                    IIf(chestLootedState, "LOOTED", "FULL")
+        Debug.Print "----------------------------------------------------"
+    Next reloadIteration
+    
+    Debug.Print "RECONCILIATION COMPLETE: Final Persisted Inventory Count = " & inventoryElixirCount
+End Sub

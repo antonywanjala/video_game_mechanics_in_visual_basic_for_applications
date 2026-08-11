@@ -1,0 +1,57 @@
+Option Explicit
+
+Public Sub ReconcileLaunchVectors()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("EnemyAssets")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Constants
+    Const BASE_IMPACT_FORCE As Double = 1500# ' Newton force for heavy flourish
+    Const DEFAULT_MASS As Double = 75#        ' Fallback mass in kg
+    Const MAX_LAUNCH_LIMIT As Double = 25#    ' Maximum physics engine launch distance (meters)
+    
+    Dim i As Long
+    Dim modelID As String
+    Dim mass As Double
+    Dim launchModifier As Double
+    Dim computedDistance As Double
+    Dim status As String
+    
+    ' Reconciliation For-Loop
+    For i = 2 To lastRow
+        modelID = ws.Cells(i, 1).Value
+        mass = Val(ws.Cells(i, 2).Value)
+        launchModifier = Val(ws.Cells(i, 3).Value)
+        
+        ' Default resistance modifier if missing or invalid
+        If launchModifier <= 0 Then launchModifier = 1#
+        
+        ' Step 1: Validate asset mass
+        If mass <= 0 Then
+            mass = DEFAULT_MASS
+            ws.Cells(i, 2).Value = mass ' Reconcile asset data in sheet
+            status = "WARNING: Reconciled with default mass (" & DEFAULT_MASS & "kg). "
+        Else
+            status = "OK: Mass validated. "
+        End If
+        
+        ' Step 2: Calculate Weight-Based Launch Vector
+        computedDistance = (BASE_IMPACT_FORCE / mass) * launchModifier
+        
+        ' Step 3: Bounds Checking / Code Limit Reconciliation
+        If computedDistance > MAX_LAUNCH_LIMIT Then
+            computedDistance = MAX_LAUNCH_LIMIT
+            status = status & "Capped to engine limit (" & MAX_LAUNCH_LIMIT & "m)."
+        Else
+            status = status & "Vector reconciled successfully."
+        End If
+        
+        ' Write Reconciled Data Back to Sheet
+        ws.Cells(i, 4).Value = Round(computedDistance, 2)
+        ws.Cells(i, 5).Value = status
+    Next i
+    
+    MsgBox "Asset-to-code launch vector reconciliation complete!", vbInformation, "Fable Asset Reconciler"
+End Sub

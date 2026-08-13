@@ -1,0 +1,228 @@
+' =========================================================================================
+' Module Name:  mod_FableSocialEngine.bas
+' Description:  Fable Social Engine Reconciliation Module
+' Mechanics:    1. Mood Value Updates
+'               2. Expression Chaining & Expression Fatigue
+'               3. Spatial Crowd Contagion (Cascading Radius Effect)
+' Author:       AI Collaborator
+' Target:       VBA Environment (Excel / Access / Standalone Office Host)
+' =========================================================================================
+
+Option Explicit
+
+' -----------------------------------------------------------------------------------------
+' DATA STRUCTURES & TYPES
+' -----------------------------------------------------------------------------------------
+
+' Represents a single NPC asset instance during runtime reconciliation
+Public Type NPCAsset
+    ID As Long
+    Name As String
+    Role As String
+    MoodValue As Double          ' System Scale: -100.0 (Terror) to +100.0 (Adoration)
+    LastExpressionUsed As String ' The last expression applied to this NPC
+    ConsecutiveRepeatCount As Long ' Tracks repeated usage for Expression Fatigue
+    PositionX As Double          ' 2D Spatial coordinate X
+    PositionY As Double          ' 2D Spatial coordinate Y
+    IsTriggered As Boolean       ' Prevents infinite recursion during contagion propagation
+End Type
+
+' -----------------------------------------------------------------------------------------
+' SYSTEM CONSTANTS
+' -----------------------------------------------------------------------------------------
+
+Private Const MOOD_MAX As Double = 100#
+Private Const MOOD_MIN As Double = -100#
+
+' Thresholds for triggering town-wide reactions
+Private Const THRESHOLD_ADORATION As Double = 85#
+Private Const THRESHOLD_TERROR As Double = -85#
+
+' Contagion parameters
+Private Const CONTAGION_RADIUS_UNITS As Double = 12#
+Private Const PANIC_CONTAGION_FORCE As Double = -30#
+Private Const ADORATION_CONTAGION_FORCE As Double = 25#
+
+' -----------------------------------------------------------------------------------------
+' MAIN RECONCILIATION ENGINE
+' -----------------------------------------------------------------------------------------
+
+''' <summary>
+''' Reconciles incoming player expressions against the vicinity's NPC state arrays.
+''' Applies Diminishing Returns (Expression Fatigue) and processes Spatial Contagion.
+''' </summary>
+Public Sub ExecuteSocialReconciliation()
+    Dim VicinityNPCs() As NPCAsset
+    Dim i As Long, j As Long
+    
+    ' Incoming Asset Action parameters (e.g., from an asset log or input buffer)
+    Dim currentExpression As String
+    Dim baseExpressionImpact As Double
+    Dim fatigueMultiplier As Double
+    Dim distSq As Double
+    Dim radiusSq As Double
+    
+    ' Pre-calculate squared radius for optimized spatial checks
+    radiusSq = CONTAGION_RADIUS_UNITS ^ 2
+
+    ' --- Step 1: Mock Asset Data Initialization ---
+    ' In production, this array is populated by parsing an imported JSON/CSV or Sheet asset
+    InitializeVicinityNPCs VicinityNPCs
+
+    ' Simulated Input Action: Player repeatedly uses "Heroic Pose"
+    currentExpression = "Heroic Pose"
+    baseExpressionImpact = 35# ' Positive impact on mood
+
+    Debug.Print "========================================================================="
+    Debug.Print "BEGINNING SOCIAL ENGINE ASSET RECONCILIATION"
+    Debug.Print "Action Performed: [" & currentExpression & "] | Base Impact: " & baseExpressionImpact
+    Debug.Print "========================================================================="
+
+    ' --- Step 2: Primary Reconciliation Loop ---
+    For i = LBound(VicinityNPCs) To UBound(VicinityNPCs)
+        
+        ' --- A. EXPRESSION CHAINING & FATIGUE RECONCILIATION ---
+        If UCase$(Trim$(VicinityNPCs(i).LastExpressionUsed)) = UCase$(Trim$(currentExpression)) Then
+            ' Increment repeat count for consecutive identical actions
+            VicinityNPCs(i).ConsecutiveRepeatCount = VicinityNPCs(i).ConsecutiveRepeatCount + 1
+            
+            ' Apply Expression Fatigue formula: 25% reduction per repeat, floor at 10% effectiveness
+            fatigueMultiplier = 1# - (VicinityNPCs(i).ConsecutiveRepeatCount * 0.25)
+            If fatigueMultiplier < 0.1 Then fatigueMultiplier = 0.1
+        Else
+            ' Expression Chained successfully! Reset fatigue multiplier and update last expression
+            VicinityNPCs(i).LastExpressionUsed = currentExpression
+            VicinityNPCs(i).ConsecutiveRepeatCount = 0
+            fatigueMultiplier = 1# ' 100% effectiveness
+        End If
+
+        ' --- B. MOOD VALUE RECONCILIATION ---
+        Dim netImpact As Double
+        netImpact = baseExpressionImpact * fatigueMultiplier
+        
+        VicinityNPCs(i).MoodValue = ClampMood(VicinityNPCs(i).MoodValue + netImpact)
+
+        Debug.Print "[" & VicinityNPCs(i).ID & "] " & PadRight(VicinityNPCs(i).Name, 18) & _
+                    " | Multiplier: " & Format$(fatigueMultiplier, "0.00") & _
+                    " | Net Mood: " & Format$(VicinityNPCs(i).MoodValue, "0.00")
+
+        ' --- C. CROWD CONTAGION PROPAGATION LOOP ---
+        If (VicinityNPCs(i).MoodValue >= THRESHOLD_ADORATION Or VicinityNPCs(i).MoodValue <= THRESHOLD_TERROR) _
+           And Not VicinityNPCs(i).IsTriggered Then
+            
+            ' Flag NPC so contagion does not bounce infinitely
+            VicinityNPCs(i).IsTriggered = True
+            
+            Dim contagionForce As Double
+            Dim stateName As String
+            
+            If VicinityNPCs(i).MoodValue >= THRESHOLD_ADORATION Then
+                contagionForce = ADORATION_CONTAGION_FORCE
+                stateName = "ADORATION / CHEERING"
+            Else
+                contagionForce = PANIC_CONTAGION_FORCE
+                stateName = "TERROR / PANIC"
+            End If
+
+            Debug.Print "   >>> CROWD CONTAGION TRIGGERED by " & VicinityNPCs(i).Name & _
+                        " [State: " & stateName & "]"
+
+            ' Inner Loop: Iterate through nearby NPCs in vicinity array
+            For j = LBound(VicinityNPCs) To UBound(VicinityNPCs)
+                ' Exclude self
+                If i <> j Then
+                    ' Calculate squared distance: (x2 - x1)^2 + (y2 - y1)^2
+                    distSq = ((VicinityNPCs(i).PositionX - VicinityNPCs(j).PositionX) ^ 2) + _
+                             ((VicinityNPCs(i).PositionY - VicinityNPCs(j).PositionY) ^ 2)
+
+                    ' Check if neighbor is within proximity radius
+                    If distSq <= radiusSq Then
+                        Dim previousMood As Double
+                        previousMood = VicinityNPCs(j).MoodValue
+                        
+                        ' Propagate mood shift to neighboring asset
+                        VicinityNPCs(j).MoodValue = ClampMood(VicinityNPCs(j).MoodValue + contagionForce)
+                        
+                        Debug.Print "       ---> Spreading to " & PadRight(VicinityNPCs(j).Name, 16) & _
+                                    " | Previous: " & Format$(previousMood, "0.0") & _
+                                    " -> Updated: " & Format$(VicinityNPCs(j).MoodValue, "0.0")
+                    End If
+                End If
+            Next j
+        End If
+    Next i
+
+    Debug.Print "========================================================================="
+    Debug.Print "RECONCILIATION COMPLETE"
+    Debug.Print "========================================================================="
+End Sub
+
+' -----------------------------------------------------------------------------------------
+' HELPER ROUTINES
+' -----------------------------------------------------------------------------------------
+
+''' <summary>
+''' Clamps a double value to system minimum and maximum limits (-100 to +100).
+''' </summary>
+Private Function ClampMood(ByVal val As Double) As Double
+    If val > MOOD_MAX Then
+        ClampMood = MOOD_MAX
+    ElseIf val < MOOD_MIN Then
+        ClampMood = MOOD_MIN
+    Else
+        ClampMood = val
+    End If
+End Function
+
+''' <summary>
+''' Utility function for aligned console log formatting.
+''' </summary>
+Private Function PadRight(ByVal text As String, ByVal length As Integer) As String
+    If Len(text) >= length Then
+        PadRight = Left$(text, length)
+    Else
+        PadRight = text & String$(length - Len(text), " ")
+    End If
+End Function
+
+''' <summary>
+''' Populates a mock batch of NPC assets for demonstration.
+''' </summary>
+Private Sub InitializeVicinityNPCs(ByRef npcArray() As NPCAsset)
+    ReDim npcArray(1 To 5)
+
+    ' NPC 1: Previously saw "Heroic Pose" (Will trigger fatigue)
+    With npcArray(1)
+        .ID = 1001: .Name = "Bowerstone Trader": .Role = "Merchant"
+        .MoodValue = 65#: .LastExpressionUsed = "Heroic Pose": .ConsecutiveRepeatCount = 1
+        .PositionX = 10#: .PositionY = 10#: .IsTriggered = False
+    End With
+
+    ' NPC 2: Nearby Merchant
+    With npcArray(2)
+        .ID = 1002: .Name = "Blacksmith": .Role = "Craftsman"
+        .MoodValue = 20#: .LastExpressionUsed = "None": .ConsecutiveRepeatCount = 0
+        .PositionX = 14#: .PositionY = 12#: .IsTriggered = False
+    End With
+
+    ' NPC 3: Town Guard
+    With npcArray(3)
+        .ID = 1003: .Name = "Guard Captain": .Role = "Guard"
+        .MoodValue = -10#: .LastExpressionUsed = "Whistle": .ConsecutiveRepeatCount = 0
+        .PositionX = 12#: .PositionY = 8#: .IsTriggered = False
+    End With
+
+    ' NPC 4: Faraway Villager (Outside contagion radius)
+    With npcArray(4)
+        .ID = 1004: .Name = "Farm Hand": .Role = "Villager"
+        .MoodValue = 0#: .LastExpressionUsed = "None": .ConsecutiveRepeatCount = 0
+        .PositionX = 80#: .PositionY = 85#: .IsTriggered = False
+    End With
+
+    ' NPC 5: Nearby Villager
+    With npcArray(5)
+        .ID = 1005: .Name = "Beggar": .Role = "Villager"
+        .MoodValue = 40#: .LastExpressionUsed = "Give Coin": .ConsecutiveRepeatCount = 0
+        .PositionX = 11#: .PositionY = 11#: .IsTriggered = False
+    End With
+End Sub

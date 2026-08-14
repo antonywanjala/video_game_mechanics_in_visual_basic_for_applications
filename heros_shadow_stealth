@@ -1,0 +1,103 @@
+Public Sub ReconcileHerosShadowStealth()
+
+    ' --- System Declarations ---
+    Dim BaseSneakSkill As Double
+    Dim HeroX As Double, HeroY As Double
+    Dim HeroSpeed As Double
+    Dim DetectionState As String
+    
+    ' Hero Properties
+    BaseSneakSkill = 0.2 ' Maxed out stealth reduces base vis (0.0 to 1.0)
+    HeroX = 12.5
+    HeroY = 30.0
+    HeroSpeed = 2.5 ' Walking/Sprinting speed
+    DetectionState = "UNDETECTED"
+
+    ' Asset Arrays (Simulating engine assets: ID, Type, X, Y, Modifier/Radius)
+    ' Types: 1 = Shadow Mesh, 2 = Guard Lantern, 3 = Surface Node
+    Dim SceneAssets As Variant
+    SceneAssets = Array( _
+        Array("Shadow_Tree_01", 1, 12.0, 29.5, 0.75), _  ' Shadow: Opacity 0.75
+        Array("Guard_Lantern_01", 2, 15.0, 32.0, 5.0), _ ' Guard: X, Y, Cone Radius
+        Array("Surface_Stone_Path", 3, 12.5, 30.0, 1.0) _ ' Surface: Noise multiplier 1.0
+    )
+
+    ' Operational Variables
+    Dim i As Long
+    Dim AssetID As String
+    Dim AssetType As Integer
+    Dim AssetX As Double, AssetY As Double
+    Dim AssetVal As Double
+    
+    Dim EnvironmentalShadow As Double
+    Dim SurfaceNoiseMult As Double
+    Dim CurrentVisibility As Double
+    Dim DistanceToAsset As Double
+    Dim TotalNoise As Double
+    Dim CalculatedDetectionDist As Double
+
+    EnvironmentalShadow = 0#
+    SurfaceNoiseMult = 0.1 ' Default grass noise multiplier
+
+    ' --- RECONCILIATION FOR LOOP ---
+    For i = LBound(SceneAssets) To UBound(SceneAssets)
+        
+        AssetID = SceneAssets(i)(0)
+        AssetType = SceneAssets(i)(1)
+        AssetX = SceneAssets(i)(2)
+        AssetY = SceneAssets(i)(3)
+        AssetVal = SceneAssets(i)(4)
+
+        ' Distance from Hero to current Asset Node
+        DistanceToAsset = Sqr((HeroX - AssetX) ^ 2 + (HeroY - AssetY) ^ 2)
+
+        Select Case AssetType
+            
+            Case 1 ' Shadow Mesh Check
+                ' If standing within shadow volume bounds, accumulate ambient light reduction
+                If DistanceToAsset <= 2.0 Then
+                    EnvironmentalShadow = EnvironmentalShadow + AssetVal
+                    If EnvironmentalShadow > 0.9 Then EnvironmentalShadow = 0.9 ' Cap reduction
+                End If
+
+            Case 2 ' Guard Lantern Illumination Cone Check
+                ' Instant full alert if standing inside an active illumination beam
+                If DistanceToAsset <= AssetVal Then
+                    DetectionState = "FULL_ALERT (GUARD LANTERN BEAM DETECTED)"
+                    Exit For ' Overrides all sneak skills immediately
+                End If
+
+            Case 3 ' Surface Audio Multiplier Check
+                If DistanceToAsset <= 1.0 Then
+                    SurfaceNoiseMult = AssetVal ' e.g., Stone = 1.0, Mud = 0.3, Grass = 0.1
+                End If
+
+        End Select
+
+    Next i
+
+    ' --- FINAL STATE RESOLUTION ---
+    If DetectionState <> "FULL_ALERT (GUARD LANTERN BEAM DETECTED)" Then
+        
+        ' 1. Real-time dynamic light calculation
+        CurrentVisibility = BaseSneakSkill * (1# - EnvironmentalShadow)
+        
+        ' 2. Dynamic acoustic output calculation
+        TotalNoise = HeroSpeed * SurfaceNoiseMult
+        
+        ' 3. Combine visual & audio factors into total detection radius
+        CalculatedDetectionDist = (CurrentVisibility * 10#) + (TotalNoise * 3#)
+
+        ' Output dynamic status
+        Debug.Print "--- HERO SHADOW RECONCILIATION COMPLETE ---"
+        Debug.Print "Environmental Light Reduction: " & (EnvironmentalShadow * 100) & "%"
+        Debug.Print "Surface Material Noise: " & SurfaceNoiseMult
+        Debug.Print "Effective Detection Distance: " & CalculatedDetectionDist & " meters"
+        Debug.Print "Final Hero State: " & DetectionState
+    Else
+        ' Immediate alert triggered
+        Debug.Print "--- HERO SHADOW RECONCILIATION COMPLETE ---"
+        Debug.Print "Final Hero State: " & DetectionState
+    End If
+
+End Sub

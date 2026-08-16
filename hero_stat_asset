@@ -1,0 +1,80 @@
+Option Explicit
+
+' Structure to represent Hero Stat Assets before reconciliation
+Public Type HeroStatAsset
+    StatName As String
+    CurrentValue As Double      ' Raw game stat (e.g., 0 to 100)
+    BaseValue As Double         ' Default un-morphed asset baseline
+    MeshProperty As String      ' Target property on the 3D visual mesh
+    ReconciledScale As Double   ' Reconciled multiplier/weight output
+    AssetPath As String         ' Texture or shader reference
+End Type
+
+Public Sub ReconcileHeroMorphingAssets()
+    Dim HeroStats(1 To 4) As HeroStatAsset
+    Dim i As Long
+    
+    ' 1. Initialize Asset Data (Simulated Asset Collection)
+    HeroStats(1).StatName = "Strength"
+    HeroStats(1).CurrentValue = 85.0
+    HeroStats(1).BaseValue = 10.0
+    HeroStats(1).MeshProperty = "Bone_MuscleScale"
+    HeroStats(1).AssetPath = "Engine/Meshes/Hero_Male_Base.fbx"
+    
+    HeroStats(2).StatName = "Morality_Evil"
+    HeroStats(2).CurrentValue = 90.0
+    HeroStats(2).BaseValue = 0.0
+    HeroStats(2).MeshProperty = "Shader_VeinGlowRed"
+    HeroStats(2).AssetPath = "Engine/Shaders/Evil_Aura_01.mat"
+    
+    HeroStats(3).StatName = "Will_Magic"
+    HeroStats(3).CurrentValue = 70.0
+    HeroStats(3).BaseValue = 0.0
+    HeroStats(3).MeshProperty = "Shader_WillRunes"
+    HeroStats(3).AssetPath = "Engine/Textures/Will_Tattoo_Glow.png"
+    
+    HeroStats(4).StatName = "Diet_Fat"
+    HeroStats(4).CurrentValue = 40.0
+    HeroStats(4).BaseValue = 5.0
+    HeroStats(4).MeshProperty = "BlendShape_BellySize"
+    HeroStats(4).AssetPath = "Engine/Meshes/Hero_Male_Base.fbx"
+    
+    Debug.Print "=== FABLE MORPHING SYSTEM: ASSET-TO-CODE RECONCILIATION ===" & vbCrLf
+    
+    ' 2. Reconciliation For Loop
+    For i = LBound(HeroStats) To UBound(HeroStats)
+        With HeroStats(i)
+            ' Calculate reconciliation scaling multiplier
+            .ReconciledScale = (.CurrentValue - .BaseValue) / 100#
+            
+            ' Bounds checking/clamping (0.0 to 1.0 weight)
+            If .ReconciledScale > 1# Then .ReconciledScale = 1#
+            If .ReconciledScale < 0# Then .ReconciledScale = 0#
+            
+            ' Apply conditional morph reconciliation behavior
+            Select Case .StatName
+                Case "Strength"
+                    Debug.Print "[MESH SCALE] " & .StatName & " reconciled to " & .MeshProperty & _
+                                " | Scale Multiplier: " & Format(.ReconciledScale + 1#, "0.00") & "x"
+                                
+                Case "Morality_Evil"
+                    Debug.Print "[SHADER TINT] " & .StatName & " reconciled to " & .MeshProperty & _
+                                " | Red Vein Alpha: " & Format(.ReconciledScale * 100#, "0.0") & "%"
+                                
+                Case "Will_Magic"
+                    Debug.Print "[TEXTURE GLOW] " & .StatName & " reconciled to " & .MeshProperty & _
+                                " | Rune Emission Intensity: " & Format(.ReconciledScale * 5#, "0.00")
+                                
+                Case "Diet_Fat"
+                    Debug.Print "[BLEND SHAPE] " & .StatName & " reconciled to " & .MeshProperty & _
+                                " | Weight Modifier: " & Format(.ReconciledScale, "0.00")
+            End Select
+            
+            ' Output Asset Binding status
+            Debug.Print "  -> Bound Asset Path: " & .AssetPath
+            Debug.Print "------------------------------------------------------------"
+        End With
+    Next i
+    
+    Debug.Print "Reconciliation complete. Visual Morphing Stack ready to render."
+End Sub

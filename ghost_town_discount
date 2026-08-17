@@ -1,0 +1,78 @@
+Public Type ShopkeeperAsset
+    ShopkeeperID As String
+    TownName As String
+    OriginalPopulation As Long
+    CurrentPopulation As Long
+    BasePriceMultiplier As Double       ' Standard price scale (1.0 = 100% price)
+    ReconciledPriceMultiplier As Double ' Updated runtime price scale
+End Type
+
+Public Sub ReconcileGhostTownDiscount()
+    ' Array representing shopkeeper assets loaded from engine data
+    Dim shopkeepers(1 To 5) As ShopkeeperAsset
+    Dim i As Long
+    
+    ' Threshold: If population falls below 20%, trigger the Ghost Town Discount
+    Const POPULATION_THRESHOLD As Double = 0.2
+    Const GHOST_TOWN_DISCOUNT_FACTOR As Double = 0.25 ' 75% discount on base prices
+    
+    ' --- Mock Asset Data Load ---
+    ' Bowerstone South (Normal Population)
+    shopkeepers(1).ShopkeeperID = "SHOP_BS_01"
+    shopkeepers(1).TownName = "Bowerstone South"
+    shopkeepers(1).OriginalPopulation = 100
+    shopkeepers(1).CurrentPopulation = 95
+    shopkeepers(1).BasePriceMultiplier = 1.0
+    
+    ' Oakvale (Depopulated - Ghost Town triggered)
+    shopkeepers(2).ShopkeeperID = "SHOP_OV_01"
+    shopkeepers(2).TownName = "Oakvale"
+    shopkeepers(2).OriginalPopulation = 80
+    shopkeepers(2).CurrentPopulation = 5 ' Well below 20%
+    shopkeepers(2).BasePriceMultiplier = 1.0
+    
+    ' Oakvale Blacksmith (Depopulated - Ghost Town triggered)
+    shopkeepers(3).ShopkeeperID = "SHOP_OV_02"
+    shopkeepers(3).TownName = "Oakvale"
+    shopkeepers(3).OriginalPopulation = 80
+    shopkeepers(3).CurrentPopulation = 5
+    shopkeepers(3).BasePriceMultiplier = 1.2 ' High tier base prices
+    
+    ' Twinblade's Camp (Slightly reduced)
+    shopkeepers(4).ShopkeeperID = "SHOP_TC_01"
+    shopkeepers(4).TownName = "Twinblade Camp"
+    shopkeepers(4).OriginalPopulation = 50
+    shopkeepers(4).CurrentPopulation = 40
+    shopkeepers(4).BasePriceMultiplier = 1.1
+    
+    ' Hook Coast (Fully Depopulated)
+    shopkeepers(5).ShopkeeperID = "SHOP_HC_01"
+    shopkeepers(5).TownName = "Hook Coast"
+    shopkeepers(5).OriginalPopulation = 60
+    shopkeepers(5).CurrentPopulation = 0
+    shopkeepers(5).BasePriceMultiplier = 1.0
+    
+    ' --- Asset-To-Code Reconciliation Loop ---
+    For i = LBound(shopkeepers) To UBound(shopkeepers)
+        Dim popRatio As Double
+        
+        ' Calculate current vs original population ratio
+        If shopkeepers(i).OriginalPopulation > 0 Then
+            popRatio = CDbl(shopkeepers(i).CurrentPopulation) / CDbl(shopkeepers(i).OriginalPopulation)
+        Else
+            popRatio = 0#
+        End If
+        
+        ' Apply the Ghost Town Discount if population threshold breached
+        If popRatio <= POPULATION_THRESHOLD Then
+            shopkeepers(i).ReconciledPriceMultiplier = shopkeepers(i).BasePriceMultiplier * GHOST_TOWN_DISCOUNT_FACTOR
+            Debug.Print "[RECONCILED] " & shopkeepers(i).ShopkeeperID & " (" & shopkeepers(i).TownName & _
+                        "): GHOST TOWN ACTIVE. New Multiplier: " & Format(shopkeepers(i).ReconciledPriceMultiplier, "0.00")
+        Else
+            ' Standard pricing remains intact
+            shopkeepers(i).ReconciledPriceMultiplier = shopkeepers(i).BasePriceMultiplier
+            Debug.Print "[RECONCILED] " & shopkeepers(i).ShopkeeperID & " (" & shopkeepers(i).TownName & _
+                        "): Normal Population. Multiplier: " & Format(shopkeepers(i).ReconciledPriceMultiplier, "0.00")
+        End If
+    Next i
+End Sub

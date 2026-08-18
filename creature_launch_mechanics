@@ -1,0 +1,108 @@
+Option Explicit
+
+' Structure representing the raw asset definition (from designer files)
+Public Type CreatureAsset
+    AssetID As String
+    CreatureName As String
+    BaseMass As Double                 ' Hidden mass assigned to model (kg)
+    SplatMultiplier As Double          ' Environmental impact sensitivity
+    HasTerrainCollision As Boolean      ' True if wall/tree/boulder in path
+End Type
+
+' Structure representing the runtime reconciled physics object
+Public Type ReconciledRuntimePhysics
+    AssetID As String
+    LaunchDistance As Double           ' Calculated distance in meters
+    InitialVelocity As Double          ' Initial speed (m/s)
+    SplatDamage As Double              ' Secondary kinetic collision damage
+    IsComboPinned As Boolean           ' Flag if pinned against solid terrain
+End Type
+
+Public Sub ReconcileCreatureLaunchMechanics()
+    ' 1. Setup sample input asset pool (Simulating designer assets)
+    Dim AssetPool(0 To 2) As CreatureAsset
+    
+    ' Balverine: Heavy, moderate splat response
+    AssetPool(0).AssetID = "CR_BALVERINE_01"
+    AssetPool(0).CreatureName = "Balverine"
+    AssetPool(0).BaseMass = 85.0
+    AssetPool(0).SplatMultiplier = 1.5
+    AssetPool(0).HasTerrainCollision = True
+    
+    ' Bandit: Light, high launch distance
+    AssetPool(1).AssetID = "CR_BANDIT_02"
+    AssetPool(1).CreatureName = "Bandit Rogue"
+    AssetPool(1).BaseMass = 65.0
+    AssetPool(1).SplatMultiplier = 1.2
+    AssetPool(1).HasTerrainCollision = False
+    
+    ' Earth Troll: Very heavy, low launch distance
+    AssetPool(2).AssetID = "CR_TROLL_01"
+    AssetPool(2).CreatureName = "Earth Troll"
+    AssetPool(2).BaseMass = 350.0
+    AssetPool(2).SplatMultiplier = 2.0
+    AssetPool(2).HasTerrainCollision = True
+
+    ' Applied Force (e.g., High-Level Force Push or Two-Handed Hammer Flourish)
+    Const APPLIED_FORCE As Double = 5000.0 ' Newtons
+    
+    Dim ReconciledPool() As ReconciledRuntimePhysics
+    ReDim ReconciledPool(LBound(AssetPool) To UBound(AssetPool))
+    
+    Dim i As Long
+    
+    ' =========================================================================
+    ' ASSET-TO-CODE RECONCILIATION LOOP
+    ' =========================================================================
+    For i = LBound(AssetPool) To UBound(AssetPool)
+        
+        ' Validate asset parameters before compiling into runtime
+        If AssetPool(i).BaseMass <= 0 Then
+            AssetPool(i).BaseMass = 1.0 ' Fallback guard against division by zero
+        End If
+        
+        ' Step A: Reconcile Weight-Based Launch Vectors
+        ' Velocity = Force / Mass
+        Dim velocity As Double
+        velocity = APPLIED_FORCE / AssetPool(i).BaseMass
+        
+        ' Trajectory distance simplified model: D = (v^2) / (2 * friction)
+        Const TERRAIN_FRICTION As Double = 9.81
+        Dim distance As Double
+        distance = (velocity ^ 2) / (2 * TERRAIN_FRICTION)
+        
+        ' Step B: Reconcile Environmental Splat Damage
+        Dim splatDamage As Double
+        splatDamage = 0#
+        Dim isPinned As Boolean
+        isPinned = False
+        
+        ' If mid-launch collision occurs, calculate secondary kinetic damage
+        If AssetPool(i).HasTerrainCollision Then
+            ' Kinetic Impact Damage = (Force * SplatMultiplier) / Mass
+            splatDamage = (APPLIED_FORCE * AssetPool(i).SplatMultiplier) / (AssetPool(i).BaseMass * 0.1)
+            
+            ' High impact against terrain enables combo pin state (Balverine loop)
+            If splatDamage > 50 Then
+                isPinned = True
+            End If
+        End If
+        
+        ' Step C: Bind to Runtime Structures
+        ReconciledPool(i).AssetID = AssetPool(i).AssetID
+        ReconciledPool(i).InitialVelocity = Round(velocity, 2)
+        ReconciledPool(i).LaunchDistance = Round(distance, 2)
+        ReconciledPool(i).SplatDamage = Round(splatDamage, 2)
+        ReconciledPool(i).IsComboPinned = isPinned
+        
+        ' Debug Log Output
+        Debug.Print "------------------------------------"
+        Debug.Print "Reconciled Asset: " & AssetPool(i).CreatureName & " [" & ReconciledPool(i).AssetID & "]"
+        Debug.Print " - Base Mass: " & AssetPool(i).BaseMass & " kg"
+        Debug.Print " - Initial Velocity: " & ReconciledPool(i).InitialVelocity & " m/s"
+        Debug.Print " - Launch Distance: " & ReconciledPool(i).LaunchDistance & " meters"
+        Debug.Print " - Environmental Splat Damage: " & ReconciledPool(i).SplatDamage
+        Debug.Print " - Combo Pin Status: " & IIf(ReconciledPool(i).IsComboPinned, "PINNED (Loop Active)", "Free Recovery")
+    Next i
+    
+End Sub

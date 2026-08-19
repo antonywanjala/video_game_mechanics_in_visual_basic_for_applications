@@ -1,0 +1,106 @@
+Option Explicit
+
+' Structure representing an Asset Payload entry before and after reconciliation
+Public Type AssetPayload
+    RawAssetID As String        ' Encoded string received from CMS/Platform
+    ExtractedRenown As Long     ' Reconciled Renown score
+    ExtractedMorality As Long   ' Reconciled Morality score (-100 Hero Evil to +100 Hero Good)
+    RepairedData As String      ' Clean payload after parity/formatting check
+    NPCReactionState As String  ' Resultant VBA game engine reaction
+End Type
+
+' -----------------------------------------------------------------------------
+' Natural Language Scaffolding Repair:
+' Simulates error-detection and payload cleaning for platform mutations 
+' (e.g., smart quotes, stripped whitespace, injected HTML tags, parity checks).
+' -----------------------------------------------------------------------------
+Function RepairLanguageScaffolding(ByVal RawData As String) As String
+    Dim Cleaned As String
+    Cleaned = RawData
+    
+    ' 1. Remove platform-injected HTML tags
+    Cleaned = Replace(Cleaned, "<p>", "")
+    Cleaned = Replace(Cleaned, "</p>", "")
+    Cleaned = Replace(Cleaned, "<br>", "")
+    
+    ' 2. Normalize smart quotes to standard straight quotes
+    Cleaned = Replace(Cleaned, ChrW(8220), """") ' Left double quote
+    Cleaned = Replace(Cleaned, ChrW(8221), """") ' Right double quote
+    Cleaned = Replace(Cleaned, ChrW(8216), "'")  ' Left single quote
+    Cleaned = Replace(Cleaned, ChrW(8217), "'")  ' Right single quote
+    
+    ' 3. Parity/Marker Check: Reconstruct structural delimiters if altered
+    If InStr(Cleaned, "[PARITY_ERR]") > 0 Then
+        ' Simple parity repair logic: normalize marker back to standard payload separator
+        Cleaned = Replace(Cleaned, "[PARITY_ERR]", "|")
+    End If
+    
+    RepairNaturalLanguageScaffolding = Trim(Cleaned)
+End Function
+
+
+' -----------------------------------------------------------------------------
+' Main Asset-to-Code Reconciliation Procedure using a For Loop
+' -----------------------------------------------------------------------------
+Sub ReconcileFableRenownMechanic()
+    Dim Assets(1 To 4) As AssetPayload
+    Dim i As Long
+    
+    ' Simulated incoming raw asset payloads with various platform-induced mutations
+    Assets(1).RawAssetID = "<p>HERO_01|Renown:1200|Morality:80[PARITY_ERR]Status:Valid</p>"
+    Assets(2).RawAssetID = "HERO_02|Renown:450|Morality:-90|Status:Valid"
+    Assets(3).RawAssetID = "<p>HERO_03|Renown:2500|Morality:-100[PARITY_ERR]Status:Valid</p>"
+    Assets(4).RawAssetID = "HERO_04|Renown:50|Morality:10|Status:Valid"
+    
+    Debug.Print "=== STARTING ASSET-TO-CODE RECONCILIATION ==="
+    
+    ' FOR LOOP: Iterates over raw asset payloads, executes scaffolding repair,
+    ' reconciles parameters, and updates the Fable VBA Game State.
+    For i = LBound(Assets) To UBound(Assets)
+        
+        ' Step 1: Repair platform-induced character shifts and natural language errors
+        Assets(i).RepairedData = RepairNaturalLanguageScaffolding(Assets(i).RawAssetID)
+        
+        ' Step 2: Parse parameters from clean payload (Simulated extraction)
+        Select Case i
+            Case 1
+                Assets(i).ExtractedRenown = 1200
+                Assets(i).ExtractedMorality = 80
+            Case 2
+                Assets(i).ExtractedRenown = 450
+                Assets(i).ExtractedMorality = -90
+            Case 3
+                Assets(i).ExtractedRenown = 2500
+                Assets(i).ExtractedMorality = -100
+            Case 4
+                Assets(i).ExtractedRenown = 50
+                Assets(i).ExtractedMorality = 10
+        End Select
+        
+        ' Step 3: Reconcile Renown & Morality values into VBA Game Engine behavior
+        If Assets(i).ExtractedRenown >= 2000 Then
+            If Assets(i).ExtractedMorality < 0 Then
+                Assets(i).NPCReactionState = "STATE_TERRIFIED_COWER"
+            Else
+                Assets(i).NPCReactionState = "STATE_CHEER_APPLAUD"
+            End If
+        ElseIf Assets(i).ExtractedRenown >= 500 Then
+            If Assets(i).ExtractedMorality < 0 Then
+                Assets(i).NPCReactionState = "STATE_BOO_HOSTILE"
+            Else
+                Assets(i).NPCReactionState = "STATE_WAVE_SMILE"
+            End If
+        Else
+            Assets(i).NPCReactionState = "STATE_IDLE_IGNORE"
+        End If
+        
+        ' Step 4: Output Reconciled Engine State
+        Debug.Print "Asset [" & i & "] Clean Payload : " & Assets(i).RepairedData
+        Debug.Print "   -> Renown Score   : " & Assets(i).ExtractedRenown
+        Debug.Print "   -> Morality Score : " & Assets(i).ExtractedMorality
+        Debug.Print "   -> Reconciled NPC : " & Assets(i).NPCReactionState
+        Debug.Print "----------------------------------------------------"
+    Next i
+    
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+End Sub

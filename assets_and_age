@@ -1,0 +1,95 @@
+Option Explicit
+
+' Structure to represent a Hero attribute upgrade
+Type AttributeUpgrade
+    AttributeName As String
+    IsPhysical As Boolean
+    ScaleIncrement As Double
+End Type
+
+Public Sub ReconcileHeroAssetsAndAge()
+    ' --- Initial Hero State ---
+    Dim heroAge As Double
+    Dim visualAge As Double
+    Dim ageBlendWeight As Double
+    Dim meshScale As Double
+    Dim muscleMapWeight As Double
+    
+    heroAge = 18.0
+    meshScale = 1.0       ' Base height/frame scale (100%)
+    muscleMapWeight = 0.0 ' Base muscle blend (0% to 100%)
+    
+    ' --- Mock Upgrades Array ---
+    Dim upgrades(1 To 5) As AttributeUpgrade
+    
+    ' Level 1 Physical upgrades
+    upgrades(1).AttributeName = "Physique Level 1"
+    upgrades(1).IsPhysical = True
+    upgrades(1).ScaleIncrement = 0.08
+    
+    upgrades(2).AttributeName = "Health Level 1"
+    upgrades(2).IsPhysical = True
+    upgrades(2).ScaleIncrement = 0.05
+    
+    upgrades(3).AttributeName = "Toughness Level 1"
+    upgrades(3).IsPhysical = True
+    upgrades(3).ScaleIncrement = 0.07
+    
+    ' Non-physical upgrades
+    upgrades(4).AttributeName = "Will Level 1"
+    upgrades(4).IsPhysical = False
+    upgrades(4).ScaleIncrement = 0.0
+    
+    upgrades(5).AttributeName = "Skill Level 1"
+    upgrades(5).IsPhysical = False
+    upgrades(5).ScaleIncrement = 0.0
+    
+    ' --- 1. Upgrade Reconciliation Loop ---
+    Dim i As Long
+    For i = LBound(upgrades) To UBound(upgrades)
+        ' Increment numerical age by 0.75 years per level 1 upgrade
+        heroAge = heroAge + 0.75
+        
+        ' Cap visual aging effects at 65.0 years old
+        If heroAge > 65.0 Then
+            visualAge = 65.0
+        Else
+            visualAge = heroAge
+        End If
+        
+        ' Calculate age texture blend (0.0 = 18 yrs, 1.0 = 65 yrs)
+        ageBlendWeight = (visualAge - 18.0) / (65.0 - 18.0)
+        
+        ' Process physical scale independently (Morphs accumulate and persist)
+        If upgrades(i).IsPhysical Then
+            meshScale = meshScale + upgrades(i).ScaleIncrement
+            muscleMapWeight = muscleMapWeight + 0.15
+            If muscleMapWeight > 1.0 Then muscleMapWeight = 1.0
+        End If
+    Next i
+    
+    ' Print state post-upgrades
+    Debug.Print "=== State After Upgrades ==="
+    Debug.Print "Actual Hero Age: " & heroAge
+    Debug.Print "Visual Age Render: " & visualAge
+    Debug.Print "Age Texture Weight: " & Format(ageBlendWeight, "0.00")
+    Debug.Print "Mesh Scale (Height/Frame): " & Format(meshScale, "0.00")
+    Debug.Print "Muscle Map Weight: " & Format(muscleMapWeight, "0.00")
+    
+    ' --- 2. Temple of Avo / Chapel of Skorm Age Reduction Event ---
+    ' Donating/Sacrificing reduces numerical age back to 18,
+    ' but DOES NOT revert the accumulated meshScale or muscleMapWeight.
+    heroAge = 18.0
+    visualAge = heroAge
+    ageBlendWeight = (visualAge - 18.0) / (65.0 - 18.0) ' Resets age texture weight to 0.0
+    
+    ' Print state post-age reduction glitch/mechanic
+    Debug.Print ""
+    Debug.Print "=== State After Temple of Avo Age Reduction ==="
+    Debug.Print "Actual Hero Age: " & heroAge
+    Debug.Print "Visual Age Render: " & visualAge
+    Debug.Print "Age Texture Weight: " & Format(ageBlendWeight, "0.00")
+    ' Physical morphs remain at maxed values:
+    Debug.Print "Mesh Scale (Height/Frame): " & Format(meshScale, "0.00")
+    Debug.Print "Muscle Map Weight: " & Format(muscleMapWeight, "0.00")
+End Sub

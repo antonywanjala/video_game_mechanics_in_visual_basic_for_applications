@@ -1,0 +1,72 @@
+Option Explicit
+
+' Type definition representing a Projectile asset in memory
+Public Type Projectile
+    ID As Long
+    BaseDamage As Double
+    CurrentDamage As Double
+    BaseVelocity As Double
+    CurrentVelocity As Double
+    TickRate As Double
+    IsStacked As Boolean
+    StackedDamageMultiplier As Double
+End Type
+
+' Subroutine performing Asset-to-Code Reconciliation for Slow Time
+Public Sub ReconcileSlowTimeMechanic()
+    ' Engine constants
+    Const BASE_TICK_RATE As Double = 60.0
+    Const TIME_SCALE_SLOW As Double = 0.1  ' 10% speed during Slow Time
+    
+    ' State flags
+    Dim isSlowTimeActive As Boolean
+    isSlowTimeActive = True ' Set to True (active) or False (expired/reconciled)
+    
+    ' Array of active projectiles (e.g., 10-15 arrows stacked in a line)
+    Dim projectiles(1 To 10) As Projectile
+    Dim i As Long
+    
+    ' Initialize sample projectile assets
+    For i = LBound(projectiles) To UBound(projectiles)
+        projectiles(i).ID = i
+        projectiles(i).BaseDamage = 25.0
+        projectiles(i).BaseVelocity = 100.0
+        projectiles(i).StackedDamageMultiplier = 1.0
+        projectiles(i).IsStacked = False
+    Next i
+
+    ' -------------------------------------------------------------
+    ' Asset-to-Code Reconciliation Loop for Slow Time Physics
+    ' -------------------------------------------------------------
+    For i = LBound(projectiles) To UBound(projectiles)
+        If isSlowTimeActive Then
+            ' 1. Reduce physics tick rate and scale velocity
+            projectiles(i).TickRate = BASE_TICK_RATE * TIME_SCALE_SLOW
+            projectiles(i).CurrentVelocity = projectiles(i).BaseVelocity * TIME_SCALE_SLOW
+            
+            ' 2. Stack projectile density and accumulate damage potential
+            If Not projectiles(i).IsStacked Then
+                projectiles(i).StackedDamageMultiplier = projectiles(i).StackedDamageMultiplier + 0.5
+                projectiles(i).IsStacked = True
+            End If
+            
+            Debug.Print "Projectile #" & projectiles(i).ID & " [SLOWED] -> Velocity: " & _
+                        projectiles(i).CurrentVelocity & " | TickRate: " & projectiles(i).TickRate
+        Else
+            ' 3. Restore global time scale upon spell expiration
+            projectiles(i).TickRate = BASE_TICK_RATE
+            projectiles(i).CurrentVelocity = projectiles(i).BaseVelocity
+            
+            ' 4. Frame-annihilating damage spike on impact reconciliation
+            If projectiles(i).IsStacked Then
+                projectiles(i).CurrentDamage = projectiles(i).BaseDamage * projectiles(i).StackedDamageMultiplier
+                projectiles(i).IsStacked = False
+            Else
+                projectiles(i).CurrentDamage = projectiles(i).BaseDamage
+            End If
+            
+            Debug.Print "Projectile #" & projectiles(i).ID & " [RECONCILED] -> Velocity: " & _
+                        projectiles(i).CurrentVelocity & " | Spike Damage: " & projectiles(i).CurrentDamage
+        End If
+    Next i
+End Sub

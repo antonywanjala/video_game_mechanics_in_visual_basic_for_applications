@@ -1,0 +1,99 @@
+Option Explicit
+
+' Define structure for runtime NPC state reconciliation
+Public Type NPCAssetRecord
+    NPC_ID As String
+    ScheduleTime As Double      ' In 24-hour format (e.g., 20.0 = 8:00 PM)
+    IsInBuilding As Boolean
+    BaseAwareness As Double
+    PropertyRentValue As Double
+    
+    ' Reconciled Runtime Outputs
+    TargetAction As String
+    ZoneStatus As String
+    AwarenessRadius As Double
+    InventoryState As String
+    GuardAlertMeter As Long
+End Type
+
+' Main Reconciliation Subroutine
+Public Sub ReconcileNPCSchedules(ByRef NPCList() As NPCAssetRecord, ByVal PlayerIsSleeping As Boolean, ByRef TotalRentCollected As Double)
+    Dim i As Long
+    Dim totalNPCs As Long
+    
+    ' Get array boundaries
+    totalNPCs = UBound(NPCList) - LBound(NPCList) + 1
+    
+    ' Main Asset-to-Code Reconciliation Loop
+    For i = LBound(NPCList) To UBound(NPCList)
+        
+        ' -------------------------------------------------------------
+        ' 1. Diurnal Clock & Pathing Triggers (8:00 PM / 20:00 Target)
+        ' -------------------------------------------------------------
+        If NPCList(i).ScheduleTime >= 20.0 Or NPCList(i).ScheduleTime < 6.0 Then
+            NPCList(i).TargetAction = "NAVIGATE_HOME_AND_LOCK"
+        Else
+            NPCList(i).TargetAction = "OPEN_SHOP"
+        End If
+        
+        ' -------------------------------------------------------------
+        ' 2. Restricted Zone & Awareness Radius Reconciliation
+        ' -------------------------------------------------------------
+        If NPCList(i).IsInBuilding And (NPCList(i).ScheduleTime >= 20.0 Or NPCList(i).ScheduleTime < 6.0) Then
+            NPCList(i).ZoneStatus = "RESTRICTED_ZONE"
+            ' Scale awareness radius up during restricted night state
+            NPCList(i).AwarenessRadius = NPCList(i).BaseAwareness * 1.5
+        Else
+            NPCList(i).ZoneStatus = "PUBLIC"
+            NPCList(i).AwarenessRadius = NPCList(i).BaseAwareness
+        End If
+        
+        ' -------------------------------------------------------------
+        ' 3. "Bed Sleep" World Reset State Reconciliation
+        ' -------------------------------------------------------------
+        If PlayerIsSleeping Then
+            ' Reset shop inventories and clear guard alerts
+            NPCList(i).InventoryState = "RESET_MERCHANDISE"
+            NPCList(i).GuardAlertMeter = 0
+            
+            ' Process passive rent collection from owned properties
+            TotalRentCollected = TotalRentCollected + NPCList(i).PropertyRentValue
+        End If
+        
+    Next i
+    
+    MsgBox "Reconciliation Complete for " & totalNPCs & " NPC assets.", vbInformation, "Asset Sync Success"
+End Sub
+
+' Example Execution Routine
+Public Sub TestReconciliation()
+    Dim NPCs(1) As NPCAssetRecord
+    Dim TotalRent As Double
+    TotalRent = 0#
+    
+    ' Mock Asset Data 1: Bowerstone Shopkeeper at 8:30 PM (20.5)
+    NPCs(0).NPC_ID = "NPC_BOWER_TAILOR_01"
+    NPCs(0).ScheduleTime = 20.5
+    NPCs(0).IsInBuilding = True
+    NPCs(0).BaseAwareness = 5.0
+    NPCs(0).PropertyRentValue = 150.0
+    
+    ' Mock Asset Data 2: Oakvale Blacksmith at 10:00 AM (10.0)
+    NPCs(1).NPC_ID = "NPC_OAK_SMITH_01"
+    NPCs(1).ScheduleTime = 10.0
+    NPCs(1).IsInBuilding = False
+    NPCs(1).BaseAwareness = 4.0
+    NPCs(1).PropertyRentValue = 75.0
+    
+    ' Run Reconciliation with Player Sleeping (Bed Sleep Reset = True)
+    Call ReconcileNPCSchedules(NPCs, True, TotalRent)
+    
+    ' Output Reconciled State for NPC 1
+    Debug.Print "NPC ID: " & NPCs(0).NPC_ID
+    Debug.Print "Action: " & NPCs(0).TargetAction
+    Debug.Print "Zone Status: " & NPCs(0).ZoneStatus
+    Debug.Print "Awareness Radius: " & NPCs(0).AwarenessRadius
+    Debug.Print "Inventory State: " & NPCs(0).InventoryState
+    Debug.Print "Guard Alert: " & NPCs(0).GuardAlertMeter
+    Debug.Print "Total Rent Collected: " & TotalRent
+End Sub

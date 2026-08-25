@@ -1,0 +1,71 @@
+Public Sub ReconcileFableHeroMorphs()
+    ' --- Variables definition ---
+    Dim heroBaseAge As Double
+    Dim totalStatUpgrades As Integer
+    Dim donationsAgeReduction As Double
+    Dim calculatedAge As Double
+    Dim reconciledAge As Double
+    Dim muscleMorphScale As Double
+    
+    Dim meshNodes(0 To 3) As String
+    Dim i As Integer
+    Dim currentNode As String
+    
+    Dim hairGreyPercentage As Double
+    Dim wrinkleIntensity As Double
+
+    ' --- Parameters Setup ---
+    heroBaseAge = 18.0
+    totalStatUpgrades = 80             ' Example: High number of attribute upgrades
+    donationsAgeReduction = 47.0       ' Mass donation at Temple of Avo
+    muscleMorphScale = 2.5            ' Max stat hero frame size
+    
+    meshNodes(0) = "HairTexture"
+    meshNodes(1) = "SkinWrinkleMap"
+    meshNodes(2) = "BodyHeightScale"
+    meshNodes(3) = "MuscleWidthScale"
+
+    ' --- Core Math Logic ---
+    ' 1. Calculate age based on upgrades (0.75 years per upgrade)
+    calculatedAge = heroBaseAge + (totalStatUpgrades * 0.75)
+    
+    ' 2. Enforce 65-year age ceiling
+    If calculatedAge > 65.0 Then
+        calculatedAge = 65.0
+    End If
+    
+    ' 3. Apply Temple/Chapel age reduction (Floor at age 18)
+    reconciledAge = calculatedAge - donationsAgeReduction
+    If reconciledAge < 18.0 Then
+        reconciledAge = 18.0
+    End If
+
+    ' --- Reconciliation Loop ---
+    For i = LBound(meshNodes) To UBound(meshNodes)
+        currentNode = meshNodes(i)
+        
+        Select Case currentNode
+            Case "HairTexture"
+                ' Calculate grey blend based on reconciled age
+                hairGreyPercentage = (reconciledAge - 18.0) / (65.0 - 18.0)
+                Debug.Print "[Reconcile] Node: " & currentNode & _
+                            " | Grey Hair Blend: " & Format(hairGreyPercentage * 100, "0.0") & "%"
+                            
+            Case "SkinWrinkleMap"
+                ' Calculate skin wrinkle intensity based on reconciled age
+                wrinkleIntensity = (reconciledAge - 18.0) / (65.0 - 18.0)
+                Debug.Print "[Reconcile] Node: " & currentNode & _
+                            " | Wrinkle Intensity: " & Format(wrinkleIntensity, "0.00")
+                            
+            Case "BodyHeightScale", "MuscleWidthScale"
+                ' MORPH SOFT-LOCK: Physical size morphs persist based on stats, ignoring reduced age
+                Debug.Print "[Reconcile] Node: " & currentNode & _
+                            " | Fixed Morph Scale Retained: " & Format(muscleMorphScale, "0.00")
+        End Select
+    Next i
+    
+    ' Print Summary
+    Debug.Print "--------------------------------------------------"
+    Debug.Print "Final Hero Visual Age: " & reconciledAge & " years old."
+    Debug.Print "Final Hero Frame Scale: " & muscleMorphScale & "x (Max Stat Frame preserved)."
+End Sub

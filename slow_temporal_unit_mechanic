@@ -1,0 +1,37 @@
+Sub ReconcileSlowTimeMechanic()
+    ' Variable Declarations
+    Dim i As Long
+    Dim totalEntities As Long
+    Dim isSlowTimeActive As Boolean
+    Dim timeDilationFactor As Double
+    Dim heroEntityID As Long
+    
+    ' Mock State Initialization
+    totalEntities = 15 ' Example entity count (e.g., Hero + stacked arrows)
+    isSlowTimeActive = True
+    heroEntityID = 1
+    
+    ' Set the global physics tick multiplier
+    If isSlowTimeActive Then
+        timeDilationFactor = 0.2 ' 20% normal speed for non-hero entities
+    Else
+        timeDilationFactor = 1.0 ' Full velocity regained simultaneously
+    End If
+
+    ' Asset-to-Code Reconciliation Loop
+    For i = 1 To totalEntities
+        If i = heroEntityID Then
+            ' Hero operates at full tick rate regardless of Slow Time status
+            Call UpdateEntityPhysics(EntityID:=i, DeltaMultiplier:=1.0)
+        Else
+            ' Non-Hero entities (stacked projectiles, traps) receive dilated physics ticks
+            Call UpdateEntityPhysics(EntityID:=i, DeltaMultiplier:=timeDilationFactor)
+        End If
+    Next i
+End Sub
+
+' Helper Subroutine representing the physics/asset update execution
+Private Sub UpdateEntityPhysics(ByVal EntityID As Long, ByVal DeltaMultiplier As Double)
+    ' Reconcile position/velocity assets with updated frame delta time
+    Debug.Print "Reconciling Entity " & EntityID & " | Physics Tick Scale: " & DeltaMultiplier
+End Sub

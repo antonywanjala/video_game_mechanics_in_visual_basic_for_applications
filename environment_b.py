@@ -1,6 +1,3 @@
-from installmissingpackages12 import preset1
-
-preset1()
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 import nltk

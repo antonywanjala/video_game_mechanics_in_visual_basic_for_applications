@@ -1,0 +1,76 @@
+Option Explicit
+
+' Define structure for physics assets during reconciliation
+Public Type PhysicsAsset
+    ID As String
+    AssetType As String       ' "Projectile", "EnvironmentalTrap", "Enemy", "Player"
+    IsPlayer As Boolean
+    BaseVelocity As Double
+    CurrentVelocity As Double
+    LocalTickScale As Double
+    PendingDamageSpike As Boolean
+End Type
+
+' Main routine performing asset-to-code reconciliation for "Slow Time"
+Public Sub ReconcileSlowTimePhysics()
+    Dim Assets(1 To 5) As PhysicsAsset
+    Dim i As Long
+    Dim IsSlowTimeActive As Boolean
+    Dim TargetScale As Double
+    
+    ' Populate sample scene data (arrows trapped in air, traps, and player)
+    Assets(1) = CreateAsset("Arrow_01", "Projectile", False, 50#)
+    Assets(2) = CreateAsset("Arrow_02", "Projectile", False, 50#)
+    Assets(3) = CreateAsset("SpikeTrap_A", "EnvironmentalTrap", False, 0#)
+    Assets(4) = CreateAsset("Bandit_01", "Enemy", False, 12#)
+    Assets(5) = CreateAsset("Hero", "Player", True, 15#)
+    
+    ' --- PHASE 1: CAST SLOW TIME ---
+    IsSlowTimeActive = True
+    TargetScale = IIf(IsSlowTimeActive, 0.1, 1#)
+    
+    Debug.Print "=== SLOW TIME ACTIVATED ==="
+    For i = LBound(Assets) To UBound(Assets)
+        If Not Assets(i).IsPlayer Then
+            Assets(i).LocalTickScale = TargetScale
+            Assets(i).CurrentVelocity = Assets(i).BaseVelocity * Assets(i).LocalTickScale
+        Else
+            Assets(i).LocalTickScale = 1# ' Hero remains at normal time scale
+            Assets(i).CurrentVelocity = Assets(i).BaseVelocity
+        End If
+        Debug.Print Assets(i).ID & " (" & Assets(i).AssetType & ") Speed: " & Assets(i).CurrentVelocity & " (Tick Scale: " & Assets(i).LocalTickScale & ")"
+    Next i
+    
+    ' --- PHASE 2: SPELL EXPIRES (RECONCILIATION & SPIKE RESOLUTION) ---
+    IsSlowTimeActive = False
+    TargetScale = IIf(IsSlowTimeActive, 0.1, 1#)
+    
+    Debug.Print vbCrLf & "=== SLOW TIME EXPIRED (RECONCILING ASSETS) ==="
+    For i = LBound(Assets) To UBound(Assets)
+        If Not Assets(i).IsPlayer Then
+            Assets(i).LocalTickScale = TargetScale
+            Assets(i).CurrentVelocity = Assets(i).BaseVelocity * Assets(i).LocalTickScale
+            
+            ' Flag piled projectiles for single-frame damage burst
+            If Assets(i).AssetType = "Projectile" Then
+                Assets(i).PendingDamageSpike = True
+            End If
+        End If
+        
+        Debug.Print Assets(i).ID & " restored to Speed: " & Assets(i).CurrentVelocity & _
+                    IIf(Assets(i).PendingDamageSpike, " [DAMAGE SPIKE TRIGGERED]", "")
+    Next i
+End Sub
+
+' Helper function to initialize asset records
+Private Function CreateAsset(ByVal AssetID As String, ByVal AType As String, ByVal IsHero As Boolean, ByVal Speed As Double) As PhysicsAsset
+    Dim Temp As PhysicsAsset
+    Temp.ID = AssetID
+    Temp.AssetType = AType
+    Temp.IsPlayer = IsHero
+    Temp.BaseVelocity = Speed
+    Temp.CurrentVelocity = Speed
+    Temp.LocalTickScale = 1#
+    Temp.PendingDamageSpike = False
+    CreateAsset = Temp
+End Function

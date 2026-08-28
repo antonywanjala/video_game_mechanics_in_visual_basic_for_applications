@@ -1,0 +1,69 @@
+Option Explicit
+
+' Define structure for Zone NPCs
+Public Type NPC
+    ID As String
+    X As Double
+    Y As Double
+    AIState As String
+    CurrentAction As String
+End Type
+
+' Main routine for Asset-to-Code Reconciliation
+Public Sub ReconcileHeroRenownAura()
+    Dim HeroX As Double, HeroY As Double
+    Dim RenownLevel As Long
+    Dim BaseAudioRadius As Double
+    Dim RenownRadiusMultiplier As Double
+    Dim EffectiveRadius As Double
+    
+    ' Hero Parameters
+    HeroX = 50.0
+    HeroY = 50.0
+    RenownLevel = 10 ' Max Renown (e.g., Level 1 to 10)
+    
+    ' Radius Parameters
+    BaseAudioRadius = 5.0
+    RenownRadiusMultiplier = 9.5
+    
+    ' Compute Renown-adjusted aura radius
+    EffectiveRadius = BaseAudioRadius + (RenownLevel * RenownRadiusMultiplier)
+    
+    ' Initialize sample Zone NPCs
+    Dim TotalZoneNPCs As Long
+    TotalZoneNPCs = 4
+    Dim ZoneNPCs() As NPC
+    ReDim ZoneNPCs(1 To TotalZoneNPCs)
+    
+    ' Populate sample NPC coordinates in the zone
+    ZoneNPCs(1).ID = "Villager_01": ZoneNPCs(1).X = 52.0: ZoneNPCs(1).Y = 51.0 ' Very Close
+    ZoneNPCs(2).ID = "Villager_02": ZoneNPCs(2).X = 80.0: ZoneNPCs(2).Y = 75.0 ' Medium Distance
+    ZoneNPCs(3).ID = "Guard_01":    ZoneNPCs(3).X = 120.0: ZoneNPCs(3).Y = 130.0 ' Far Distance
+    ZoneNPCs(4).ID = "Merchant_01": ZoneNPCs(4).X = 55.0: ZoneNPCs(4).Y = 48.0 ' Close
+    
+    ' =========================================================================
+    ' FOR LOOP: Asset-to-Code Reconciliation for Hero's Renown Render Distance
+    ' =========================================================================
+    Dim i As Long
+    Dim DistanceToHero As Double
+    
+    For i = 1 To TotalZoneNPCs
+        ' Calculate Euclidean distance between Hero and current NPC
+        DistanceToHero = Sqr((ZoneNPCs(i).X - HeroX) ^ 2 + (ZoneNPCs(i).Y - HeroY) ^ 2)
+        
+        ' Reconcile state based on effective audio/crowd pull radius
+        If DistanceToHero <= EffectiveRadius Then
+            ZoneNPCs(i).AIState = "CROWD_PULL"
+            ZoneNPCs(i).CurrentAction = "Run to Hero, cheer, and demand autograph"
+        Else
+            ZoneNPCs(i).AIState = "PATROL"
+            ZoneNPCs(i).CurrentAction = "Continue ambient daily routine"
+        End If
+        
+        ' Output reconciled result to Immediate Window
+        Debug.Print "NPC ID: " & ZoneNPCs(i).ID & _
+                    " | Distance: " & Format(DistanceToHero, "0.00") & _
+                    " | State: " & ZoneNPCs(i).AIState & _
+                    " | Action: " & ZoneNPCs(i).CurrentAction
+    Next i
+End Sub

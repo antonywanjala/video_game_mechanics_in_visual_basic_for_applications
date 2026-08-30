@@ -1,0 +1,120 @@
+' =========================================================================
+' Fable Mechanic: Physical Shield Mana-Burn Reconciliation
+' Evaluates incoming combat hit assets against player runtime stats in VBA
+' =========================================================================
+
+Public Type PlayerStats
+    CurrentHealth As Double
+    MaxHealth As Double
+    CurrentMana As Double
+    MaxMana As Double
+    IsShieldActive As Boolean
+    IsHitStunned As Boolean
+End Type
+
+Public Type HitAsset
+    HitID As Long
+    RawDamage As Double
+    KnockbackForce As Double
+End Type
+
+'''
+' Processes hit assets using Physical Shield mana-burn reconciliation logic
+'''
+Public Sub ProcessPhysicalShieldHits(ByRef Player As PlayerStats, ByRef Hits() As HitAsset, ByVal ManaPerDamageRatio As Double)
+    Dim i As Long
+    Dim incomingDamage As Double
+    Dim requiredMana As Double
+    Dim overflowDamage As Double
+    
+    ' Loop through each incoming hit asset for reconciliation
+    For i = LBound(Hits) To UBound(Hits)
+        
+        ' Check if player is defeated before processing hit
+        If Player.CurrentHealth <= 0 Then
+            Debug.Print "Player defeated. Terminating processing at Hit ID: " & Hits(i).HitID
+            Exit For
+        End If
+        
+        incomingDamage = Hits(i).RawDamage
+        
+        If Player.IsShieldActive Then
+            ' -------------------------------------------------------------
+            ' Physical Shield Active: Route damage to Mana & Negate Hit-Stun
+            ' -------------------------------------------------------------
+            Player.IsHitStunned = False ' Knockback Negation
+            requiredMana = incomingDamage * ManaPerDamageRatio
+            
+            If Player.CurrentMana >= requiredMana Then
+                ' Shield fully absorbs the incoming damage
+                Player.CurrentMana = Player.CurrentMana - requiredMana
+                
+                Debug.Print "[Hit ID " & Hits(i).HitID & "] Shield Absorbed: " & _
+                            incomingDamage & " dmg | Mana Drain: " & requiredMana & _
+                            " | Remaining Mana: " & Player.CurrentMana & _
+                            " | Hit-Stun Suppressed."
+            Else
+                ' Mana exhausted: Partial absorption, break shield, leak remaining damage
+                overflowDamage = (requiredMana - Player.CurrentMana) / ManaPerDamageRatio
+                Player.CurrentMana = 0
+                Player.IsShieldActive = False
+                Player.CurrentHealth = Player.CurrentHealth - overflowDamage
+                Player.IsHitStunned = True ' Hit-stun applies once shield breaks
+                
+                Debug.Print "[Hit ID " & Hits(i).HitID & "] SHIELD BROKEN! Overflow Dmg: " & _
+                            overflowDamage & " | Current Health: " & Player.CurrentHealth & _
+                            " | Hit-Stun Applied!"
+            End If
+            
+        Else
+            ' -------------------------------------------------------------
+            ' Physical Shield Inactive: Standard Health Processing
+            ' -------------------------------------------------------------
+            Player.CurrentHealth = Player.CurrentHealth - incomingDamage
+            Player.IsHitStunned = (Hits(i).KnockbackForce > 0)
+            
+            Debug.Print "[Hit ID " & Hits(i).HitID & "] Direct Hit! Health Loss: " & _
+                        incomingDamage & " | Current Health: " & Player.CurrentHealth
+        End If
+        
+    Next i
+End Sub
+
+'''
+' Example Execution Harness
+'''
+Public Sub RunReconciliationTest()
+    Dim Hero As PlayerStats
+    Hero.CurrentHealth = 100
+    Hero.MaxHealth = 100
+    Hero.CurrentMana = 50
+    Hero.MaxMana = 100
+    Hero.IsShieldActive = True
+    Hero.IsHitStunned = False
+    
+    ' Generate sample incoming hit assets
+    Dim DamageEvents(0 To 3) As HitAsset
+    
+    ' Hit 1: Fully absorbed
+    DamageEvents(0).HitID = 101
+    DamageEvents(0).RawDamage = 20
+    DamageEvents(0).KnockbackForce = 50
+    
+    ' Hit 2: Fully absorbed
+    DamageEvents(1).HitID = 102
+    DamageEvents(1).RawDamage = 25
+    DamageEvents(1).KnockbackForce = 80
+    
+    ' Hit 3: Breaks shield and leaks damage to health
+    DamageEvents(2).HitID = 103
+    DamageEvents(2).RawDamage = 40
+    DamageEvents(2).KnockbackForce = 100
+    
+    ' Hit 4: Unshielded direct damage
+    DamageEvents(3).HitID = 104
+    DamageEvents(3).RawDamage = 15
+    DamageEvents(3).KnockbackForce = 30
+    
+    ' Execute reconciliation (1 point damage = 1 point mana)
+    Call ProcessPhysicalShieldHits(Hero, DamageEvents, 1.0)
+End Sub

@@ -1,0 +1,87 @@
+Option Explicit
+
+' Define structure for Chest Assets
+Type ChestAsset
+    ChestID As String
+    ItemName As String
+    Quantity As Long
+    IsOpenedInWorld As Boolean ' Saved in World State
+End Type
+
+' Define structure for Inventory Items
+Type InventoryItem
+    ItemName As String
+    Quantity As Long
+End Type
+
+Sub ReconcileGhostDupingMechanic()
+    ' 1. Initialize Test Data
+    Dim Chests(1 To 3) As ChestAsset
+    Dim PlayerInventory(1 To 10) As InventoryItem
+    Dim InventoryCount As Long
+    
+    ' World state chest data (Chest 1 was looted, but world state reset on reload)
+    Chests(1).ChestID = "CHEST_001_ELIXIR"
+    Chests(1).ItemName = "Elixir of Will"
+    Chests(1).Quantity = 2
+    Chests(1).IsOpenedInWorld = False ' Reset by Hero Save reload!
+    
+    Chests(2).ChestID = "CHEST_002_GOLD"
+    Chests(2).ItemName = "Gold"
+    Chests(2).Quantity = 500
+    Chests(2).IsOpenedInWorld = True ' Locked open state
+    
+    ' Pre-existing inventory from previous run before reload
+    PlayerInventory(1).ItemName = "Elixir of Will"
+    PlayerInventory(1).Quantity = 2
+    InventoryCount = 1
+
+    Dim i As Long
+    Dim j As Long
+    Dim ItemFound As Boolean
+
+    ' 2. Reconciliation For Loop
+    ' Loop through chest assets to evaluate state vs inventory
+    For i = LBound(Chests) To UBound(Chests)
+        
+        ' The Duping Glitch Logic:
+        ' If the chest is NOT marked as opened in the world state file,
+        ' the system treats the chest as available for looting again,
+        ' even if the hero save inventory already contains the previous loot.
+        If Chests(i).IsOpenedInWorld = False Then
+            
+            ItemFound = False
+            
+            ' Reconcile into Player Inventory
+            For j = 1 To InventoryCount
+                If PlayerInventory(j).ItemName = Chests(i).ItemName Then
+                    ' Item already in hero inventory (retained from save) + Chest is closed again
+                    ' Result: Items duplicate in code reconciliation
+                    PlayerInventory(j).Quantity = PlayerInventory(j).Quantity + Chests(i).Quantity
+                    ItemFound = True
+                    Exit For
+                End If
+            Next j
+            
+            ' If item wasn't in inventory, add new slot
+            If Not ItemFound Then
+                InventoryCount = InventoryCount + 1
+                PlayerInventory(InventoryCount).ItemName = Chests(i).ItemName
+                PlayerInventory(InventoryCount).Quantity = Chests(i).Quantity
+            End If
+            
+            Debug.Print "Reconciled Chest [" & Chests(i).ChestID & "]: Duped " & _
+                        Chests(i).Quantity & "x " & Chests(i).ItemName
+        Else
+            Debug.Print "Skipped Chest [" & Chests(i).ChestID & "]: Already marked opened."
+        End If
+        
+    Next i
+
+    ' 3. Display Final Inventory Results
+    Debug.Print "--- Final Reconciled Inventory ---"
+    For i = 1 To InventoryCount
+        Debug.Print PlayerInventory(i).ItemName & " | Total Quantity: " & PlayerInventory(i).Quantity
+    Next i
+
+End Sub

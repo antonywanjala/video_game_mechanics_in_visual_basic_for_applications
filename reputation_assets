@@ -1,0 +1,81 @@
+Option Explicit
+
+' Define the structure for NPC Asset Data
+Public Type NPCReputationAsset
+    NPCID As String
+    NPCName As String
+    FactionOrClass As String      ' e.g., "WorkingClass", "WealthyMerchant"
+    EvictionActionTaken As Boolean ' True if player evicted a tenant in their zone
+    CurrentOpinionScore As Long    ' Opinion range: -100 (Hated) to +100 (Respected)
+    ReconciliationStatus As String
+End Type
+
+Public Sub ReconcileNPCReputationAssets()
+
+    Dim npcList(1 To 4) As NPCReputationAsset
+    Dim i As Long
+    
+    ' --- 1. Populate Simulated Asset Data ---
+    ' Villager 1: Working Class
+    npcList(1).NPCID = "NPC_001"
+    npcList(1).NPCName = "Bowerstone Villager"
+    npcList(1).FactionOrClass = "WorkingClass"
+    npcList(1).EvictionActionTaken = True
+    npcList(1).CurrentOpinionScore = 0
+    
+    ' Villager 2: Wealthy Merchant
+    npcList(2).NPCID = "NPC_002"
+    npcList(2).NPCName = "Merchant Guildmaster"
+    npcList(2).FactionOrClass = "WealthyMerchant"
+    npcList(2).EvictionActionTaken = True
+    npcList(2).CurrentOpinionScore = 0
+    
+    ' Villager 3: Neutral Working Class (No eviction action)
+    npcList(3).NPCID = "NPC_003"
+    npcList(3).NPCName = "Old Mill Hand"
+    npcList(3).FactionOrClass = "WorkingClass"
+    npcList(3).EvictionActionTaken = False
+    npcList(3).CurrentOpinionScore = 10
+    
+    ' Villager 4: Wealthy Landlord
+    npcList(4).NPCID = "NPC_004"
+    npcList(4).NPCName = "Bowerstone Landlord"
+    npcList(4).FactionOrClass = "WealthyMerchant"
+    npcList(4).EvictionActionTaken = True
+    npcList(4).CurrentOpinionScore = 20
+
+    ' --- 2. Asset-to-Code Reconciliation Loop ---
+    ' Iterates over local NPC opinion data to reconcile alignment/action impact
+    For i = LBound(npcList) To UBound(npcList)
+        
+        If npcList(i).EvictionActionTaken Then
+            Select Case npcList(i).FactionOrClass
+                Case "WorkingClass"
+                    ' Evicting a tenant makes working-class villagers hate the player (-50 points)
+                    npcList(i).CurrentOpinionScore = npcList(i).CurrentOpinionScore - 50
+                    npcList(i).ReconciliationStatus = "RECONCILED: Opinion lowered (Hated by Working Class)"
+                    
+                Case "WealthyMerchant"
+                    ' Evicting a tenant gains respect among wealthy merchants (+30 points)
+                    npcList(i).CurrentOpinionScore = npcList(i).CurrentOpinionScore + 30
+                    npcList(i).ReconciliationStatus = "RECONCILED: Opinion raised (Respected by Merchants)"
+                    
+                Case Else
+                    npcList(i).ReconciliationStatus = "RECONCILED: No local faction modifier applied"
+            End Select
+        Else
+            npcList(i).ReconciliationStatus = "UNCHANGED: No relevant player action recorded"
+        End If
+        
+        ' Clamp opinion score between -100 and 100
+        If npcList(i).CurrentOpinionScore < -100 Then npcList(i).CurrentOpinionScore = -100
+        If npcList(i).CurrentOpinionScore > 100 Then npcList(i).CurrentOpinionScore = 100
+        
+        ' Output reconciliation results to Immediate Window (Ctrl + G in VBA editor)
+        Debug.Print "ID: " & npcList(i).NPCID & " | Name: " & npcList(i).NPCName & _
+                    " | Faction: " & npcList(i).FactionOrClass & _
+                    " | Score: " & npcList(i).CurrentOpinionScore & _
+                    " | Status: " & npcList(i).ReconciliationStatus
+    Next i
+
+End Sub

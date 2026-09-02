@@ -1,0 +1,83 @@
+' ==============================================================================
+' Module: FableLifeSimReconciliation
+' Description: Reconciles housing asset definitions with game code business logic
+' Repository: 57. Life-Simulation Infrastructure
+' ==============================================================================
+
+Option Explicit
+
+Public Type HousingAsset
+    PropertyID As String
+    BaseRent As Double
+    ConditionFactor As Double
+    MinRent As Double
+    MaxRent As Double
+    CurrentRent As Double
+End Type
+
+Public Sub ReconcilePropertyAssets()
+    Dim PropertyList() As HousingAsset
+    Dim RegionInflation As Double
+    Dim HasGreedyLandlordPerk As Boolean
+    Dim i As Long
+    
+    ' --------------------------------------------------------------------------
+    ' 1. INITIALIZE SIMULATED ENVIRONMENT & RAW ASSET DATA
+    ' --------------------------------------------------------------------------
+    RegionInflation = 1.08 ' 8% regional economic inflation in Albion
+    HasGreedyLandlordPerk = True
+    
+    ' Populate sample property array (Simulating loaded asset files)
+    ReDim PropertyList(0 To 2)
+    
+    ' Property 1: Bowerstone Coach House
+    PropertyList(0).PropertyID = "PROP_BOWER_01"
+    PropertyList(0).BaseRent = 150#
+    PropertyList(0).ConditionFactor = 1.2 ' Well maintained
+    PropertyList(0).MinRent = 50#
+    PropertyList(0).MaxRent = 400#
+    
+    ' Property 2: Oakfield Cottage
+    PropertyList(1).PropertyID = "PROP_OAK_04"
+    PropertyList(1).BaseRent = 80#
+    PropertyList(1).ConditionFactor = 0.85 ' Slightly run down
+    PropertyList(1).MinRent = 20#
+    PropertyList(1).MaxRent = 200#
+
+    ' Property 3: Bloodstone Tenement
+    PropertyList(2).PropertyID = "PROP_BLOOD_09"
+    PropertyList(2).BaseRent = 300#
+    PropertyList(2).ConditionFactor = 1.5 ' Luxuriously furnished
+    PropertyList(2).MinRent = 100#
+    PropertyList(2).MaxRent = 500#
+
+    ' --------------------------------------------------------------------------
+    ' 2. RECONCILIATION FOR LOOP
+    ' --------------------------------------------------------------------------
+    For i = LBound(PropertyList) To UBound(PropertyList)
+        Dim CalculatedRent As Double
+        
+        ' Step A: Reconcile base asset attributes with dynamic environment inflation
+        CalculatedRent = PropertyList(i).BaseRent * PropertyList(i).ConditionFactor * RegionInflation
+        
+        ' Step B: Apply player-specific code rules (Landlord Perks)
+        If HasGreedyLandlordPerk Then
+            CalculatedRent = CalculatedRent * 1.15
+        End If
+        
+        ' Step C: Clamp values to prevent economy exploits (Asset limits)
+        If CalculatedRent > PropertyList(i).MaxRent Then
+            CalculatedRent = PropertyList(i).MaxRent
+        ElseIf CalculatedRent < PropertyList(i).MinRent Then
+            CalculatedRent = PropertyList(i).MinRent
+        End If
+        
+        ' Step D: Final reconciliation write-back to runtime property state
+        PropertyList(i).CurrentRent = Round(CalculatedRent, 2)
+        
+        ' Output result to Immediate Window (Debug log)
+        Debug.Print "Reconciled [" & PropertyList(i).PropertyID & "] -> Final Rent: Gold " & PropertyList(i).CurrentRent
+    Next i
+
+    MsgBox "Asset-to-code property reconciliation complete!", vbInformation, "Fable Infrastructure"
+End Sub

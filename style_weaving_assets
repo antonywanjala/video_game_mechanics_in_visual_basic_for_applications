@@ -1,0 +1,87 @@
+Option Explicit
+
+' Structure representing an incoming combat asset definition
+Public Type CombatAsset
+    AssetID As String
+    ActionType As String      ' "Melee", "Ranged", or "Magic"
+    NextActionType As String  ' Action being chained into
+    CancelWindowFrame As Long ' Frame offset where chain opens
+    IsValidTransition As Boolean
+End Type
+
+' Dynamic array representing reconciled runtime data
+Public Type ReconciledAbility
+    AssetID As String
+    CanCancelWithoutDelay As Boolean
+    TriggerFrame As Long
+End Type
+
+Public Sub ReconcileStyleWeavingAssets()
+    Dim RawAssets(0 To 4) As CombatAsset
+    Dim ReconciledBehaviors() As ReconciledAbility
+    Dim i As Long
+    Dim reconciledCount As Long
+    
+    ' 1. Mocking incoming asset package from design tools
+    '    (Sword -> Pistol, Pistol -> Magic, Magic -> Sword, etc.)
+    RawAssets(0).AssetID = "Anim_SwordSlash_01"
+    RawAssets(0).ActionType = "Melee"
+    RawAssets(0).NextActionType = "Ranged" ' Point-blank pistol shot
+    RawAssets(0).CancelWindowFrame = 12
+
+    RawAssets(1).AssetID = "Anim_PistolShot_01"
+    RawAssets(1).ActionType = "Ranged"
+    RawAssets(1).NextActionType = "Magic" ' Mid-combo spell cast
+    RawAssets(1).CancelWindowFrame = 8
+
+    RawAssets(2).AssetID = "Anim_SpellCast_01"
+    RawAssets(2).ActionType = "Magic"
+    RawAssets(2).NextActionType = "Melee" ' Seamless return to blade
+    RawAssets(2).CancelWindowFrame = 15
+
+    RawAssets(3).AssetID = "Anim_HeavyHammer_01"
+    RawAssets(3).ActionType = "Melee"
+    RawAssets(3).NextActionType = "HeavyMelee" ' Standard combo (Non-weaving)
+    RawAssets(3).CancelWindowFrame = 24
+
+    RawAssets(4).AssetID = "Anim_SpellCast_02"
+    RawAssets(4).ActionType = "Magic"
+    RawAssets(4).NextActionType = "Ranged"
+    RawAssets(4).CancelWindowFrame = 10
+
+    ' Allocate reconciliation buffer
+    ReDim ReconciledBehaviors(0 To UBound(RawAssets))
+    reconciledCount = 0
+
+    ' 2. Reconciliation Loop: Validate stance-weaving capabilities
+    For i = LBound(RawAssets) To UBound(RawAssets)
+        
+        ' Rule: Style Weaving applies when switching between distinct core combat styles
+        ' without draw-delay penalty.
+        If RawAssets(i).ActionType <> RawAssets(i).NextActionType Then
+            RawAssets(i).IsValidTransition = True
+        Else
+            RawAssets(i).IsValidTransition = False
+        End If
+
+        ' Reconcile asset data into code structures
+        If RawAssets(i).IsValidTransition Then
+            ReconciledBehaviors(reconciledCount).AssetID = RawAssets(i).AssetID
+            ReconciledBehaviors(reconciledCount).CanCancelWithoutDelay = True
+            ReconciledBehaviors(reconciledCount).TriggerFrame = RawAssets(i).CancelWindowFrame
+            
+            Debug.Print "Reconciled [Style Weaving]: " & ReconciledBehaviors(reconciledCount).AssetID & _
+                        " -> Cancel Frame: " & ReconciledBehaviors(reconciledCount).TriggerFrame
+            
+            reconciledCount = reconciledCount + 1
+        Else
+            Debug.Print "Reconciled [Standard Transition]: " & RawAssets(i).AssetID
+        End If
+
+    Next i
+
+    ' Resize reconciled collection to actual size
+    If reconciledCount > 0 Then
+        ReDim Preserve ReconciledBehaviors(0 To reconciledCount - 1)
+    End If
+End Sub

@@ -1,0 +1,121 @@
+Option Explicit
+
+' -------------------------------------------------------------------
+' FABLE: LIVING POPULATION MEMORY SYSTEM
+' Asset-to-Code Reconciliation Module
+' -------------------------------------------------------------------
+
+Public Type DynamicMemory
+    QuestID As String
+    HeroReputationImpact As Long
+    IsObserved As Boolean
+End Type
+
+Public Type NPCAsset
+    NPC_ID As Long
+    Name As String
+    HomeTown As String
+    PersonalityTrait As String ' e.g., "Courageous", "Cowardly", "Gullible"
+    LikesCount As Integer
+    DislikesCount As Integer
+    ActiveMemory As DynamicMemory
+    CrierDialogueFlag As String
+    IsValid As Boolean
+End Type
+
+' Global Runtime Engine Population Buffer (Cap: 1000 Handcrafted NPCs)
+Public RuntimeAlbionPopulation(1 To 1000) As NPCAsset
+
+' Primary Reconciliation Entry Point
+Public Sub Reconcile_Albion_Population()
+    Dim i As Long
+    Dim TotalNPCs As Long
+    Dim ReconciledCount As Long
+    
+    TotalNPCs = 1000
+    ReconciledCount = 0
+    
+    ' Populate mock data for reconciliation pipeline test
+    Call Load_Raw_Asset_Data
+    
+    Debug.Print "=== FABLE ASSET-TO-CODE RECONCILIATION STARTED ==="
+    Debug.Print "Processing " & TotalNPCs & " Handcrafted Albion NPCs..."
+    Debug.Print "--------------------------------------------------"
+    
+    ' ---------------------------------------------------------------
+    ' RECONCILIATION FOR LOOP
+    ' Iterates through every NPC asset to reconcile data into code runtime
+    ' ---------------------------------------------------------------
+    For i = 1 To TotalNPCs
+        
+        ' 1. Structural Validation
+        If RuntimeAlbionPopulation(i).NPC_ID > 0 And RuntimeAlbionPopulation(i).HomeTown <> "" Then
+            RuntimeAlbionPopulation(i).IsValid = True
+        Else
+            RuntimeAlbionPopulation(i).IsValid = False
+        End If
+        
+        ' 2. Memory Reconciliation & Memory Cleanup
+        If RuntimeAlbionPopulation(i).IsValid Then
+            
+            ' Reconcile memory state: Prune stale or invalid quest observations
+            If RuntimeAlbionPopulation(i).ActiveMemory.QuestID = "" Then
+                RuntimeAlbionPopulation(i).ActiveMemory.IsObserved = False
+            End If
+            
+            ' 3. Dynamic Dialogue & Town Crier Reaction Reconciliation
+            ' Updates bark dialogue based on personality traits and hero events seen
+            If RuntimeAlbionPopulation(i).ActiveMemory.IsObserved Then
+                Select Case RuntimeAlbionPopulation(i).PersonalityTrait
+                    Case "Cowardly"
+                        RuntimeAlbionPopulation(i).CrierDialogueFlag = "FLEES_HERO_" & RuntimeAlbionPopulation(i).ActiveMemory.QuestID
+                    Case "Courageous"
+                        RuntimeAlbionPopulation(i).CrierDialogueFlag = "CHALLENGES_HERO_" & RuntimeAlbionPopulation(i).ActiveMemory.QuestID
+                    Case Else
+                        RuntimeAlbionPopulation(i).CrierDialogueFlag = "CHEERS_HERO_" & RuntimeAlbionPopulation(i).ActiveMemory.QuestID
+                End Select
+            Else
+                RuntimeAlbionPopulation(i).CrierDialogueFlag = "DEFAULT_TOWN_BARK"
+            End If
+            
+            ReconciledCount = ReconciledCount + 1
+        End If
+        
+    Next i
+    ' ---------------------------------------------------------------
+    
+    ' Reconciliation Summary
+    Debug.Print "--------------------------------------------------"
+    Debug.Print "=== RECONCILIATION COMPLETE ==="
+    Debug.Print "Successfully Reconciled " & ReconciledCount & " / " & TotalNPCs & " NPCs into Runtime Memory."
+    
+    ' Print sample output from reconciled array
+    Debug.Print "Sample Reconciled NPC [ID: 101]: " & RuntimeAlbionPopulation(101).Name
+    Debug.Print " - Personality: " & RuntimeAlbionPopulation(101).PersonalityTrait
+    Debug.Print " - Memory Event: " & RuntimeAlbionPopulation(101).ActiveMemory.QuestID
+    Debug.Print " - Dynamic Bark Flag: " & RuntimeAlbionPopulation(101).CrierDialogueFlag
+End Sub
+
+' Helper Routine to mock incoming uncooked asset data
+Private Sub Load_Raw_Asset_Data()
+    Dim idx As Long
+    For idx = 1 To 1000
+        RuntimeAlbionPopulation(idx).NPC_ID = idx
+        RuntimeAlbionPopulation(idx).Name = "Citizen_" & idx
+        RuntimeAlbionPopulation(idx).HomeTown = "Bowerstone"
+        
+        If idx Mod 3 = 0 Then
+            RuntimeAlbionPopulation(idx).PersonalityTrait = "Cowardly"
+            RuntimeAlbionPopulation(idx).ActiveMemory.QuestID = "QUEST_SLAY_WASP_QUEEN"
+            RuntimeAlbionPopulation(idx).ActiveMemory.IsObserved = True
+        ElseIf idx Mod 5 = 0 Then
+            RuntimeAlbionPopulation(idx).PersonalityTrait = "Courageous"
+            RuntimeAlbionPopulation(idx).ActiveMemory.QuestID = "QUEST_ORCHARD_FARM"
+            RuntimeAlbionPopulation(idx).ActiveMemory.IsObserved = True
+        Else
+            RuntimeAlbionPopulation(idx).PersonalityTrait = "Neutral"
+            RuntimeAlbionPopulation(idx).ActiveMemory.QuestID = ""
+            RuntimeAlbionPopulation(idx).ActiveMemory.IsObserved = False
+        End If
+    Next idx
+End Sub

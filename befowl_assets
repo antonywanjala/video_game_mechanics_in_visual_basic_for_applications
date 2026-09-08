@@ -1,0 +1,29 @@
+Sub ReconcileBefowlAssets()
+    Dim befowlAssets() As Variant
+    Dim i As Integer
+    Dim assetLoaded As Boolean
+    
+    befowlAssets = Array("Mesh_UndeadChicken", "VFX_FeatherPoof", "SFX_CluckUndead", "Anim_ChickenFlee")
+    
+    For i = LBound(befowlAssets) To UBound(befowlAssets)
+        assetLoaded = CheckMemoryForAsset(befowlAssets(i))
+        
+        If Not assetLoaded Then
+            Call StreamAssetIntoMemory(befowlAssets(i))
+        End If
+        
+        Call BindAssetToSpellPointer("Spell_Befowl", befowlAssets(i))
+    Next i
+    
+    MsgBox "Asset-to-code reconciliation complete for the Befowl mechanic."
+End Sub
+
+Function CheckMemoryForAsset(assetName As Variant) As Boolean
+    CheckMemoryForAsset = False 
+End Function
+
+Sub StreamAssetIntoMemory(assetName As Variant)
+End Sub
+
+Sub BindAssetToSpellPointer(spellID As String, assetName As Variant)
+End Sub

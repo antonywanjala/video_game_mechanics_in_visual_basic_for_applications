@@ -1,0 +1,62 @@
+' Struct representing runtime AI Entity attributes
+Public Type AIEntity
+    EntityID As String
+    FactionID As Integer ' 1: Hero, 2: Balverine, 3: Hobbe, 4: HollowMan
+    NoiseLevel As Double
+    IsSpawned As Boolean
+    TargetFactionID As Integer
+End Type
+
+Public Sub ReconcileEnvironmentalAggro()
+    ' Simulated asset data arrays (Asset-to-Code Input)
+    Dim rawEntityIDs() As Variant
+    Dim rawFactionIDs() As Variant
+    Dim rawNoiseLevels() As Variant
+    
+    rawEntityIDs = Array("Balverine_Pack_01", "Hobbe_Camp_01", "HollowMan_Grave_01")
+    rawFactionIDs = Array(2, 3, 4)
+    rawNoiseLevels = Array(75.5, 10.0, 85.0) ' High noise near graves triggers early spawn
+    
+    Dim count As Integer
+    count = UBound(rawEntityIDs) - LBound(rawEntityIDs) + 1
+    
+    Dim runtimeEntities() As AIEntity
+    ReDim runtimeEntities(0 To count - 1)
+    
+    ' Reconciliation Loop: Map raw assets into runtime structures and evaluate aggro/spawns
+    Dim i As Integer
+    For i = 0 To count - 1
+        ' Step 1: Map raw values to structure
+        runtimeEntities(i).EntityID = CStr(rawEntityIDs(i))
+        runtimeEntities(i).FactionID = CInt(rawFactionIDs(i))
+        runtimeEntities(i).NoiseLevel = CDbl(rawNoiseLevels(i))
+        
+        ' Step 2: Resolve Cross-Faction Aggro (Non-unified enemy logic)
+        ' Hobbes (3) and Balverines (2) prioritize each other if in proximity
+        If runtimeEntities(i).FactionID = 2 Then
+            runtimeEntities(i).TargetFactionID = 3 ' Balverine targets Hobbe
+        ElseIf runtimeEntities(i).FactionID = 3 Then
+            runtimeEntities(i).TargetFactionID = 2 ' Hobbe targets Balverine
+        Else
+            runtimeEntities(i).TargetFactionID = 1 ' Default target: Hero
+        End If
+        
+        ' Step 3: Sound-Based Spawn Evaluation
+        ' Hollow Men (4) spawn early if environmental noise exceeds threshold (e.g., > 50.0)
+        If runtimeEntities(i).FactionID = 4 Then
+            If runtimeEntities(i).NoiseLevel > 50.0 Then
+                runtimeEntities(i).IsSpawned = True
+            Else
+                runtimeEntities(i).IsSpawned = False ' Player successfully sneaked past
+            End If
+        Else
+            runtimeEntities(i).IsSpawned = True ' Standard entities already present
+        End If
+        
+        ' Step 4: Output reconciled runtime state
+        Debug.Print "Reconciled: " & runtimeEntities(i).EntityID & _
+                    " | Faction: " & runtimeEntities(i).FactionID & _
+                    " | Target Faction: " & runtimeEntities(i).TargetFactionID & _
+                    " | Spawn State: " & runtimeEntities(i).IsSpawned
+    Next i
+End Sub

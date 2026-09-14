@@ -1,0 +1,25 @@
+Function ReconcileBowerstoneEconomy(ByVal totalProperties As Integer, ByVal rentRate As Double) As String
+    Dim basePrice As Double
+    Dim totalMaintenance As Double
+    Dim inflationMultiplier As Double
+    Dim propertyIndex As Integer
+    Dim currentPropertyCost As Double
+    
+    basePrice = 1000.0
+    totalMaintenance = 0.0
+    
+    ' Calculate regional inflation based on rent settings
+    ' Higher rent increases global consumable costs
+    inflationMultiplier = 1.0 + (rentRate * 0.5)
+    
+    ' Loop through acquired properties to calculate cumulative maintenance with diminishing returns
+    For propertyIndex = 1 To totalProperties
+        ' Scale cost per property: each additional asset increases cost exponentially
+        currentPropertyCost = basePrice * (1.15 ^ (propertyIndex - 1))
+        totalMaintenance = totalMaintenance + (currentPropertyCost * 0.05)
+    Next propertyIndex
+    
+    ReconcileBowerstoneEconomy = "Total Properties: " & totalProperties & _
+                                " | Total Maintenance: " & Format(totalMaintenance, "0.00") & _
+                                " | Local Merchant Price Multiplier: " & Format(inflationMultiplier, "0.00") & "x"
+End Function

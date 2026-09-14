@@ -1,0 +1,52 @@
+Option Explicit
+
+' Structure representing raw asset data exported from editor/level files
+Type SpawnPointAsset
+    AssetID As String
+    NoiseThreshold As Double      ' Player noise level required to trigger spawn
+    SpawnCount As Long            ' Number of Hollow Men to spawn
+    IsReconciled As Boolean       ' Validation status
+End Type
+
+Sub ReconcileSoundBasedSpawns()
+    ' Engine constants defining code-level constraints
+    Const MIN_NOISE_THRESHOLD As Double = 10.0
+    Const MAX_NOISE_THRESHOLD As Double = 100.0
+    Const MAX_SPAWN_LIMIT As Long = 12
+    
+    Dim spawnAssets(1 To 4) As SpawnPointAsset
+    Dim i As Long
+    
+    ' Sample asset data loaded from level files
+    spawnAssets(1).AssetID = "SP_Grave_01": spawnAssets(1).NoiseThreshold = 5.0:  spawnAssets(1).SpawnCount = 5
+    spawnAssets(2).AssetID = "SP_Grave_02": spawnAssets(2).NoiseThreshold = 45.0: spawnAssets(2).SpawnCount = 8
+    spawnAssets(3).AssetID = "SP_Grave_03": spawnAssets(3).NoiseThreshold = 120.0: spawnAssets(3).SpawnCount = 20
+    spawnAssets(4).AssetID = "SP_Grave_04": spawnAssets(4).NoiseThreshold = 30.0: spawnAssets(4).SpawnCount = 0
+
+    ' --- Asset-to-Code Reconciliation Loop ---
+    For i = LBound(spawnAssets) To UBound(spawnAssets)
+        
+        ' 1. Clamp noise threshold to engine safety bounds
+        If spawnAssets(i).NoiseThreshold < MIN_NOISE_THRESHOLD Then
+            spawnAssets(i).NoiseThreshold = MIN_NOISE_THRESHOLD
+        ElseIf spawnAssets(i).NoiseThreshold > MAX_NOISE_THRESHOLD Then
+            spawnAssets(i).NoiseThreshold = MAX_NOISE_THRESHOLD
+        End If
+        
+        ' 2. Enforce maximum entity count per spawn trigger to prevent performance drops
+        If spawnAssets(i).SpawnCount > MAX_SPAWN_LIMIT Then
+            spawnAssets(i).SpawnCount = MAX_SPAWN_LIMIT
+        ElseIf spawnAssets(i).SpawnCount <= 0 Then
+            ' Default to minimum active count if asset value is invalid
+            spawnAssets(i).SpawnCount = 1
+        End If
+        
+        ' 3. Mark asset record as reconciled
+        spawnAssets(i).IsReconciled = True
+        
+        ' Verification output
+        Debug.Print "Reconciled " & spawnAssets(i).AssetID & _
+                    " -> Noise Threshold: " & spawnAssets(i).NoiseThreshold & _
+                    ", Spawn Count: " & spawnAssets(i).SpawnCount
+    Next i
+End Sub

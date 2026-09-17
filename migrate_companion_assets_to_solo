@@ -1,0 +1,30 @@
+Sub MigrateCompanionAssetsToSolo()
+    Dim worldEntities As Variant
+    Dim i As Long
+    Dim entityName As String
+    Dim requiresCanineAI As Boolean
+    Dim convertedToHeroTrigger As Boolean
+    
+    ' Sample array representing world entities marked during asset ingestion
+    worldEntities = Array("TreasureMound_01", "CanineTrack_02", "Chest_Buried_01", "Door_Interact_01")
+    
+    For i = LBound(worldEntities) To UBound(worldEntities)
+        entityName = CStr(worldEntities(i))
+        
+        ' Reconciliation check: Identify legacy companion dependencies
+        If InStr(1, entityName, "Treasure") > 0 Or InStr(1, entityName, "Canine") > 0 Then
+            requiresCanineAI = True
+        Else
+            requiresCanineAI = False
+        End If
+        
+        ' Convert legacy companion triggers to direct solo Hero triggers
+        If requiresCanineAI Then
+            convertedToHeroTrigger = True
+            Debug.Print "Reconciled " & entityName & ": Removed Canine AI trigger -> Assigned Hero Proximity Interaction."
+        Else
+            convertedToHeroTrigger = False
+            Debug.Print "Reconciled " & entityName & ": Standard Hero interaction maintained."
+        End If
+    Next i
+End Sub

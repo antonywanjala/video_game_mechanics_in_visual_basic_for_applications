@@ -1,0 +1,32 @@
+Public Sub loanSharkTriggers()
+    Dim assetDebts() As Variant
+    Dim heroDebts() As Double
+    Dim loanSharkTriggers() As Boolean
+    Dim i As Long
+    Dim currentDebt As Double
+    
+    ' Simulated incoming profile asset data from Fable II Pub Games save files
+    assetDebts = Array(0#, 1500#, -250#, 50000#, -12000#)
+    
+    ReDim heroDebts(LBound(assetDebts) To UBound(assetDebts))
+    ReDim loanSharkTriggers(LBound(assetDebts) To UBound(assetDebts))
+    
+    ' Asset-to-code reconciliation loop: Map and clamp external state into engine values
+    For i = LBound(assetDebts) To UBound(assetDebts)
+        currentDebt = CDbl(assetDebts(i))
+        
+        ' Reconcile negative debt balances: map external debt to positive character liability
+        If currentDebt < 0# Then
+            heroDebts(i) = Abs(currentDebt)
+        Else
+            heroDebts(i) = 0#
+        End If
+        
+        ' Reconcile loan shark spawn flags for severe debt thresholds (> 10,000 gold)
+        If heroDebts(i) >= 10000# Then
+            loanSharkTriggers(i) = True
+        Else
+            loanSharkTriggers(i) = False
+        End If
+    Next i
+End Sub

@@ -1,0 +1,50 @@
+Sub asset_reconciliation()
+    Dim assetIDs As Variant
+    Dim codeRegistry As Object
+    Dim assetIndex As Long
+    
+    Dim currentAssetID As String
+    Dim existsInCode As Boolean
+    Dim assetType As String
+    Dim isSmartGlassSecret As Boolean
+    Dim mapVisible As Boolean
+    Dim pingMobileApp As Boolean
+    
+    ' Simulated asset definitions from game engine payload
+    assetIDs = Array("KEY_01", "DIG_04", "CHEST_02", "MAP_NODE_12")
+    
+    ' Simulated code registry mapping asset IDs to properties
+    Set codeRegistry = CreateObject("Scripting.Dictionary")
+    codeRegistry.Add "KEY_01", "SilverKey"
+    codeRegistry.Add "DIG_04", "HiddenDigSpot"
+    codeRegistry.Add "CHEST_02", "StandardChest"
+    ' "MAP_NODE_12" is intentionally omitted to simulate an unlinked asset
+    
+    ' Loop executing asset-to-code reconciliation
+    For assetIndex = LBound(assetIDs) To UBound(assetIDs)
+        currentAssetID = CStr(assetIDs(assetIndex))
+        existsInCode = codeRegistry.Exists(currentAssetID)
+        
+        If existsInCode Then
+            assetType = CStr(codeRegistry.Item(currentAssetID))
+            
+            ' Determine visibility and second-screen trigger rules
+            If assetType = "SilverKey" Or assetType = "HiddenDigSpot" Then
+                isSmartGlassSecret = True
+                mapVisible = False        ' Hidden on TV main screen
+                pingMobileApp = True      ' Triggers SmartGlass mobile ping
+            Else
+                isSmartGlassSecret = False
+                mapVisible = True         ' Visible on primary display
+                pingMobileApp = False
+            End If
+            
+            Debug.Print "RECONCILED: Asset [" & currentAssetID & "] (" & assetType & ") -> MainMapVisible: " & mapVisible & " | SmartGlassPing: " & pingMobileApp
+        Else
+            ' Asset exists in art/level files but lacks code registration
+            Debug.Print "MISMATCH WARNING: Asset [" & currentAssetID & "] has no corresponding code registry mapping!"
+        End If
+    Next assetIndex
+    
+    Set codeRegistry = Nothing
+End Sub

@@ -1,0 +1,74 @@
+' VBA Asset-to-Code Reconciliation Loop for Fable "Arena Crowd-Meter"
+' Simulates crowd excitement decay, boredom penalties, and execution bonuses
+
+Public Sub ReconcileArenaCrowdMeter()
+    Dim totalWaves As Long
+    Dim i As Long
+    
+    ' Simulation State Variables
+    Dim crowdMeter As Double       ' Value bounded between 0.0 (Bored) and 100.0 (Max Excitement)
+    Dim goldMultiplier As Double   ' Current gold payout multiplier
+    Dim totalGoldEarned As Double  ' Accumulated gold reward
+    Dim totalRenownEarned As Double ' Accumulated renown burst points
+    
+    ' Mock Asset Input Parameters (reconciled against code execution logic)
+    Dim crowdDecayRate As Double
+    Dim boredomThreshold As Double
+    Dim executionBonus As Double
+    
+    crowdDecayRate = 12.5       ' Boredom decay per turn/action without dynamic combat
+    boredomThreshold = 25.0     ' Threshold below which booing & multiplier penalties activate
+    executionBonus = 35.0       ' Boost added by high-damage flourishes or spell chains
+    
+    ' Initial Baseline State
+    crowdMeter = 50.0
+    goldMultiplier = 1.0
+    totalGoldEarned = 0#
+    totalRenownEarned = 0#
+    totalWaves = 10
+    
+    ' Reconciliation Loop over Arena Waves
+    For i = 1 To totalWaves
+        ' Simulate player actions during the wave
+        ' Odd waves simulate defensive turtling/booing; Even waves simulate high-excitement executions
+        If i Mod 2 <> 0 Then
+            ' Player turtled behind shields / dragged combat out
+            crowdMeter = crowdMeter - crowdDecayRate
+        Else
+            ' Player landed a high-damage flourish / decapitation
+            crowdMeter = crowdMeter + executionBonus
+        End If
+        
+        ' Clamp Crowd Meter boundaries [0, 100]
+        If crowdMeter > 100.0 Then
+            crowdMeter = 100.0
+        ElseIf crowdMeter < 0.0 Then
+            crowdMeter = 0.0
+        End If
+        
+        ' Update multiplier and rewards based on crowd reaction
+        If crowdMeter < boredomThreshold Then
+            ' Crowd boos: Multiplier plummets
+            goldMultiplier = 0.5
+            Debug.Print "Wave " & i & ": Crowd Booing! Meter: " & crowdMeter & " | Gold Multiplier: " & goldMultiplier
+        ElseIf crowdMeter >= 90.0 Then
+            ' Max crowd excitement: Massive gold payout and Renown bursts
+            goldMultiplier = 3.0
+            totalRenownEarned = totalRenownEarned + 250.0
+            Debug.Print "Wave " & i & ": Audience Screaming Title! Meter: " & crowdMeter & " | Gold Multiplier: " & goldMultiplier & " | Renown Burst!"
+        Else
+            ' Neutral combat state
+            goldMultiplier = 1.0
+            Debug.Print "Wave " & i & ": Steady Combat. Meter: " & crowdMeter & " | Gold Multiplier: " & goldMultiplier
+        End If
+        
+        ' Accumulate earnings for the wave
+        totalGoldEarned = totalGoldEarned + (100.0 * goldMultiplier)
+    Next i
+    
+    ' Print Summary Results
+    Debug.Print "--- Reconciliation Summary ---"
+    Debug.Print "Final Crowd Meter: " & crowdMeter
+    Debug.Print "Total Gold Earned: " & totalGoldEarned
+    Debug.Print "Total Renown Earned: " & totalRenownEarned
+End Sub

@@ -1,0 +1,51 @@
+Public Sub ReconcileAnatomicalCombatAssets()
+    Dim i As Long
+    Dim totalAssets As Long
+    Dim currentAssetID As String
+    Dim targetEntityID As String
+    Dim hitLocation As String
+    Dim damageAmount As Double
+    Dim currentHealth As Double
+    Dim MobilityState As String
+    Dim AIBehaviorState As String
+    
+    ' Simulated asset manifest count containing dismemberment and hit-box data
+    totalAssets = 100
+    
+    For i = 1 To totalAssets
+        ' 1. Read / Extract Asset Properties
+        currentAssetID = "AST_COMBAT_" & CStr(i)
+        targetEntityID = "ENT_SKELETON_" & CStr(i)
+        hitLocation = "Knee_Joint_Left"
+        damageAmount = 45.5
+        currentHealth = 100.0
+        
+        ' 2. Reconcile Hit Location & Structural Dismemberment Logic
+        If hitLocation = "Knee_Joint_Left" Or hitLocation = "Knee_Joint_Right" Then
+            If damageAmount > 30.0 Then
+                MobilityState = "Crippled_Crawling"
+                AIBehaviorState = "TargetedDisability_CrawlToPlayer"
+            Else
+                MobilityState = "Limping"
+                AIBehaviorState = "Standard_Aggressive"
+            End If
+        ElseIf hitLocation = "Head_Skull" Then
+            If damageAmount >= currentHealth Or damageAmount > 75.0 Then
+                MobilityState = "Decapitated_Severed"
+                AIBehaviorState = "Blind_Fire_Random"
+            Else
+                MobilityState = "Stunned"
+                AIBehaviorState = "Standard_Aggressive"
+            End If
+        Else
+            MobilityState = "Intact"
+            AIBehaviorState = "Standard_Aggressive"
+        End If
+        
+        ' 3. Reconcile Code State Back to Data Buffer / Log Output
+        Debug.Print "Reconciled Asset: " & currentAssetID & _
+                    " | Entity: " & targetEntityID & _
+                    " | New Mobility: " & MobilityState & _
+                    " | New AI State: " & AIBehaviorState
+    Next i
+End Sub

@@ -1,0 +1,69 @@
+Public Type ProjectileAsset
+    ProjectileID As String
+    ProjectileType As String ' "Arrow", "Bolt", "BossSpell"
+    RequiredSkillLevel As Integer
+    ParryWindowFrames As Integer
+End Type
+
+Public Function ReconcileParryMechanic( _
+    ByRef Assets() As ProjectileAsset, _
+    ByVal PlayerSkillLevel As Integer, _
+    ByVal InputTimingFrame As Integer _
+) As String()
+
+    Dim TotalAssets As Long
+    TotalAssets = UBound(Assets) - LBound(Assets) + 1
+    
+    Dim Results() As String
+    ReDim Results(1 To TotalAssets)
+    
+    Dim i As Long
+    For i = LBound(Assets) To UBound(Assets)
+        Dim currentAsset As ProjectileAsset
+        currentAsset = Assets(i)
+        
+        ' Reconciliation check: Assess skill requirement and timing window
+        If PlayerSkillLevel >= currentAsset.RequiredSkillLevel Then
+            If InputTimingFrame <= currentAsset.ParryWindowFrames Then
+                Results(i) = "Asset " & currentAsset.ProjectileID & " [" & currentAsset.ProjectileType & "]: RECONCILED -> STATE_PARRIED_CATCH"
+            Else
+                Results(i) = "Asset " & currentAsset.ProjectileID & " [" & currentAsset.ProjectileType & "]: RECONCILED -> STATE_TIMING_FAILED"
+            End If
+        Else
+            Results(i) = "Asset " & currentAsset.ProjectileID & " [" & currentAsset.ProjectileType & "]: RECONCILED -> STATE_SKILL_TOO_LOW"
+        End If
+    Next i
+    
+    ReconcileParryMechanic = Results
+End Function
+
+Public Sub TestReconciliationLoop()
+    Dim Projectiles(1 To 3) As ProjectileAsset
+    
+    ' Asset 1: Standard Arrow
+    Projectiles(1).ProjectileID = "PRJ_001"
+    Projectiles(1).ProjectileType = "Arrow"
+    Projectiles(1).RequiredSkillLevel = 1
+    Projectiles(1).ParryWindowFrames = 10
+    
+    ' Asset 2: Crossbow Bolt
+    Projectiles(2).ProjectileID = "PRJ_002"
+    Projectiles(2).ProjectileType = "Bolt"
+    Projectiles(2).RequiredSkillLevel = 2
+    Projectiles(2).ParryWindowFrames = 6
+    
+    ' Asset 3: Boss Spell
+    Projectiles(3).ProjectileID = "PRJ_BOSS_01"
+    Projectiles(3).ProjectileType = "BossSpell"
+    Projectiles(3).RequiredSkillLevel = 5
+    Projectiles(3).ParryWindowFrames = 4
+    
+    ' Simulate player with Skill Level 5 reacting at Frame 5
+    Dim Outcomes() As String
+    Outcomes = ReconcileParryMechanic(Projectiles, PlayerSkillLevel:=5, InputTimingFrame:=5)
+    
+    Dim j As Long
+    For j = LBound(Outcomes) To UBound(Outcomes)
+        Debug.Print Outcomes(j)
+    Next j
+End Sub

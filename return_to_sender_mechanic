@@ -1,0 +1,32 @@
+Sub ReconcileReturnToSenderMechanic()
+    ' Array of registered projectile assets to reconcile
+    Dim projectileAssets As Variant
+    projectileAssets = Array("Arrow_Physical", "Bolt_Crossbow", "Spell_DirectedMagic", "Spell_BossDeflection")
+    
+    ' Reconciliation state tracking
+    Dim assetIndex As Long
+    Dim currentAsset As String
+    Dim isCatchable As Boolean
+    Dim deflectionPowerMultiplier As Double
+    Dim logOutput As String
+    
+    ' Asset-to-code reconciliation loop
+    For assetIndex = LBound(projectileAssets) To UBound(projectileAssets)
+        currentAsset = projectileAssets(assetIndex)
+        
+        ' Reconcile asset properties into code parameters
+        If InStr(currentAsset, "Boss") > 0 Then
+            isCatchable = True
+            deflectionPowerMultiplier = 2.5 ' High burst damage output
+        Else
+            isCatchable = True
+            deflectionPowerMultiplier = 1.0 ' Standard redirection
+        End If
+        
+        ' Apply frame-window counter logic and velocity inversion
+        If isCatchable Then
+            logOutput = "Reconciled [" & currentAsset & "]: Mid-Air Catch Enabled | Deflection Multiplier: " & CStr(deflectionPowerMultiplier) & "x"
+            Debug.Print logOutput
+        End If
+    Next assetIndex
+End Sub

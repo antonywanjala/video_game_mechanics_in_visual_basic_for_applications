@@ -1,0 +1,40 @@
+Sub ReconcileDismembermentMechanic()
+    Dim enemyStates As Variant
+    Dim i As Long
+    Dim limbID As String
+    Dim remainingHealth As Double
+    Dim currentBehavior As String
+    Dim statusOutput As String
+    
+    ' Array representing asset entries: (Limb Target, Initial Health %, Damage Dealt)
+    enemyStates = Array( _
+        Array("Head", 100#, 100#), _
+        Array("Left Leg", 100#, 100#), _
+        Array("Right Arm", 100#, 40#), _
+        Array("Torso", 100#, 10#) _
+    )
+    
+    ' Loop executing asset-to-code reconciliation
+    For i = LBound(enemyStates) To UBound(enemyStates)
+        limbID = CStr(enemyStates(i)(0))
+        remainingHealth = CDbl(enemyStates(i)(1)) - CDbl(enemyStates(i)(2))
+        
+        If remainingHealth <= 0 Then
+            Select Case UCase(limbID)
+                Case "HEAD"
+                    currentBehavior = "Blind Flailing / Random Targeting"
+                Case "LEFT LEG", "RIGHT LEG"
+                    currentBehavior = "Prone Crawling / Desperate Pursuit"
+                Case Else
+                    currentBehavior = "Standard Aggression (Limb Severed)"
+            End Select
+        Else
+            currentBehavior = "Standard Combat AI"
+        End If
+        
+        statusOutput = "Asset Reconciled: " & limbID & " | Remaining Integrity: " & _
+                       CStr(remainingHealth) & "% | Behavioral State: " & currentBehavior
+        
+        Debug.Print statusOutput
+    Next i
+End Sub

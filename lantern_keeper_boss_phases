@@ -1,0 +1,56 @@
+Sub ReconcileLanternKeeperBossPhases()
+    ' Structure representing boss asset states during code reconciliation
+    Type BossAsset
+        BossID As String
+        Health As Double
+        CurrentPhase As Integer
+        IsAirborne As Boolean
+        UnblockableFireActive As Boolean
+        SummonedHollowFolkCount As Integer
+    End Type
+
+    ' Sample array of boss entity assets
+    Dim BossRegistry(1 To 3) As BossAsset
+    Dim i As Integer
+
+    ' Initialize test boss instances from game data
+    BossRegistry(1).BossID = "LK_001"
+    BossRegistry(1).Health = 0#          ' Defeated in Phase 1, ready for Phase 2 transition
+    BossRegistry(1).CurrentPhase = 1
+    BossRegistry(1).IsAirborne = False
+    BossRegistry(1).UnblockableFireActive = False
+    BossRegistry(1).SummonedHollowFolkCount = 0
+
+    BossRegistry(2).BossID = "LK_002"
+    BossRegistry(2).Health = 75.5        ' Still active in Phase 1
+    BossRegistry(2).CurrentPhase = 1
+    BossRegistry(2).IsAirborne = False
+    BossRegistry(2).UnblockableFireActive = False
+    BossRegistry(2).SummonedHollowFolkCount = 0
+
+    BossRegistry(3).BossID = "LK_003"
+    BossRegistry(3).Health = 40.0        ' Already in Phase 2
+    BossRegistry(3).CurrentPhase = 2
+    BossRegistry(3).IsAirborne = True
+    BossRegistry(3).UnblockableFireActive = True
+    BossRegistry(3).SummonedHollowFolkCount = 4
+
+    ' Asset-to-code reconciliation loop
+    For i = LBound(BossRegistry) To UBound(BossRegistry)
+        ' Check if Phase 1 boss health is depleted to trigger multi-stage phase transition
+        If BossRegistry(i).Health <= 0# And BossRegistry(i).CurrentPhase = 1 Then
+            ' Transition to secondary airborne phase
+            BossRegistry(i).CurrentPhase = 2
+            BossRegistry(i).Health = 100# ' Reset health pool for Phase 2
+            BossRegistry(i).IsAirborne = True
+            BossRegistry(i).UnblockableFireActive = True
+            BossRegistry(i).SummonedHollowFolkCount = 4 ' Summon additional wave of Hollow Folk
+            
+            Debug.Print "Reconciled " & BossRegistry(i).BossID & ": Phase 2 activated (Airborne mode & Hollow Folk wave spawned)."
+        ElseIf BossRegistry(i).CurrentPhase = 2 Then
+            Debug.Print "Reconciled " & BossRegistry(i).BossID & ": Retaining Phase 2 airborne tactical mechanics."
+        Else
+            Debug.Print "Reconciled " & BossRegistry(i).BossID & ": Remaining in Phase 1 ground combat mode."
+        End If
+    Next i
+End Sub

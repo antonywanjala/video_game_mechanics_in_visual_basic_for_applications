@@ -1,0 +1,35 @@
+Sub ReconcileBusinessMechanicAssets()
+    ' Array representing asset-derived property and NPC manager traits
+    Dim properties(1 To 3, 1 To 3) As Variant
+    
+    ' Property ID, Base Yield, Assigned NPC Trait
+    properties(1, 1) = "Farm_01": properties(1, 2) = 100: properties(1, 3) = "hard-working"
+    properties(2, 1) = "Blacksmith_01": properties(2, 2) = 250: properties(2, 3) = "lazy"
+    properties(3, 1) = "Tavern_01": properties(3, 2) = 180: properties(3, 3) = "hard-working"
+    
+    Dim i As Long
+    Dim baseYield As Double
+    Dim trait As String
+    Dim traitSynergyMultiplier As Double
+    Dim reconciledFinalYield As Double
+    
+    ' Reconciliation loop: process asset properties into game-state code values
+    For i = LBound(properties, 1) To UBound(properties, 1)
+        baseYield = CDbl(properties(i, 2))
+        trait = CStr(properties(i, 3))
+        
+        ' Apply trait synergy rule (20% boost for "hard-working")
+        If LCase(trait) = "hard-working" Then
+            traitSynergyMultiplier = 1.2
+        Else
+            traitSynergyMultiplier = 1.0
+        End If
+        
+        reconciledFinalYield = baseYield * traitSynergyMultiplier
+        
+        Debug.Print "Asset: " & properties(i, 1) & _
+                    " | Trait: " & trait & _
+                    " | Base Yield: " & baseYield & _
+                    " | Reconciled Yield: " & reconciledFinalYield
+    Next i
+End Sub

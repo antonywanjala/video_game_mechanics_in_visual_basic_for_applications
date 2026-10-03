@@ -1,0 +1,44 @@
+Sub ReconcileBusinessMechanics()
+    Dim businessCount As Long
+    Dim i As Long
+    
+    ' Simulated count of business assets to reconcile
+    businessCount = 5
+    
+    ' Arrays representing asset properties: Base Profit, Trait Flag (1 = Hard-Working, 0 = Standard)
+    Dim baseProfits() As Variant
+    Dim hasHardWorkingTrait() As Variant
+    Dim reconciledProfits() As Double
+    
+    ReDim baseProfits(1 To businessCount)
+    ReDim hasHardWorkingTrait(1 To businessCount)
+    ReDim reconciledProfits(1 To businessCount)
+    
+    ' Sample asset data initialization
+    baseProfits(1) = 1000: hasHardWorkingTrait(1) = 1  ' Farm with Hard-Working NPC
+    baseProfits(2) = 2500: hasHardWorkingTrait(2) = 0  ' Blacksmith with Standard NPC
+    baseProfits(3) = 800:  hasHardWorkingTrait(3) = 1  ' Farm with Hard-Working NPC
+    baseProfits(4) = 1500: hasHardWorkingTrait(4) = 0  ' Tavern with Standard NPC
+    baseProfits(5) = 3000: hasHardWorkingTrait(5) = 1  ' General Store with Hard-Working NPC
+    
+    ' Asset-to-Code Reconciliation Loop
+    For i = 1 To businessCount
+        Dim baseValue As Double
+        Dim traitMultiplier As Double
+        
+        baseValue = CDbl(baseProfits(i))
+        
+        ' Evaluate Trait Synergy (20% bonus for Hard-Working trait)
+        If hasHardWorkingTrait(i) = 1 Then
+            traitMultiplier = 1.20
+        Else
+            traitMultiplier = 1.00
+        End If
+        
+        ' Calculate reconciled output value
+        reconciledProfits(i) = baseValue * traitMultiplier
+        
+        ' Output reconciliation result
+        Debug.Print "Asset ID " & i & " Reconciled Profit: " & reconciledProfits(i)
+    Next i
+End Sub

@@ -1,0 +1,51 @@
+Sub ReconcileFableLegendModeAssets()
+    Dim assetCount As Long
+    Dim i As Long
+    
+    Dim assetEnemyHealthMultiplier() As Double
+    Dim assetDamageOutputMultiplier() As Double
+    Dim assetSpellCooldownMultiplier() As Double
+    Dim assetReconciled() As Boolean
+    
+    Dim codeEnemyHealthMultiplier As Double
+    Dim codeDamageOutputMultiplier As Double
+    Dim codeSpellCooldownMultiplier As Double
+    
+    ' Target Code Baselines for Fable "Legend Mode"
+    codeEnemyHealthMultiplier = 2.5
+    codeDamageOutputMultiplier = 1.75
+    codeSpellCooldownMultiplier = 0.8
+    
+    ' Simulated asset entries requiring reconciliation
+    assetCount = 5
+    ReDim assetEnemyHealthMultiplier(1 To assetCount)
+    ReDim assetDamageOutputMultiplier(1 To assetCount)
+    ReDim assetSpellCooldownMultiplier(1 To assetCount)
+    ReDim assetReconciled(1 To assetCount)
+    
+    ' Initializing mock asset values from raw file offsets
+    assetEnemyHealthMultiplier(1) = 1.0: assetDamageOutputMultiplier(1) = 1.0: assetSpellCooldownMultiplier(1) = 1.0
+    assetEnemyHealthMultiplier(2) = 2.5: assetDamageOutputMultiplier(2) = 1.75: assetSpellCooldownMultiplier(2) = 0.8
+    assetEnemyHealthMultiplier(3) = 2.0: assetDamageOutputMultiplier(3) = 1.5: assetSpellCooldownMultiplier(3) = 1.0
+    assetEnemyHealthMultiplier(4) = 2.5: assetDamageOutputMultiplier(4) = 1.75: assetSpellCooldownMultiplier(4) = 0.8
+    assetEnemyHealthMultiplier(5) = 1.2: assetDamageOutputMultiplier(5) = 1.0: assetSpellCooldownMultiplier(5) = 0.9
+    
+    ' Reconciliation Loop: Partial Decompression & Offset Alignment
+    For i = 1 To assetCount
+        If assetEnemyHealthMultiplier(i) <> codeEnemyHealthMultiplier Or _
+           assetDamageOutputMultiplier(i) <> codeDamageOutputMultiplier Or _
+           assetSpellCooldownMultiplier(i) <> codeSpellCooldownMultiplier Then
+            
+            ' Align asset parameters directly at target byte offsets
+            assetEnemyHealthMultiplier(i) = codeEnemyHealthMultiplier
+            assetDamageOutputMultiplier(i) = codeDamageOutputMultiplier
+            assetSpellCooldownMultiplier(i) = codeSpellCooldownMultiplier
+            
+            assetReconciled(i) = True
+            Debug.Print "Asset Offset Node " & i & ": Successfully reconciled to Legend Mode baselines."
+        Else
+            assetReconciled(i) = True
+            Debug.Print "Asset Offset Node " & i & ": Already aligned with Legend Mode."
+        End If
+    Next i
+End Sub

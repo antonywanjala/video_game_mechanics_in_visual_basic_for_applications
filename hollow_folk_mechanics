@@ -1,0 +1,36 @@
+Public Sub ReconcileHollowFolkMechanics()
+    ' Array representing body segments: 0 = Head, 1 = Torso (Armored), 2 = Left Arm, 3 = Right Arm
+    Dim bodySegments(0 To 3) As String
+    Dim isArmored(0 To 3) As Boolean
+    Dim isDismembered(0 To 3) As Boolean
+    
+    ' Initialization of asset properties
+    bodySegments(0) = "Head":       isArmored(0) = False
+    bodySegments(1) = "Torso":      isArmored(1) = True
+    bodySegments(2) = "Left Arm":   isArmored(2) = False
+    bodySegments(3) = "Right Arm":  isArmored(3) = False
+    
+    Dim attackType As String
+    Dim targetIndex As Integer
+    Dim i As Integer
+    
+    ' Simulated reconciliation parameters
+    attackType = "Ranged" ' Options: "Ranged", "Melee", "Magic"
+    targetIndex = 2       ' Targeting Left Arm
+    
+    ' For Loop: Reconciling limb armor and dismemberment states
+    For i = LBound(bodySegments) To UBound(bodySegments)
+        If i = targetIndex Then
+            ' Rule 1: Armored variants/parts are immune to ranged attacks
+            If isArmored(i) And attackType = "Ranged" Then
+                Debug.Print "Asset State [ " & bodySegments(i) & " ]: Ranged attack deflected by armor! Force Melee or Magic."
+            Else
+                ' Rule 2: Unarmored parts dismantle on hit, but combat state remains active
+                isDismembered(i) = True
+                Debug.Print "Asset State [ " & bodySegments(i) & " ]: Dismembered! Mesh detached. Entity combat behavior remains active."
+            End If
+        Else
+            Debug.Print "Asset State [ " & bodySegments(i) & " ]: Intact."
+        End If
+    Next i
+End Sub

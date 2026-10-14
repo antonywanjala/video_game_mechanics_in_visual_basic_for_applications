@@ -1,0 +1,74 @@
+Option Explicit
+
+' Structure representing a combat action asset in the Style-Weaving chain
+Public Type StyleWeaveAsset
+    ActionID As String          ' e.g., "SW_SWORD_SLASH", "SW_BOW_SHOT", "SW_FIREBALL"
+    ActionType As String        ' "Melee", "Ranged", "Magic"
+    Damage As Double            ' Base damage from asset
+    CancelWindowStart As Double ' Frame/time when next action can weave in
+    CancelWindowEnd As Double   ' End of the seamless combo window
+    IsReconciled As Boolean     ' Reconciliation flag
+End Type
+
+' Structure representing the compiled runtime combat state
+Public Type CompiledCombatState
+    ActionID As String
+    ActionType As String
+    EffectiveDamage As Double
+    CanChainSeamlessly As Boolean
+End Type
+
+' Main procedure: Performs asset-to-code reconciliation for Style-Weaving
+Public Sub ReconcileStyleWeavingMechanic()
+    Dim rawAssets(0 To 2) As StyleWeaveAsset
+    Dim compiledStates(0 To 2) As CompiledCombatState
+    Dim i As Long
+    
+    ' 1. Populate raw asset data simulating asset pipeline output
+    rawAssets(0).ActionID = "SW_SWORD_SLASH"
+    rawAssets(0).ActionType = "Melee"
+    rawAssets(0).Damage = 45.0
+    rawAssets(0).CancelWindowStart = 0.2
+    rawAssets(0).CancelWindowEnd = 0.5
+    rawAssets(0).IsReconciled = False
+    
+    rawAssets(1).ActionID = "SW_BOW_SHOT"
+    rawAssets(1).ActionType = "Ranged"
+    rawAssets(1).Damage = 35.0
+    rawAssets(1).CancelWindowStart = 0.15
+    rawAssets(1).CancelWindowEnd = 0.45
+    rawAssets(1).IsReconciled = False
+    
+    rawAssets(2).ActionID = "SW_FIREBALL"
+    rawAssets(2).ActionType = "Magic"
+    rawAssets(2).Damage = 80.0
+    rawAssets(2).CancelWindowStart = 0.3
+    rawAssets(2).CancelWindowEnd = 0.7
+    rawAssets(2).IsReconciled = False
+
+    ' 2. Reconciliation Loop: Convert raw assets to runtime combat chain states
+    For i = LBound(rawAssets) To UBound(rawAssets)
+        ' Copy core identifiers
+        compiledStates(i).ActionID = rawAssets(i).ActionID
+        compiledStates(i).ActionType = rawAssets(i).ActionType
+        
+        ' Validate fluid chain timing: Action can weave if cancel window exists
+        If rawAssets(i).CancelWindowEnd > rawAssets(i).CancelWindowStart And rawAssets(i).CancelWindowStart > 0 Then
+            compiledStates(i).CanChainSeamlessly = True
+            ' Apply combo weave multiplier for valid fluid transitions
+            compiledStates(i).EffectiveDamage = rawAssets(i).Damage * 1.15
+        Else
+            compiledStates(i).CanChainSeamlessly = False
+            compiledStates(i).EffectiveDamage = rawAssets(i).Damage
+        End If
+        
+        ' Mark asset as successfully reconciled
+        rawAssets(i).IsReconciled = True
+        
+        ' Output reconciliation results
+        Debug.Print "Reconciled Asset [" & rawAssets(i).ActionID & "] -> Type: " & _
+                    compiledStates(i).ActionType & " | Effective Damage: " & _
+                    compiledStates(i).EffectiveDamage & " | Fluid Weave Active: " & _
+                    compiledStates(i).CanChainSeamlessly
+    Next i
+End Sub

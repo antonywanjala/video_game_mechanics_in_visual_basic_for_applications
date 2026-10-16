@@ -1,0 +1,42 @@
+Public Sub ReconcileAndExecuteWraithMechanic()
+    Dim MaxHollowFolkSpawns As Long
+    Dim PhaseTwoHealthThreshold As Double
+    Dim CurrentHollowFolkCount As Long
+    Dim WraithActive As Boolean
+    Dim SecondaryPhaseTriggered As Boolean
+    Dim AssetReconciled As Boolean
+    
+    ' Asset-to-Code Reconciliation Step
+    ' Simulates extracting reconciled properties from the partial-compression data stream
+    MaxHollowFolkSpawns = 3
+    PhaseTwoHealthThreshold = 0.0
+    AssetReconciled = True
+    
+    If Not AssetReconciled Then
+        Exit Sub
+    End If
+    
+    ' Phase 1: Wraith active, actively spawning and inhabiting Hollow Folk
+    WraithActive = True
+    CurrentHollowFolkCount = 0
+    SecondaryPhaseTriggered = False
+    
+    Do While CurrentHollowFolkCount < MaxHollowFolkSpawns
+        CurrentHollowFolkCount = CurrentHollowFolkCount + 1
+        ' Execute spawn logic for Hollow Folk inhabitant
+    Loop
+    
+    ' Combat Loop: Player defeats all spawned Hollow Folk
+    Do While CurrentHollowFolkCount > 0
+        CurrentHollowFolkCount = CurrentHollowFolkCount - 1
+    Loop
+    
+    ' Phase 2: Secondary Combat Phase Emergence
+    ' Wraith pops out for direct combat after skeleton hosts are destroyed
+    If CurrentHollowFolkCount = 0 And Not SecondaryPhaseTriggered Then
+        SecondaryPhaseTriggered = True
+        ' Execute Wraith secondary emergence phase
+    End If
+    
+    WraithActive = False
+End Sub

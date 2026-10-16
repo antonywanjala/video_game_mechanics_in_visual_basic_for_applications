@@ -1,0 +1,53 @@
+Sub ReconcileFableDefensiveMechanics()
+    Dim DefensiveFrameWindows As Variant
+    Dim i As Long
+    Dim FrameWindowStart As Long
+    Dim FrameWindowEnd As Long
+    Dim MechanicType As String
+    Dim IsReconciled As Boolean
+    Dim LogRow As Long
+    
+    ' Array representing asset combat timing windows: (Type, Start Frame, End Frame)
+    DefensiveFrameWindows = Array( _
+        Array("Directional Dodge", 4, 12), _
+        Array("Timed Parry", 10, 15), _
+        Array("Counterattack Vulnerability", 16, 24), _
+        Array("Contextual Block", 1, 20) _
+    )
+    
+    LogRow = 2
+    ThisWorkbook.Sheets(1).Cells(1, 1).Value = "Mechanic Type"
+    ThisWorkbook.Sheets(1).Cells(1, 2).Value = "Start Frame"
+    ThisWorkbook.Sheets(1).Cells(1, 3).Value = "End Frame"
+    ThisWorkbook.Sheets(1).Cells(1, 4).Value = "Reconciliation Status"
+    
+    ' Iterate through combat mechanics for asset-to-code validation
+    For i = LBound(DefensiveFrameWindows) To UBound(DefensiveFrameWindows)
+        MechanicType = DefensiveFrameWindows(i)(0)
+        FrameWindowStart = DefensiveFrameWindows(i)(1)
+        FrameWindowEnd = DefensiveFrameWindows(i)(2)
+        
+        ' Validate window parameters against target engine runtime constraints (60 FPS baseline)
+        If FrameWindowStart >= 0 And FrameWindowEnd > FrameWindowStart And FrameWindowEnd <= 60 Then
+            IsReconciled = True
+        Else
+            IsReconciled = False
+        End If
+        
+        ' Commit reconciled state to the spreadsheet registry
+        With ThisWorkbook.Sheets(1)
+            .Cells(LogRow, 1).Value = MechanicType
+            .Cells(LogRow, 2).Value = FrameWindowStart
+            .Cells(LogRow, 3).Value = FrameWindowEnd
+            If IsReconciled Then
+                .Cells(LogRow, 4).Value = "RECONCILED - VALID"
+            Else
+                .Cells(LogRow, 4).Value = "RECONCILED - OUT OF BOUNDS"
+            End If
+        End With
+        
+        LogRow = LogRow + 1
+    Next i
+    
+    MsgBox "Defensive mechanics asset-to-code reconciliation complete.", vbInformation, "Reconciliation Success"
+End Sub

@@ -1,0 +1,58 @@
+Public Sub ReconcileDefensiveDepthMechanics()
+    ' Represents Fable Defensive Depth mechanic timing data reconciled from asset manifests
+    Dim frameData As Variant
+    Dim reconciledStatus() As String
+    Dim i As Long
+    Dim arraySize As Long
+    
+    ' Dynamic frame data array: [FrameIndex, DefensiveType (1=Block, 2=Dodge, 3=Counter), TimingWindowMS]
+    frameData = Array( _
+        Array(12, 1, 150), _
+        Array(18, 2, 300), _
+        Array(25, 3, 80), _
+        Array(40, 1, 200), _
+        Array(52, 3, 65) _
+    )
+    
+    arraySize = UBound(frameData) - LBound(frameData) + 1
+    ReDim reconciledStatus(1 To arraySize)
+    
+    ' Asset-to-code reconciliation loop over frame timings
+    For i = LBound(frameData) To UBound(frameData)
+        Dim frameNum As Long
+        Dim defenseType As Long
+        Dim timingMs As Long
+        Dim mechanicName As String
+        Dim isOptimal As Boolean
+        
+        frameNum = frameData(i)(0)
+        defenseType = frameData(i)(1)
+        timingMs = frameData(i)(2)
+        
+        Select Case defenseType
+            Case 1
+                mechanicName = "Real-Time Block"
+                isOptimal = (timingMs >= 100 And timingMs <= 250)
+            Case 2
+                mechanicName = "Dodge Roll"
+                isOptimal = (timingMs >= 200 And timingMs <= 400)
+            Case 3
+                mechanicName = "Counterattack Parry"
+                isOptimal = (timingMs >= 50 And timingMs <= 100)
+            Case Else
+                mechanicName = "Unknown Mechanic"
+                isOptimal = False
+        End Select
+        
+        If isOptimal Then
+            reconciledStatus(i + 1) = "Frame " & frameNum & " [" & mechanicName & "]: Reconciled - Valid Timing (" & timingMs & "ms)"
+        Else
+            reconciledStatus(i + 1) = "Frame " & frameNum & " [" & mechanicName & "]: Reconciled - Timing Window Flagged for Adjustment (" & timingMs & "ms)"
+        End If
+    Next i
+    
+    ' Output reconciled results
+    For i = 1 To UBound(reconciledStatus)
+        Debug.Print reconciledStatus(i)
+    Next i
+End Sub

@@ -1,0 +1,79 @@
+' ==============================================================================
+' Module: FableCombatReconciliation.bas
+' Purpose: Reconcile combat asset definitions (timing windows) against game code rules
+' Repository: local::combat-engine/reconciliation/vba
+' ==============================================================================
+Option Explicit
+
+Public Type CombatAsset
+    AssetID As String
+    AnimationName As String
+    TotalFrames As Long
+    BlockWindowStart As Long
+    BlockWindowEnd As Long
+    CounterWindowStart As Long
+    CounterWindowEnd As Long
+    IsReconciled As Boolean
+End Type
+
+Public Sub ReconcileFableCombatAssets()
+    Dim assetList(0 To 2) As CombatAsset
+    Dim i As Long
+    Dim minParryDuration As Long
+    Dim maxAnimDuration As Long
+    
+    ' Engine rule constants
+    minParryDuration = 4       ' Minimum frames required for responsive counter
+    maxAnimDuration = 60       ' Max standard frame cap for flourish transitions
+    
+    ' Sample asset definitions exported from animation pipeline
+    assetList(0).AssetID = "AST_SWORD_BLOCK_01"
+    assetList(0).AnimationName = "flourish_parry_riposte"
+    assetList(0).TotalFrames = 48
+    assetList(0).BlockWindowStart = 6
+    assetList(0).BlockWindowEnd = 16
+    assetList(0).CounterWindowStart = 10
+    assetList(0).CounterWindowEnd = 15
+    assetList(0).IsReconciled = False
+    
+    assetList(1).AssetID = "AST_HAMMER_DEF_02"
+    assetList(1).AnimationName = "heavy_block_brace"
+    assetList(1).TotalFrames = 64
+    assetList(1).BlockWindowStart = 12
+    assetList(1).BlockWindowEnd = 28
+    assetList(1).CounterWindowStart = 20
+    assetList(1).CounterWindowEnd = 22
+    assetList(1).IsReconciled = False
+    
+    assetList(2).AssetID = "AST_DAGGER_EVADE_01"
+    assetList(2).AnimationName = "dodge_counter_roll"
+    assetList(2).TotalFrames = 36
+    assetList(2).BlockWindowStart = 2
+    assetList(2).BlockWindowEnd = 14
+    assetList(2).CounterWindowStart = 8
+    assetList(2).CounterWindowEnd = 13
+    assetList(2).IsReconciled = False
+
+    ' Asset-to-code reconciliation loop
+    For i = LBound(assetList) To UBound(assetList)
+        Dim counterSpan As Long
+        counterSpan = assetList(i).CounterWindowEnd - assetList(i).CounterWindowStart
+        
+        ' Rule 1: Counter window must fit inside total animation frames
+        ' Rule 2: Counter window must meet minimum frame length for player reaction
+        ' Rule 3: Animation duration must not exceed max engine ceiling
+        If (assetList(i).CounterWindowEnd <= assetList(i).TotalFrames) And _
+           (counterSpan >= minParryDuration) And _
+           (assetList(i).TotalFrames <= maxAnimDuration) Then
+            
+            assetList(i).IsReconciled = True
+            Debug.Print "[PASS] Asset " & assetList(i).AssetID & " (" & _
+                        assetList(i).AnimationName & ") reconciled successfully. Window: " & _
+                        counterSpan & " frames."
+        Else
+            assetList(i).IsReconciled = False
+            Debug.Print "[FAIL] Asset " & assetList(i).AssetID & " (" & _
+                        assetList(i).AnimationName & ") validation error. Flagged for review."
+        End If
+    Next i
+End Sub

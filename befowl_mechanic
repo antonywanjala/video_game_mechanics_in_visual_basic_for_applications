@@ -1,0 +1,78 @@
+Option Explicit
+
+Public Type ActorAsset
+    AssetGUID As String
+    OriginalType As String
+    RuntimeSpell As String
+    ResolvedMesh As String
+    ColliderScale As Double
+    IsReconciled As Boolean
+End Type
+
+Public Sub ReconcileFableBefowlMechanic()
+    Dim assetManifest() As ActorAsset
+    Dim totalActors As Long
+    Dim i As Long
+    
+    ' Sample scene manifest count
+    totalActors = 4
+    ReDim assetManifest(1 To totalActors)
+    
+    ' Populate sample raw assets
+    assetManifest(1).AssetGUID = "ACT_001": assetManifest(1).OriginalType = "Bandit": assetManifest(1).RuntimeSpell = "None"
+    assetManifest(2).AssetGUID = "ACT_002": assetManifest(2).OriginalType = "Bandit": assetManifest(2).RuntimeSpell = "Befowl"
+    assetManifest(3).AssetGUID = "ACT_003": assetManifest(3).OriginalType = "Skeleton": assetManifest(3).RuntimeSpell = "Befowl"
+    assetManifest(4).AssetGUID = "ACT_004": assetManifest(4).OriginalType = "Hobbe": assetManifest(4).RuntimeSpell = "Lift"
+    
+    ' --- Asset-to-Code Reconciliation Loop ---
+    For i = LBound(assetManifest) To UBound(assetManifest)
+        If assetManifest(i).RuntimeSpell = "Befowl" Then
+            ' Check for inherited legacy state tags
+            If StrComp(assetManifest(i).OriginalType, "Skeleton", vbTextCompare) = 0 Then
+                assetManifest(i).ResolvedMesh = "SK_Chicken_Undead.fbx"
+            Else
+                assetManifest(i).ResolvedMesh = "SK_Chicken_Standard.fbx"
+            End If
+            
+            assetManifest(i).ColliderScale = 0.35
+            assetManifest(i).IsReconciled = True
+        Else
+            ' Maintain native actor profile
+            assetManifest(i).ResolvedMesh = "SK_" & assetManifest(i).OriginalType & "_Default.fbx"
+            assetManifest(i).ColliderScale = 1.0
+            assetManifest(i).IsReconciled = True
+        End If
+    Next i
+    
+    ' Publish reconciled dataset to repository sheet
+    Call CommitToAssetRepository(assetManifest)
+End Sub
+
+Private Sub CommitToAssetRepository(ByRef manifest() As ActorAsset)
+    Dim repoSheet As Worksheet
+    Dim rowIdx As Long
+    Dim i As Long
+    
+    On Error Resume Next
+    Set repoSheet = ThisWorkbook.Sheets("AssetRepository")
+    On Error GoTo 0
+    
+    If repoSheet Is Nothing Then
+        Set repoSheet = ThisWorkbook.Sheets.Add
+        repoSheet.Name = "AssetRepository"
+        repoSheet.Range("A1:F1").Value = Array("AssetGUID", "OriginalType", "RuntimeSpell", "ResolvedMesh", "ColliderScale", "IsReconciled")
+    End If
+    
+    rowIdx = 2
+    For i = LBound(manifest) To UBound(manifest)
+        repoSheet.Cells(rowIdx, 1).Value = manifest(i).AssetGUID
+        repoSheet.Cells(rowIdx, 2).Value = manifest(i).OriginalType
+        repoSheet.Cells(rowIdx, 3).Value = manifest(i).RuntimeSpell
+        repoSheet.Cells(rowIdx, 4).Value = manifest(i).ResolvedMesh
+        repoSheet.Cells(rowIdx, 5).Value = manifest(i).ColliderScale
+        repoSheet.Cells(rowIdx, 6).Value = manifest(i).IsReconciled
+        rowIdx = rowIdx + 1
+    Next i
+    
+    repoSheet.Columns("A:F").AutoFit
+End Sub

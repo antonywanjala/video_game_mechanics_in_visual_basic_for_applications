@@ -1,0 +1,82 @@
+Option Explicit
+
+Public Type PropertyAsset
+    AssetID As String
+    PropertyName As String
+    BaseRent As Double
+    ManagerTrait As String
+    IsTenanted As Boolean
+    IsEvicted As Boolean
+    ReconciledRent As Double
+End Type
+
+Public Sub ReconcileFableRealEstateAssets()
+    Dim properties() As PropertyAsset
+    Dim totalRentPool As Double
+    Dim i As Long
+    
+    ' Sample asset definitions matching Albion real-estate mechanics
+    ReDim properties(0 To 3)
+    
+    properties(0).AssetID = "PROP_BOWERSTONE_01"
+    properties(0).PropertyName = "Bowerstone South Cottage"
+    properties(0).BaseRent = 100#
+    properties(0).ManagerTrait = "none"
+    properties(0).IsTenanted = True
+    properties(0).IsEvicted = False
+    
+    properties(1).AssetID = "PROP_OAKVALE_FARM_01"
+    properties(1).PropertyName = "Oakvale Farmhouse & Mill"
+    properties(1).BaseRent = 250#
+    properties(1).ManagerTrait = "hard-working" ' +20% profit bonus
+    properties(1).IsTenanted = True
+    properties(1).IsEvicted = False
+    
+    properties(2).AssetID = "PROP_BLOODSTONE_TAVERN"
+    properties(2).PropertyName = "Bloodstone Waterfront Den"
+    properties(2).BaseRent = 400#
+    properties(2).ManagerTrait = "slothful"     ' -15% profit penalty
+    properties(2).IsTenanted = True
+    properties(2).IsEvicted = False
+    
+    properties(3).AssetID = "PROP_BOWER_MARKET_02"
+    properties(3).PropertyName = "Bowerstone Market Stall"
+    properties(3).BaseRent = 150#
+    properties(3).ManagerTrait = "hard-working"
+    properties(3).IsTenanted = False            ' Evicted/unoccupied
+    properties(3).IsEvicted = True
+    
+    totalRentPool = 0#
+    
+    ' Asset-to-Code Reconciliation Loop
+    For i = LBound(properties) To UBound(properties)
+        If properties(i).IsEvicted Or Not properties(i).IsTenanted Then
+            ' Evicted properties produce zero active rental yield
+            properties(i).ReconciledRent = 0#
+        Else
+            Dim traitMultiplier As Double
+            traitMultiplier = 1#
+            
+            Select Case LCase$(Trim$(properties(i).ManagerTrait))
+                Case "hard-working"
+                    traitMultiplier = 1.2  ' 20% bonus from diligent NPCs
+                Case "slothful"
+                    traitMultiplier = 0.85 ' 15% reduction from lazy staff
+                Case Else
+                    traitMultiplier = 1#
+            End Select
+            
+            properties(i).ReconciledRent = properties(i).BaseRent * traitMultiplier
+        End If
+        
+        totalRentPool = totalRentPool + properties(i).ReconciledRent
+        
+        Debug.Print "Asset: " & properties(i).AssetID & _
+                    " | Name: " & properties(i).PropertyName & _
+                    " | Base: " & FormatCurrency(properties(i).BaseRent) & _
+                    " | Reconciled Yield: " & FormatCurrency(properties(i).ReconciledRent)
+    Next i
+    
+    Debug.Print "---"
+    Debug.Print "Total Reconciled Interval Revenue: " & FormatCurrency(totalRentPool)
+End Sub

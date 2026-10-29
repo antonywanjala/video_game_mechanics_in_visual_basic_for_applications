@@ -1,0 +1,64 @@
+Attribute VB_Name = "mFableReconciliation"
+Option Explicit
+
+' Type definition representing raw editor placed entities
+Public Type EntityAsset
+    AssetID As String
+    PrefabType As String          ' e.g., "Wraith", "HollowFolk", "LanternKeeper"
+    TargetHostID As String        ' Marker pointing to initial host target
+    PrimaryPhaseHealth As Single
+    SecondaryPhaseHealth As Single
+    CanInhabit As Boolean
+    CurrentState As String        ' "Dormant", "Possessing", "Active"
+End Type
+
+' Function reconciling placed assets into runtime dynamic phase combatants
+Public Function ReconcileEnemyPhases(ByRef RawAssets() As EntityAsset) As Collection
+    Dim ReconciledEnemies As New Collection
+    Dim i As Long
+    Dim j As Long
+    Dim CurrentAsset As EntityAsset
+    Dim HostFound As Boolean
+    
+    ' Asset-to-code reconciliation loop for multi-stage combatants
+    For i = LBound(RawAssets) To UBound(RawAssets)
+        CurrentAsset = RawAssets(i)
+        
+        ' Process phase-shifting entities (Wraiths & Possessors)
+        If CurrentAsset.PrefabType = "Wraith" Then
+            HostFound = False
+            
+            ' Reconcile host binding against existing level placements
+            For j = LBound(RawAssets) To UBound(RawAssets)
+                If RawAssets(j).AssetID = CurrentAsset.TargetHostID And RawAssets(j).PrefabType = "HollowFolk" Then
+                    CurrentAsset.CurrentState = "Possessing"
+                    HostFound = True
+                    Exit For
+                End If
+            Next j
+            
+            ' Default fallback if no host is mapped in scene data
+            If Not HostFound Then
+                CurrentAsset.CurrentState = "Active"
+                CurrentAsset.TargetHostID = vbNullString
+            End If
+            
+            ' Enforce secondary combat phase baseline thresholds
+            If CurrentAsset.SecondaryPhaseHealth <= 0 Then
+                CurrentAsset.SecondaryPhaseHealth = 45#
+            End If
+            
+        ElseIf CurrentAsset.PrefabType = "HollowFolk" Then
+            ' Base host initialization
+            CurrentAsset.CanInhabit = True
+            If CurrentAsset.PrimaryPhaseHealth <= 0 Then
+                CurrentAsset.PrimaryPhaseHealth = 100#
+            End If
+        End If
+        
+        ' Push validated configuration into runtime registration collection
+        ReconciledEnemies.Add CurrentAsset, CurrentAsset.AssetID
+    Next i
+    
+    Set ReconcileEnemyPhases = ReconciledEnemies
+End Function

@@ -1,0 +1,62 @@
+Sub ReconcileFableAssets()
+    Dim assetIndex As Integer
+    Dim entityType As String
+    Dim entityState As String
+    
+    ' Explicit asset trackers to emphasize population changes
+    Dim initialAssetTotal As Integer
+    Dim currentActivePopulation As Integer
+    Dim wraithsSpawned As Integer
+    Dim hollowFolkCleared As Integer
+    
+    ' Simulating the total number of loaded game assets during combat
+    initialAssetTotal = 250
+    currentActivePopulation = initialAssetTotal
+    wraithsSpawned = 0
+    hollowFolkCleared = 0
+    
+    Debug.Print "=== ASSET RECONCILIATION INITIALIZED ==="
+    Debug.Print "Initial Active Population: " & currentActivePopulation
+    Debug.Print "----------------------------------------"
+    
+    ' Loop representing behavior during asset-to-code reconciliation
+    For assetIndex = 1 To initialAssetTotal
+        entityType = GetAssetType(assetIndex)
+        entityState = GetAssetState(assetIndex)
+        
+        ' Reconciling the dynamic Wraith possession mechanic
+        If entityType = "Hollow_Folk" And entityState = "Health_Depleted_Possessed" Then
+            ' 1. Clear defeated skeleton asset (-1 unit)
+            Call UnloadAssetCode(assetIndex)
+            hollowFolkCleared = hollowFolkCleared + 1
+            currentActivePopulation = currentActivePopulation - 1
+            
+            ' 2. Inject Wraith asset for secondary combat phase (+1 unit)
+            Call InjectAssetCode("Wraith_Entity", GetAssetCoordinates(assetIndex), "Aggressive_Phase_Two")
+            wraithsSpawned = wraithsSpawned + 1
+            currentActivePopulation = currentActivePopulation + 1
+            
+            Debug.Print "Index " & assetIndex & ": Hollow Folk unloaded, Wraith injected."
+            Debug.Print " -> Net Population: " & currentActivePopulation
+            
+        ' Reconciling the Lantern Keeper's ability to spawn Wraiths
+        ElseIf entityType = "Lantern_Keeper" And entityState = "Casting_Spawn" Then
+            ' Inject new minion asset (+1 unit)
+            Call InjectAssetCode("Wraith_Entity", GetAssetCoordinates(assetIndex), "Minion_Phase")
+            wraithsSpawned = wraithsSpawned + 1
+            currentActivePopulation = currentActivePopulation + 1
+            
+            Debug.Print "Index " & assetIndex & ": Lantern Keeper spawned Wraith minion."
+            Debug.Print " -> Net Population: " & currentActivePopulation
+        End If
+    Next assetIndex
+    
+    ' Final Asset Breakdown
+    Debug.Print "----------------------------------------"
+    Debug.Print "=== RECONCILIATION AUDIT COMPLETE ==="
+    Debug.Print "Starting Population:         " & initialAssetTotal
+    Debug.Print "Hollow Folk Assets Purged:   " & hollowFolkCleared
+    Debug.Print "Wraith Assets Injected:      " & wraithsSpawned
+    Debug.Print "Final Active Population:     " & currentActivePopulation
+    Debug.Print "========================================"
+End Sub

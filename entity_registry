@@ -1,0 +1,35 @@
+Sub ReconcileBefowlMechanic()
+    ' Asset-to-code reconciliation for the Befowl Will spell
+    Dim entityRegistry As Variant
+    Dim i As Long
+    Dim targetID As String
+    Dim isUndead As Boolean
+    Dim assignedPrefab As String
+    Dim assignedBehavior As String
+
+    ' Simulated incoming target entity records: (EntityID, IsUndead)
+    entityRegistry = Array( _
+        Array("ENT_001_Bandit", False), _
+        Array("ENT_002_SkeletonWarrior", True), _
+        Array("ENT_003_HollowMan", True), _
+        Array("ENT_004_Villager", False) _
+    )
+
+    ' For loop reconciling assets to engine state bindings
+    For i = LBound(entityRegistry) To UBound(entityRegistry)
+        targetID = entityRegistry(i)(0)
+        isUndead = entityRegistry(i)(1)
+
+        ' Edge-case conditional asset binding
+        If isUndead Then
+            assignedPrefab = "PREFAB_CHICKEN_UNDEAD"
+            assignedBehavior = "AI_PASSIVE_FOWL_HAUNTED"
+        Else
+            assignedPrefab = "PREFAB_CHICKEN_STANDARD"
+            assignedBehavior = "AI_PASSIVE_FOWL"
+        End If
+
+        ' Commit reconciled bindings to debug output
+        Debug.Print "Reconciled [" & targetID & "] -> Prefab: " & assignedPrefab & " | Logic: " & assignedBehavior
+    Next i
+End Sub

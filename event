@@ -1,0 +1,10 @@
+Dim marriageCount As Integer
+marriageCount = 0
+For Each npcAsset In SettlementNPCs
+    If npcAsset.RomanceStatus = "Married" And npcAsset.PlayerLinked = True Then
+        marriageCount = marriageCount + 1
+        If marriageCount > 1 Then
+            Call TriggerBlackmailEvent(npcAsset.ID)
+        End If
+    End If
+Next npcAsset

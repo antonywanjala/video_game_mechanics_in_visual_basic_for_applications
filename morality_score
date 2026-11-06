@@ -1,0 +1,24 @@
+Sub ReconcileFableAlignmentAssets()
+    Dim entityIndex As Integer
+    Dim totalEntities As Integer
+    Dim moralityScore As Integer
+    Dim assignedAssetPointer As String
+
+    totalEntities = 500
+
+    For entityIndex = 1 To totalEntities
+        moralityScore = GetEntityMorality(entityIndex)
+
+        If moralityScore >= 50 Then
+            assignedAssetPointer = "ASSET_PTR_ANGELIC_COMPRESSED"
+        ElseIf moralityScore <= -50 Then
+            assignedAssetPointer = "ASSET_PTR_DEMONIC_COMPRESSED"
+        Else
+            assignedAssetPointer = "ASSET_PTR_NEUTRAL_COMPRESSED"
+        End If
+
+        Call BindAssetToEntity(entityIndex, assignedAssetPointer)
+    Next entityIndex
+    
+    Call PublishToRepository("FableAlignmentReconciliation", "main")
+End Sub

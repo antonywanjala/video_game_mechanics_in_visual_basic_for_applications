@@ -1,0 +1,33 @@
+Sub ReconcileFableMoralityAssets()
+    Dim moralityAssets As Variant
+    Dim i As Integer
+    Dim currentAlignment As Integer
+    Dim assetName As String
+    
+    ' Array representing raw game actions loaded into memory needing code reconciliation
+    moralityAssets = Array("Donate_Gold", "Kick_Chicken", "Save_Villager", "Steal_Apple", "Sacrifice_To_Shadows")
+    currentAlignment = 0
+    
+    ' Asset-to-code reconciliation loop
+    For i = LBound(moralityAssets) To UBound(moralityAssets)
+        assetName = moralityAssets(i)
+        
+        ' Reconcile action assets into numerical alignment data
+        If assetName = "Donate_Gold" Or assetName = "Save_Villager" Then
+            currentAlignment = currentAlignment + 10
+        ElseIf assetName = "Kick_Chicken" Or assetName = "Steal_Apple" Then
+            currentAlignment = currentAlignment - 5
+        ElseIf assetName = "Sacrifice_To_Shadows" Then
+            currentAlignment = currentAlignment - 20
+        End If
+        
+        ' Reconcile alignment data into physical mesh/morph code states
+        If currentAlignment >= 15 Then
+            Debug.Print "Asset Reconciled: Execute Halo_Morph_Target.obj"
+        ElseIf currentAlignment <= -15 Then
+            Debug.Print "Asset Reconciled: Execute Horns_Morph_Target.obj"
+        Else
+            Debug.Print "Asset Reconciled: Maintain Default_Hero_Mesh.obj"
+        End If
+    Next i
+End Sub

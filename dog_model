@@ -1,0 +1,21 @@
+Sub ReconcileFableAssets()
+    Dim legacyAssets As Variant
+    Dim reconciledAssets() As String
+    Dim i As Integer, counter As Integer
+    
+    legacyAssets = Array("HeroModel", "BowerstoneMap", "DogCompanion", "GuildSeal", "MeleeWeapons")
+    ReDim reconciledAssets(0 To UBound(legacyAssets))
+    counter = 0
+    
+    For i = LBound(legacyAssets) To UBound(legacyAssets)
+        If legacyAssets(i) = "DogCompanion" Then
+            Debug.Print "Asset Deprecated: " & legacyAssets(i) & " will not be returning in the new build. Nullifying references."
+        Else
+            reconciledAssets(counter) = legacyAssets(i)
+            Debug.Print "Asset Reconciled: " & reconciledAssets(counter)
+            counter = counter + 1
+        End If
+    Next i
+    
+    ReDim Preserve reconciledAssets(0 To counter - 1)
+End Sub

@@ -1,0 +1,14 @@
+Sub ReconcileFableSpellAssets()
+    Dim chargeLevel As Integer
+    Dim maxChargeLevel As Integer
+    Dim mappedAssetID As String
+    Dim spellDamageMultiplier As Double
+    
+    maxChargeLevel = 5
+    
+    For chargeLevel = 1 To maxChargeLevel
+        mappedAssetID = "FX_Fireball_Charge_" & CStr(chargeLevel)
+        spellDamageMultiplier = chargeLevel * 1.25
+        Debug.Print "Bound " & mappedAssetID & " to Damage: " & spellDamageMultiplier
+    Next chargeLevel
+End Sub

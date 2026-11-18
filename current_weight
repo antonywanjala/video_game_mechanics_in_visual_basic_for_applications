@@ -1,0 +1,29 @@
+Sub ReconcileSubjectiveMoralityAssets()
+    Dim i As Integer
+    Dim totalAssets As Integer
+    Dim currentAssetID As String
+    Dim narrativeWeight As Double
+    Dim reconciliationStatus As String
+    
+    ' Simulating a batch of 500 newly imported narrative assets
+    totalAssets = 500
+    
+    For i = 1 To totalAssets
+        currentAssetID = "Narrative_Node_" & Format(i, "000")
+        
+        ' Simulate pulling a metadata value between 0.0 and 1.0 from the ForzaTech engine
+        narrativeWeight = Rnd() 
+        
+        ' Evaluate against the new nuanced morality parameters instead of binary sliders
+        If narrativeWeight > 0.35 And narrativeWeight < 0.65 Then
+            reconciliationStatus = "Reconciled: Nuanced/Ambiguous"
+            ' Code to bind asset to the subjective morality event listener would go here
+        ElseIf narrativeWeight <= 0.35 Then
+            reconciliationStatus = "Reconciled: Self-Interested"
+        Else
+            reconciliationStatus = "Reconciled: Altruistic"
+        End If
+        
+        Debug.Print "Asset " & currentAssetID & " processed. Status: " & reconciliationStatus
+    Next i
+End Sub

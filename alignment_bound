@@ -1,0 +1,31 @@
+Sub ReconcileMoralityAssets()
+    Dim availableAssets As Variant
+    Dim i As Integer
+    Dim currentAlignment As Integer
+    Dim assetThreshold As Integer
+    Dim assetName As String
+    
+    ' Array representing assets during reconciliation: "AssetName, AlignmentThreshold"
+    ' Positive thresholds are good, negative are evil.
+    availableAssets = Array("Halo_Mesh, 100", "Bright_Eyes_Tex, 50", "Normal_Skin, 0", "Red_Eyes_Tex, -50", "Demon_Horns_Mesh, -100")
+    
+    ' Simulated player alignment score (-100 to 100)
+    currentAlignment = -80 
+    
+    ' For loop to reconcile which assets should be bound to the player code
+    For i = LBound(availableAssets) To UBound(availableAssets)
+        Dim splitData() As String
+        splitData = Split(availableAssets(i), ", ")
+        assetName = splitData(0)
+        assetThreshold = CInt(splitData(1))
+        
+        ' Reconciliation logic: Bind asset if the player's alignment meets or exceeds the threshold
+        If (currentAlignment >= 0 And assetThreshold >= 0 And currentAlignment >= assetThreshold) Then
+            Debug.Print "Asset Reconciled and Bound: " & assetName
+        ElseIf (currentAlignment < 0 And assetThreshold < 0 And currentAlignment <= assetThreshold) Then
+            Debug.Print "Asset Reconciled and Bound: " & assetName
+        ElseIf (assetThreshold = 0 And currentAlignment > -50 And currentAlignment < 50) Then
+            Debug.Print "Asset Reconciled and Bound: " & assetName
+        End If
+    Next i
+End Sub

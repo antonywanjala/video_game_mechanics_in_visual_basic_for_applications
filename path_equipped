@@ -1,0 +1,57 @@
+Option Explicit
+
+' Represents a single character asset binding during reconciliation
+Public Type CharacterAssetRecord
+    EntityID As String
+    HostName As String
+    MaskEquipped As Boolean
+    MeshAssetPath As String
+    VoiceBankPath As String
+    AIBehaviorScript As String
+    ReconciliationStatus As String
+End Type
+
+Public Sub ReconcileMaskPossessionAssets()
+    Dim assets(1 To 3) As CharacterAssetRecord
+    Dim i As Long
+    
+    ' Sample asset manifest loaded before reconciliation
+    assets(1).EntityID = "NPC_001"
+    assets(1).HostName = "Guild_Initiate"
+    assets(1).MaskEquipped = False
+    assets(1).MeshAssetPath = "/assets/meshes/initiate_base.mesh"
+    assets(1).VoiceBankPath = "/assets/audio/initiate_vo.bnk"
+    assets(1).AIBehaviorScript = "AI_StandardHero"
+    
+    assets(2).EntityID = "NPC_002"
+    assets(2).HostName = "Fallen_Hero"
+    assets(2).MaskEquipped = True
+    assets(2).MeshAssetPath = "/assets/meshes/hero_base.mesh"
+    assets(2).VoiceBankPath = "/assets/audio/hero_vo.bnk"
+    assets(2).AIBehaviorScript = "AI_StandardHero"
+    
+    assets(3).EntityID = "NPC_003"
+    assets(3).HostName = "Albion_Merchant"
+    assets(3).MaskEquipped = False
+    assets(3).MeshAssetPath = "/assets/meshes/merchant_base.mesh"
+    assets(3).VoiceBankPath = "/assets/audio/merchant_vo.bnk"
+    assets(3).AIBehaviorScript = "AI_Vendor"
+    
+    ' Asset-to-code reconciliation loop
+    For i = LBound(assets) To UBound(assets)
+        If assets(i).MaskEquipped Then
+            ' Host consciousness is overtaken: reconcile pointers to Jack of Blades' assets
+            assets(i).MeshAssetPath = "/assets/meshes/void_jack_of_blades.mesh"
+            assets(i).VoiceBankPath = "/assets/audio/void_jack_vo.bnk"
+            assets(i).AIBehaviorScript = "AI_VoidEntity_Jack"
+            assets(i).ReconciliationStatus = "OVERRIDDEN_BY_MASK"
+        Else
+            ' Standard host assets remain intact
+            assets(i).ReconciliationStatus = "VERIFIED_HOST"
+        End If
+        
+        Debug.Print assets(i).EntityID & " | " & assets(i).HostName & _
+                    " | Status: " & assets(i).ReconciliationStatus & _
+                    " | Mesh: " & assets(i).MeshAssetPath
+    Next i
+End Sub

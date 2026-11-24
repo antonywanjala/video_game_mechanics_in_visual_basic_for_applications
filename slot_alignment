@@ -1,0 +1,64 @@
+Option Explicit
+
+' Represents an asset-to-code binding entry for Fable's Morality Morphing system
+Private Type MorphAssetBinding
+    AssetID As String
+    SlotName As String
+    MinAlignment As Integer
+    MaxAlignment As Integer
+    CodeHook As String
+    IsReconciled As Boolean
+End Type
+
+Public Sub ReconcileFableMoralityAssets()
+    Dim heroAlignment As Integer
+    Dim manifest(1 To 4) As MorphAssetBinding
+    Dim i As Integer
+    Dim activeBindingCount As Integer
+    
+    ' Example runtime state: Hero is leaning Evil (-750)
+    heroAlignment = -750
+    activeBindingCount = 0
+    
+    ' Populate sample asset manifest (Asset ID -> Code Hook mapping)
+    manifest(1).AssetID = "MESH_HERO_HALO_01"
+    manifest(1).SlotName = "HeadAccessory"
+    manifest(1).MinAlignment = 500
+    manifest(1).MaxAlignment = 1000
+    manifest(1).CodeHook = "BindGoodAuraMesh"
+    
+    manifest(2).AssetID = "MESH_HERO_HORNS_03"
+    manifest(2).SlotName = "HeadAccessory"
+    manifest(2).MinAlignment = -1000
+    manifest(2).MaxAlignment = -500
+    manifest(2).CodeHook = "BindEvilHornMesh"
+    
+    manifest(3).AssetID = "TEX_SKIN_CORRUPT_02"
+    manifest(3).SlotName = "SkinMaterial"
+    manifest(3).MinAlignment = -1000
+    manifest(3).MaxAlignment = -250
+    manifest(3).CodeHook = "ApplyCorruptShader"
+    
+    manifest(4).AssetID = "TEX_SKIN_NEUTRAL_01"
+    manifest(4).SlotName = "SkinMaterial"
+    manifest(4).MinAlignment = -249
+    manifest(4).MaxAlignment = 499
+    manifest(4).CodeHook = "ApplyNeutralShader"
+    
+    ' Asset-to-Code Reconciliation Loop
+    For i = LBound(manifest) To UBound(manifest)
+        If heroAlignment >= manifest(i).MinAlignment And heroAlignment <= manifest(i).MaxAlignment Then
+            manifest(i).IsReconciled = True
+            activeBindingCount = activeBindingCount + 1
+            Debug.Print "[RECONCILED] Slot: " & manifest(i).SlotName & _
+                        " | Asset: " & manifest(i).AssetID & _
+                        " -> Hook: " & manifest(i).CodeHook
+        Else
+            manifest(i).IsReconciled = False
+            Debug.Print "[SKIPPED]    Slot: " & manifest(i).SlotName & _
+                        " | Asset: " & manifest(i).AssetID & " (Out of alignment range)"
+        End If
+    Next i
+    
+    Debug.Print "Reconciliation complete. Active asset hooks bound: " & activeBindingCount
+End Sub

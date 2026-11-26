@@ -1,0 +1,127 @@
+Option Explicit
+
+' Reconciles co-developed Fable studio assets against ForzaTech alignment hooks
+' and handles the Mask of Jack of Blades total host-possession state override.
+Public Sub ReconcileFableMorphAssets(ByVal currentAlignment As Double, ByVal isJackMaskEquipped As Boolean)
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim assetID As String
+    Dim studioSource As String
+    Dim codeHook As String
+    Dim activationVal As Double
+    Dim fullMorphVal As Double
+    Dim rawExists As String
+    Dim filePresent As Boolean
+    Dim rawProgress As Double
+    Dim morphWeight As Double
+    Dim reconStatus As String
+
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets("AssetManifest")
+    On Error GoTo 0
+
+    If ws Is Nothing Then
+        MsgBox "Worksheet 'AssetManifest' was not found in this workbook.", vbCritical
+        Exit Sub
+    End If
+
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Columns:
+    ' A = AssetID | B = SourceStudio | C = CodeHook | D = ActivationAlign
+    ' E = FullMorphAlign | F = FileExists | G = MorphWeight | H = ReconciliationStatus
+    For i = 2 To lastRow
+        assetID = Trim$(CStr(ws.Cells(i, 1).Value))
+        studioSource = Trim$(CStr(ws.Cells(i, 2).Value))
+        codeHook = UCase$(Trim$(CStr(ws.Cells(i, 3).Value)))
+        activationVal = Val(ws.Cells(i, 4).Value)
+        fullMorphVal = Val(ws.Cells(i, 5).Value)
+        rawExists = UCase$(Trim$(CStr(ws.Cells(i, 6).Value)))
+        filePresent = (rawExists = "TRUE" Or Val(rawExists) = 1)
+
+        morphWeight = 0#
+
+        If Len(assetID) = 0 Or Not filePresent Then
+            reconStatus = "ERR_MISSING_STUDIO_ASSET [" & studioSource & "]"
+        ElseIf Not IsRegisteredForzaTechHook(codeHook) Then
+            reconStatus = "ERR_ORPHAN_CODE_HOOK [" & codeHook & "]"
+        ElseIf isJackMaskEquipped Then
+            ' Jack of Blades Mask lore behavior: hijacks host state and suppresses Hero morphs
+            If codeHook = "MASK_OF_JACK_OVERRIDE" Then
+                morphWeight = 1#
+                reconStatus = "RECONCILED_HOST_HIJACKED [" & studioSource & "]"
+            Else
+                morphWeight = 0#
+                reconStatus = "RECONCILED_SUPPRESSED_BY_MASK [" & studioSource & "]"
+            End If
+        ElseIf codeHook = "MASK_OF_JACK_OVERRIDE" Then
+            morphWeight = 0#
+            reconStatus = "RECONCILED_DORMANT_ARTIFACT [" & studioSource & "]"
+        Else
+            ' Standard Hero Morality & Reputation Morphing interpolation (-100 to +100)
+            If fullMorphVal = activationVal Then
+                If (activationVal >= 0# And currentAlignment >= activationVal) Or _
+                   (activationVal < 0# And currentAlignment <= activationVal) Then
+                    morphWeight = 1#
+                End If
+            Else
+                rawProgress = (currentAlignment - activationVal) / (fullMorphVal - activationVal)
+                If rawProgress < 0# Then
+                    morphWeight = 0#
+                ElseIf rawProgress > 1# Then
+                    morphWeight = 1#
+                Else
+                    morphWeight = Round(rawProgress, 4)
+                End If
+            End If
+
+            If morphWeight > 0# Then
+                reconStatus = "RECONCILED_ACTIVE [" & studioSource & "]"
+            Else
+                reconStatus = "RECONCILED_STANDBY [" & studioSource & "]"
+            End If
+        End If
+
+        ws.Cells(i, 7).Value = morphWeight
+        ws.Cells(i, 8).Value = reconStatus
+    Next i
+End Sub
+
+Private Function IsRegisteredForzaTechHook(ByVal hookName As String) As Boolean
+    Select Case hookName
+        Case "MORPH_HERO_PURE", "MORPH_HERO_CORRUPT", _
+             "NPC_REP_REVERE", "NPC_REP_FEAR", _
+             "CIN_HERO_RIG_BLEND", "MASK_OF_JACK_OVERRIDE"
+            IsRegisteredForzaTechHook = True
+        Case Else
+            IsRegisteredForzaTechHook = False
+    End Select
+End Function
+
+' Exports this VBA module (named "FableAssetReconciler") and publishes it to a Git repository.
+Public Sub PublishReconcilerToGitRepo(ByVal localRepoPath As String, Optional ByVal branchName As String = "main")
+    Dim exportedFile As String
+    Dim gitCmd As String
+    Dim shellObj As Object
+    Dim exitCode As Long
+
+    If Right$(localRepoPath, 1) <> "\" Then localRepoPath = localRepoPath & "\"
+    exportedFile = localRepoPath & "FableAssetReconciler.bas"
+
+    ThisWorkbook.VBProject.VBComponents("FableAssetReconciler").Export exportedFile
+
+    gitCmd = "cmd.exe /c cd /d """ & localRepoPath & """ && " & _
+             "git add ""FableAssetReconciler.bas"" && " & _
+             "git commit -m ""Add Fable morphing asset-to-code reconciliation VBA module"" && " & _
+             "git push origin " & branchName
+
+    Set shellObj = CreateObject("WScript.Shell")
+    exitCode = shellObj.Run(gitCmd, 0, True)
+
+    If exitCode = 0 Then
+        MsgBox "Exported and pushed FableAssetReconciler.bas to " & branchName & ".", vbInformation
+    Else
+        MsgBox "Git command exited with code " & exitCode & ". Check repo path and Git remote auth.", vbExclamation
+    End If
+End Sub
